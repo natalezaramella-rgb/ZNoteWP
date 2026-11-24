@@ -66,7 +66,6 @@ Dopo 5 password sbagliate l'app impone un'attesa crescente; dopo 10 si blocca e 
 Il link è comodo ma meno riservato del codice: per farlo funzionare il sito deve conservare una copia protetta della tua chiave, cosa che senza link non avviene. Per questo è spento finché non lo attivi e ha diverse protezioni:
 
 - È legato all'indirizzo email che hai quando lo attivi. Se l'email o la password del tuo utente WordPress vengono cambiate, il recupero si spegne da solo e ricevi un avviso.
-
 - Funziona solo se hai già effettuato l'accesso a WordPress con il tuo utente.
 - Vale una sola volta e scade dopo 30 minuti.
 - Dopo il clic parte un'**attesa di 24 ore**: ricevi un avviso via email e sui dispositivi già collegati, e puoi annullare il recupero se non l'hai chiesto tu.
@@ -116,7 +115,7 @@ Le Attività sono liste di cose da fare con scadenze, pensate per essere spuntat
 - **Scadenza**: data e, se serve, ora. Le scadute sono in rosso, quelle di oggi in arancio. All'ora indicata ricevi un promemoria.
 - **Ripetizione**: ogni giorno, settimana, mese o anno. Quando completi un'attività ricorrente compare subito la successiva.
 - **Sotto-attività**: un livello sotto l'attività principale, ciascuna da spuntare a parte, con scadenza propria. Si riordinano e si possono promuovere ad attività.
-- **Dettagli**: appunti scritti con lo stesso editor visuale delle pagine, salvati in Markdown.
+- **Dettagli**: appunti con grassetto, corsivo ed elenchi, salvati in Markdown.
 - **Completare**: tocchi il cerchio, l'attività scende in «Completate» e per qualche secondo puoi annullare.
 - **Riordinare**: trascini la maniglia a sinistra. In alternativa ordini la lista per data di scadenza.
 - **Spostare**: dal dettaglio sposti un'attività in un'altra lista.
@@ -138,7 +137,7 @@ Anche i disegni sono cifrati come il resto delle note.
 
 Ogni utente ha un indirizzo email personale, per esempio `note-7f3k9q@note.tuodominio.it`: inoltri un messaggio a quell'indirizzo e dopo qualche minuto lo ritrovi come nota.
 
-- **Cosa viene importato**: l'oggetto diventa il titolo, il corpo diventa il testo. Le firme grafiche vengono scartate. Per gli allegati scegli tu: ignorarli, elencarne i nomi nella nota o importare PDF e immagini.
+- **Cosa viene importato**: l'oggetto diventa il titolo, il corpo diventa il testo. Le firme grafiche vengono scartate. Per gli allegati scegli tu: ignorarli oppure importare immagini e PDF.
 - **Smistamento**: una parola con il cancelletto nell'oggetto, per esempio `#ricette`, manda la nota nella sezione o nella lista con quel nome.
 - **Dove finisce**: lo scegli tu. Come nuova pagina in una sezione (di solito Posta in arrivo) oppure come nuova attività in una lista.
 - **Chi può scrivere**: solo i mittenti che hai autorizzato, verificati con i controlli antifalsificazione della posta (SPF e DKIM). Le altre email vengono scartate. C'è un limite di messaggi all'ora e puoi rigenerare l'indirizzo personale se finisce in mani sbagliate.
@@ -161,12 +160,12 @@ L'app installata resta collegata al sito a lungo: all'apertura chiede solo lo sb
 - **Taccuino**: albero di gruppi e sezioni a sinistra, elenco delle pagine al centro, pagina aperta a destra.
 - **Attività**: lista a sinistra e dettaglio dell'attività selezionata a destra, senza cambiare schermata.
 - La navigazione passa in una barra verticale a sinistra; le finestre di conferma compaiono al centro.
-- Scorciatoie da tastiera: **Ctrl+K** per cercare, **Ctrl+Maiusc+L** per bloccare (Cmd su Mac).
+- Scorciatoie da tastiera: **Ctrl+K** per cercare, **Alt+N** nuova pagina, **Alt+T** nuova attività, **Ctrl+Maiusc+L** per bloccare (Cmd su Mac).
 - Sul PC si disegna con il mouse, la tavoletta grafica o il touch screen.
 
 I dati sono gli stessi su tutti i dispositivi: una nota scritta sul telefono si ritrova sul PC dopo lo sblocco.
 
-**Ricerca.** Un'unica casella cerca nei titoli e nei testi di tutte le pagine e di tutte le attività, evidenziando le parole trovate.
+**Ricerca.** Un'unica casella cerca nei titoli, nei testi e nelle etichette di tutte le pagine e di tutte le attività, evidenziando le parole trovate. Filtri rapidi restringono a pagine, attività, note con disegni o arrivate via email.
 
 **Blocco automatico.** Dopo un tempo di inattività che scegli tu (subito, 1, 5 o 15 minuti) l'app si richiude e chiede di nuovo la password, oppure l'impronta, il volto o un PIN breve se li hai attivati. Il lucchetto in alto la chiude subito.
 
@@ -209,7 +208,7 @@ Ogni caso descrive chi agisce, cosa vuole ottenere e i passi nell'app.
 
 **9. Recuperare l'accesso.** Ha dimenticato la password. Nella schermata di sblocco tocca Password dimenticata, inserisce il codice di recupero e sceglie una nuova password. Riceve subito un nuovo codice da salvare. In alternativa usa il link via email e attende 24 ore.
 
-**10. Togliere l'accesso.** L'amministratore spegne l'interruttore dell'utente. I dati restano cifrati e possono essere riattivati, oppure cancellati definitivamente su richiesta.
+**10. Togliere l'accesso.** L'amministratore spegne l'interruttore dell'utente e conferma. I dati restano cifrati e possono essere riattivati, oppure cancellati definitivamente su richiesta.
 
 ## Domande frequenti
 
