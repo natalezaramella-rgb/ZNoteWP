@@ -3,6 +3,7 @@
 | File | Contenuto |
 | --- | --- |
 | [presentazione-utente.md](presentazione-utente.md) | Funzioni e casi d'uso spiegati per l'utente finale |
+| [decisioni.md](decisioni.md) | Decisioni prese dopo la revisione: riferimento per lo sviluppo |
 | [revisione-critica.md](revisione-critica.md) | Difetti e miglioramenti trovati su presentazione e mockup |
 | [mockup/znotekeeper-mockup.html](mockup/znotekeeper-mockup.html) | Mockup interattivo (vista telefono e PC): scaricalo e aprilo nel browser |
 

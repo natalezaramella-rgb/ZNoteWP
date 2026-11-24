@@ -4,7 +4,7 @@
 
 ## Cos'è ZNoteKeeper
 
-ZNoteKeeper è un taccuino privato con lista delle attività, che vive sul tuo sito WordPress e si usa dal telefono o dal PC come un'app. Tutto ciò che scrivi viene chiuso a chiave con una password che scegli tu: nemmeno l'amministratore del sito può leggerlo.
+ZNoteKeeper è un taccuino privato con lista delle attività, che vive sul tuo sito WordPress e si usa dal telefono o dal PC come un'app. Tutto ciò che scrivi viene cifrato sul tuo dispositivo con una password che scegli tu, prima di essere inviato al sito: sul server arrivano solo dati illeggibili.
 
 In un solo posto trovi:
 
@@ -12,7 +12,7 @@ In un solo posto trovi:
 - **Attività**: liste di cose da fare con scadenze, ripetizioni e sotto-attività.
 - **Disegni**: schizzi a mano libera dentro le note e le attività.
 - **Email → nota**: inoltri un'email a un indirizzo personale e diventa una nota.
-- **App sul telefono e sul PC**: si installa sulla schermata Home o sul computer, si apre in una finestra propria e funziona anche senza rete.
+- **App sul telefono e sul PC**: si installa sulla schermata Home o sul computer e si apre in una finestra propria. Senza rete puoi leggere quello che è già sul dispositivo.
 
 Puoi provare tutte le schermate nel mockup interattivo: [`docs/mockup/znotekeeper-mockup.html`](mockup/znotekeeper-mockup.html) (aprilo nel browser).
 
@@ -34,7 +34,9 @@ Per usare ZNoteKeeper serve il via libera dell'amministratore del sito, poi ogni
 4. Se vuole, attiva anche il **recupero via email** (vedi la sezione successiva).
 5. Installa l'app sul telefono o sul PC e, se lo desidera, attiva lo sblocco con impronta o volto.
 
-La password delle note non viene mai salvata da nessuna parte, neppure cifrata: il sistema conserva solo una sua «impronta» che permette di riconoscerla, non di ricostruirla.
+La password delle note non lascia mai il tuo dispositivo e non viene salvata da nessuna parte: la cifratura avviene nel browser e il sito riceve solo dati già cifrati.
+
+**Cosa protegge e cosa no.** ZNoteKeeper protegge le note da chi ottiene il database, un backup o l'accesso in lettura al server, e da un amministratore curioso. Non protegge da un amministratore che modifica di proposito il codice del plugin per catturare la password: per questo va installato su un sito di cui ti fidi.
 
 ## Password e recupero
 
@@ -48,7 +50,9 @@ flowchart LR
   K["Chiave del tuo spazio<br/><small>conservata solo chiusa a chiave</small>"] --> D["I tuoi dati<br/><small>note, attività, disegni, email: sempre cifrati</small>"]
 ```
 
-Se dimentichi la password non perdi nulla, purché tu abbia il codice di recupero. L'amministratore non entra mai in nessuno dei tre percorsi.
+Se dimentichi la password non perdi nulla, purché tu abbia il codice di recupero.
+
+Dopo 5 password sbagliate l'app impone un'attesa crescente; dopo 10 si blocca e ti avvisa via email. Per le azioni delicate (nuovo codice, recupero via email, cambio password, dispositivi, backup) la password viene chiesta di nuovo anche ad app aperta.
 
 **Codice di recupero (consigliato)**
 
@@ -59,14 +63,16 @@ Se dimentichi la password non perdi nulla, purché tu abbia il codice di recuper
 
 **Link via email (facoltativo)**
 
-Il link è comodo ma meno riservato del codice, perché chi controlla la tua casella e il server potrebbe usarlo. Per questo è spento finché non lo attivi e ha diverse protezioni:
+Il link è comodo ma meno riservato del codice: per farlo funzionare il sito deve conservare una copia protetta della tua chiave, cosa che senza link non avviene. Per questo è spento finché non lo attivi e ha diverse protezioni:
+
+- È legato all'indirizzo email che hai quando lo attivi. Se l'email o la password del tuo utente WordPress vengono cambiate, il recupero si spegne da solo e ricevi un avviso.
 
 - Funziona solo se hai già effettuato l'accesso a WordPress con il tuo utente.
 - Vale una sola volta e scade dopo 30 minuti.
 - Dopo il clic parte un'**attesa di 24 ore**: ricevi un avviso via email e sui dispositivi già collegati, e puoi annullare il recupero se non l'hai chiesto tu.
 - A recupero completato tutti gli altri dispositivi vengono scollegati.
 
-**Se perdi sia la password che il codice** (e non hai attivato il link), i dati non si possono più aprire. È il prezzo della riservatezza: nessuno, nemmeno chi gestisce il sito, ha una copia della chiave. L'amministratore può solo cancellare lo spazio e farti ripartire da zero.
+**Se perdi sia la password che il codice** (e non hai attivato il link), i dati non si possono più aprire. È il prezzo della riservatezza: senza il link attivo nessuno, nemmeno chi gestisce il sito, ha una copia della chiave. L'amministratore può solo cancellare lo spazio e farti ripartire da zero.
 
 **Cambiare la password** è immediato: le note restano come sono, cambia solo la serratura che apre la chiave.
 
@@ -85,12 +91,17 @@ Il Taccuino ordina le note su tre livelli: **gruppi di sezioni**, **sezioni** e 
 
 - Aprire l'albero delle sezioni dal menu in alto a sinistra, chiudere e riaprire i gruppi.
 - Creare gruppi e sezioni, scegliere il colore della sezione, rinominarle, spostare una sezione in un altro gruppo.
-- Creare pagine, spostarle in un'altra sezione, trasformarle in sottopagine o eliminarle (con possibilità di annullare).
+- Creare pagine, spostarle in un'altra sezione, trasformarle in sottopagine, ordinarle a mano, per data o per titolo.
+- Eliminare una pagina: finisce nel **Cestino**, dove resta 30 giorni prima di sparire.
+- Segnare le pagine **preferite**, ritrovare le **recenti** e assegnare **etichette**.
+- Consultare la **cronologia delle versioni** di una pagina e ripristinarne una precedente.
 - Tenere sezioni fuori dai gruppi, come **Posta in arrivo** dove arrivano le email.
 
 **Scrivere una pagina**
 
-L'editor è visuale: scrivi e formatti come in un normale programma di videoscrittura, senza codici da ricordare. La barra in basso offre titoli, grassetto, corsivo, barrato, codice, elenchi puntati e numerati, caselle da spuntare, citazioni e l'inserimento di un disegno.
+L'editor è visuale: scrivi e formatti come in un normale programma di videoscrittura, senza codici da ricordare. La barra degli strumenti (in basso sul telefono, in alto sul PC) offre titoli, grassetto, corsivo, barrato, codice, elenchi puntati e numerati, caselle da spuntare, citazioni, **link**, **tabelle**, **immagini e foto** e l'inserimento di un disegno.
+
+Una casella da spuntare può diventare un'**attività** con scadenza: resta collegata alla pagina, e dall'attività si torna alla pagina con un tocco.
 
 Il testo viene salvato in **Markdown**, un formato di testo semplice e aperto. Significa che le tue note restano leggibili con qualsiasi programma anche fuori da ZNoteKeeper, per esempio dopo un'esportazione. Il pulsante **Markdown** sulla pagina mostra il testo esattamente come viene salvato, prima di essere cifrato.
 
@@ -104,8 +115,8 @@ Le Attività sono liste di cose da fare con scadenze, pensate per essere spuntat
 - **Speciali**: la stella su un'attività la porta nella vista Speciali, che raccoglie le stelle di tutte le liste.
 - **Scadenza**: data e, se serve, ora. Le scadute sono in rosso, quelle di oggi in arancio. All'ora indicata ricevi un promemoria.
 - **Ripetizione**: ogni giorno, settimana, mese o anno. Quando completi un'attività ricorrente compare subito la successiva.
-- **Sotto-attività**: un livello sotto l'attività principale, ciascuna da spuntare a parte.
-- **Dettagli**: un campo di testo libero per appunti, salvato anch'esso in Markdown.
+- **Sotto-attività**: un livello sotto l'attività principale, ciascuna da spuntare a parte, con scadenza propria. Si riordinano e si possono promuovere ad attività.
+- **Dettagli**: appunti scritti con lo stesso editor visuale delle pagine, salvati in Markdown.
 - **Completare**: tocchi il cerchio, l'attività scende in «Completate» e per qualche secondo puoi annullare.
 - **Riordinare**: trascini la maniglia a sinistra. In alternativa ordini la lista per data di scadenza.
 - **Spostare**: dal dettaglio sposti un'attività in un'altra lista.
@@ -114,7 +125,8 @@ Le Attività sono liste di cose da fare con scadenze, pensate per essere spuntat
 
 Puoi disegnare con il dito, un pennino, il mouse o una tavoletta grafica dentro una pagina del Taccuino o dentro un'attività.
 
-- Strumenti: penna, evidenziatore trasparente e gomma.
+- Strumenti: penna, evidenziatore trasparente, gomma, linea e rettangolo.
+- Il foglio ha la stessa dimensione su telefono e PC: un disegno iniziato su uno si continua sull'altro senza perdere qualità.
 - Sei colori e uno spessore regolabile.
 - Annulla e ripristina tratto per tratto, oppure cancella tutto il foglio.
 - **Salva** inserisce il disegno nella pagina nel punto in cui stavi scrivendo, o tra i disegni dell'attività.
@@ -126,10 +138,11 @@ Anche i disegni sono cifrati come il resto delle note.
 
 Ogni utente ha un indirizzo email personale, per esempio `note-7f3k9q@note.tuodominio.it`: inoltri un messaggio a quell'indirizzo e dopo qualche minuto lo ritrovi come nota.
 
-- **Cosa viene importato**: l'oggetto diventa il titolo, il corpo diventa il testo. Allegati, immagini e firme grafiche vengono scartati.
+- **Cosa viene importato**: l'oggetto diventa il titolo, il corpo diventa il testo. Le firme grafiche vengono scartate. Per gli allegati scegli tu: ignorarli, elencarne i nomi nella nota o importare PDF e immagini.
+- **Smistamento**: una parola con il cancelletto nell'oggetto, per esempio `#ricette`, manda la nota nella sezione o nella lista con quel nome.
 - **Dove finisce**: lo scegli tu. Come nuova pagina in una sezione (di solito Posta in arrivo) oppure come nuova attività in una lista.
-- **Chi può scrivere**: solo i mittenti che hai autorizzato, per esempio i tuoi indirizzi personali e di lavoro. Le email da altri indirizzi vengono scartate senza creare note.
-- **Riservatezza**: l'email viene chiusa nella tua cassaforte appena arriva, anche se in quel momento non hai l'app aperta. Da quel momento la può leggere solo chi conosce la tua password.
+- **Chi può scrivere**: solo i mittenti che hai autorizzato, verificati con i controlli antifalsificazione della posta (SPF e DKIM). Le altre email vengono scartate. C'è un limite di messaggi all'ora e puoi rigenerare l'indirizzo personale se finisce in mani sbagliate.
+- **Riservatezza**: fino al sito l'email viaggia come ogni email, quindi non cifrata. Appena arriva viene chiusa nella tua cassaforte e cancellata dalla casella: da quel momento la può leggere solo chi conosce la tua password.
 - Le note arrivate via email hanno una busta accanto al titolo e indicano mittente e ora di arrivo.
 
 ## App sul telefono e sul PC, ricerca e blocco
@@ -139,7 +152,9 @@ Ogni utente ha un indirizzo email personale, per esempio `note-7f3k9q@note.tuodo
 - Android (Chrome): tocca **Installa app** nel banner o nel menu ⋮.
 - iPhone (Safari): tocca **Condividi**, poi **Aggiungi alla schermata Home**. I promemoria delle scadenze arrivano solo se l'app è stata aggiunta così.
 
-Una volta installata si apre a schermo intero e mostra le note già scaricate anche senza connessione.
+Una volta installata si apre a schermo intero. **Senza connessione** puoi leggere e cercare tutto ciò che è già sul dispositivo; per modificare serve la rete. In questo modo telefono e PC non possono mai andare in conflitto.
+
+L'app installata resta collegata al sito a lungo: all'apertura chiede solo lo sblocco, non il login di WordPress.
 
 **Sul PC.** Con Chrome o Edge si clicca l'icona **Installa** nella barra degli indirizzi: ZNoteKeeper compare nel menu Start o nel Launchpad e si apre in una finestra sua, senza schede né barra del browser. Lo schermo grande viene sfruttato a colonne:
 
@@ -153,9 +168,11 @@ I dati sono gli stessi su tutti i dispositivi: una nota scritta sul telefono si 
 
 **Ricerca.** Un'unica casella cerca nei titoli e nei testi di tutte le pagine e di tutte le attività, evidenziando le parole trovate.
 
-**Blocco automatico.** Dopo un tempo di inattività che scegli tu (subito, 1, 5 o 15 minuti) l'app si richiude e chiede di nuovo la password, oppure l'impronta o il volto se li hai attivati. Il lucchetto in alto la chiude subito.
+**Blocco automatico.** Dopo un tempo di inattività che scegli tu (subito, 1, 5 o 15 minuti) l'app si richiude e chiede di nuovo la password, oppure l'impronta, il volto o un PIN breve se li hai attivati. Il lucchetto in alto la chiude subito.
 
-**Backup.** Da Impostazioni puoi scaricare una copia di tutto in un file cifrato, che si apre solo con la tua password.
+**Promemoria.** Le notifiche inviate dal sito dicono solo «hai un'attività in scadenza», perché il sito non può leggere i titoli. Il titolo compare nei promemoria preparati dal dispositivo quando l'app è stata aperta di recente.
+
+**Backup ed esportazione.** Da Impostazioni puoi scaricare una copia di tutto in un file cifrato, che si apre solo con la tua password, e ripristinarla. Puoi anche esportare le note come file Markdown leggibili, per usarle con altri programmi.
 
 ## Casi d'uso
 
@@ -196,7 +213,7 @@ Ogni caso descrive chi agisce, cosa vuole ottenere e i passi nell'app.
 
 ## Domande frequenti
 
-**L'amministratore del sito può leggere le mie note?** No. Può abilitarti, disabilitarti o cancellare il tuo spazio, ma i contenuti per lui sono illeggibili.
+**L'amministratore del sito può leggere le mie note?** Nel database e nei backup del sito le note sono illeggibili anche per lui. Solo un amministratore che modificasse di proposito il codice del plugin potrebbe aggirare la protezione.
 
 **La password delle note è la stessa di WordPress?** No, sono due password separate. Quella di WordPress ti fa entrare nel sito, quella delle note apre il tuo spazio.
 
@@ -206,7 +223,9 @@ Ogni caso descrive chi agisce, cosa vuole ottenere e i passi nell'app.
 
 **Quali informazioni non sono cifrate?** Solo quelle che servono a ordinare e ad avvisarti: le date di scadenza, lo stato completato, l'ordine e il colore delle sezioni. Titoli, testi, disegni ed email sono sempre cifrati. L'elenco definitivo sarà fissato nell'analisi.
 
-**Posso portare via le mie note?** Sì, con il backup cifrato. Il testo, essendo in Markdown, resta leggibile anche con altri programmi una volta decifrato.
+**Posso portare via le mie note?** Sì: con il backup cifrato, oppure con l'esportazione in file Markdown leggibili da qualsiasi programma.
+
+**Posso scrivere senza rete?** No. Senza rete l'app è in sola lettura: vedi e cerchi quello che è già sul dispositivo.
 
 ## Glossario
 
