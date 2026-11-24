@@ -1,5 +1,4 @@
-<!doctype html>
-<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
 <title>ZNoteKeeper</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -255,6 +254,15 @@ details.crypto summary::-webkit-details-marker{display:none}
 .editor ul.todo li.done::before{background:var(--accent);border-color:var(--accent)}
 .editor ul.todo li.done::after{content:"";position:absolute;left:6px;top:6px;width:5px;height:9px;border:solid var(--accent-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}
 .editor img.sketch{display:block;max-width:100%;border-radius:12px;border:1px solid var(--line);background:var(--paper);margin:6px 0 12px;cursor:pointer}
+.editor table{border-collapse:collapse;width:100%;margin:0 0 10px}
+.editor th,.editor td{border:1px solid var(--line);padding:6px 8px;text-align:left;min-width:40px}
+.editor th{background:var(--surface-2);font-weight:700}
+.editor a{color:var(--accent);text-underline-offset:3px}
+.editor img.photo{max-width:100%;border-radius:12px;display:block;margin:6px 0 12px}
+.tlink{font-size:11px;font-weight:700;background:var(--accent-soft);color:var(--accent);padding:1px 8px;border-radius:999px;margin-left:6px;cursor:pointer;display:inline-block;text-decoration:none}
+.app.desk .sectabs{display:none}
+.tagchip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.tagchip.add{color:var(--accent);border-style:dashed}
 .mdview{font-family:var(--f-mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;background:var(--surface-2);border-radius:12px;padding:14px;margin:0 0 12px}
 .mdnote{font-size:12px;color:var(--muted);margin:0 0 8px}
 .etools{flex:none;display:flex;gap:2px;overflow-x:auto;padding:6px 8px;border-top:1px solid var(--line);background:var(--surface);scrollbar-width:none}
@@ -265,7 +273,33 @@ details.crypto summary::-webkit-details-marker{display:none}
 
 /* draw */
 .paper{flex:1;margin:0 12px;border-radius:16px;background-color:var(--paper);background-image:radial-gradient(var(--paper-dot) 1.2px,transparent 1.3px);background-size:22px 22px;position:relative;overflow:hidden;touch-action:none;min-height:0;border:1px solid var(--line)}
-.paper canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.paper{display:grid;place-items:center}
+.paper canvas{touch-action:none;background:#fff;border-radius:4px;box-shadow:0 1px 8px rgba(0,0,0,.2)}
+.notes-in.rich{min-height:44px;overflow:visible;padding-bottom:6px}
+.notes-in.rich:empty::before{content:attr(data-ph);color:var(--muted)}
+.notes-in.rich ul{padding-left:20px;margin:4px 0}
+.ntools{display:flex;gap:4px;margin:0 0 8px}
+.ntools button{min-width:40px;height:34px;border-radius:8px;font-weight:800;font-size:13px;color:var(--muted);display:grid;place-items:center}
+.ntools button:hover{background:var(--surface-2)}
+.datebtn{position:relative;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;font-weight:600;cursor:pointer}
+.datebtn.empty{color:var(--muted);font-weight:500}
+.frow .datebtn input[type],.datebtn input[type]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:0;padding:0;margin:0}
+.datebtn input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer}
+.subrow .mini{position:relative}
+.subrow .mini::after{content:"";position:absolute;inset:-12px}
+.lockerr{min-height:20px;margin-top:10px;font-size:13px;font-weight:600;color:var(--danger)}
+.ack{display:flex;gap:10px;align-items:flex-start;margin-top:14px;font-size:14px;cursor:pointer}
+.ack input{width:20px;height:20px;margin-top:1px;accent-color:var(--accent);flex:none}
+.offrow{display:flex;align-items:center;gap:10px;font-size:14px}
+.offbar{position:absolute;top:6px;left:50%;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:6px;white-space:nowrap;background:var(--ink);color:var(--surface);font-size:12px;font-weight:700;padding:5px 12px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.offbar .i{width:14px;height:14px}
+.sfilters{display:flex;gap:6px;overflow-x:auto;padding:0 16px 10px;scrollbar-width:none;flex:none}
+.fchip{padding:7px 13px;border-radius:999px;border:1px solid var(--line);font-size:13px;font-weight:600;flex:none}
+.fchip[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.srow[data-act]{cursor:pointer}
+.app.desk [data-screen=page] .statusbar,.app.desk [data-screen=page] .topbar{order:-2}
+.app.desk [data-screen=page] .etools{order:-1;border-top:0;border-bottom:1px solid var(--line)}
+.app.desk .sfilters{max-width:760px;margin:0 auto;width:calc(100% - 32px);padding-left:0;padding-right:0}
 .dtools{flex:none;padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
 .dtools .r{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .tool{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line)}
@@ -423,6 +457,17 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
   <symbol id="i-finger" viewBox="0 0 24 24"><path d="M7 11a5 5 0 0 1 10 0v2M12 11v4c0 2.5-1 4.5-2.5 6M9 13c0 3-.6 5-1.8 6.7M15 14c0 2.5-.4 4.4-1.2 6M4.5 9A8 8 0 0 1 19.5 9M4 14v-2"/></symbol>
   <symbol id="i-sub" viewBox="0 0 24 24"><path d="M6 4v8a3 3 0 0 0 3 3h9M15 12l3 3-3 3"/></symbol>
   <symbol id="i-move" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM10 13h6M13.5 10.5L16 13l-2.5 2.5"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-table" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M3 15h18M9 5v14M15 5v14"/></symbol>
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.5"/><path d="M4 17l5-4 4 3 3-2 4 3"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4v4h4M12 8v4.5l3 1.8"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M4 4h7l9 9-7 7-9-9z"/><path d="M8 8h.01" stroke-width="3"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-wifi-off" viewBox="0 0 24 24"><path d="M3 3l18 18M8.5 16.5a5 5 0 0 1 7 0M5 13a10 10 0 0 1 4.2-2.5M19 13a10 10 0 0 0-5-2.7M2 9.5A15 15 0 0 1 6.5 6.6M22 9.5A15 15 0 0 0 11 5M12 20h.01"/></symbol>
+  <symbol id="i-rect" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="1.5"/></symbol>
+  <symbol id="i-line" viewBox="0 0 24 24"><path d="M5 19L19 5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></symbol>
   <symbol id="i-md" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M6 15V9l2.5 3L11 9v6M16.5 9v6M14.5 13l2 2 2-2"/></symbol>
 </svg>
 
@@ -432,13 +477,14 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
       <div class="logo">ZN</div>
       <div>
         <h1>ZNoteKeeper</h1>
-        <p>Mockup interattivo · bozza 0.3 · 24 novembre 2026</p>
+        <p>Mockup interattivo · bozza 0.4 · 24 novembre 2026</p>
       </div>
     </div>
     <p class="intro">Plugin WordPress per note e attività riservate, usato come app installata (PWA) sul telefono e sul PC. Il mockup è cliccabile: i contenuti sono esempi e nulla viene salvato.</p>
     <div class="devtoggle"><p class="eyebrow">Anteprima</p>
       <div class="seg" role="group" aria-label="Dispositivo"><button data-act="dev" data-dev="phone" aria-pressed="true">Telefono</button><button data-act="dev" data-dev="pc" aria-pressed="false">PC</button></div>
       <p class="ok" id="devNote">Sul telefono: una schermata alla volta, barra di navigazione in basso.</p></div>
+    <div class="offrow"><label class="switch"><input type="checkbox" id="offSw" aria-label="Simula assenza di rete"><span></span></label><span>Simula assenza di rete (sola lettura)</span></div>
 
     <div>
       <p class="eyebrow">Schermate</p>
@@ -461,14 +507,18 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
     <div class="notes-box" id="notesBox" aria-live="polite"></div>
 
     <div>
-      <p class="eyebrow">Da decidere nell'analisi</p>
+      <p class="eyebrow">Deciso</p>
       <ol class="qs">
-        <li><b>Recupero via email</b><span>Deciso: ogni utente sceglie la propria password e il server non può leggere i dati. Il link via email però richiede una copia della chiave custodita dal server: confermare che resti facoltativo, spento di default e con attesa di 24 ore.</span></li>
-        <li><b>Come arriva la posta</b><span>Lettura della casella via IMAP ogni pochi minuti con WP-Cron, oppure webhook "inbound" di un servizio di invio email.</span></li>
-        <li><b>Email in arrivo e cifratura</b><span>Le email arrivano quando l'utente non ha l'app aperta: vanno chiuse con una chiave pubblica dell'utente, che solo la sua password può riaprire.</span></li>
-        <li><b>Note e attività</b><span>Nel mockup sono due aree collegate (una checklist in una pagina resta nella pagina). Valutare se una casella di una pagina può diventare un'attività con scadenza.</span></li>
-        <li><b>Formato dei disegni</b><span>Immagine PNG cifrata, oppure tratti vettoriali (più leggeri e modificabili in seguito).</span></li>
-        <li><b>Offline e notifiche</b><span>Modifiche senza rete da sincronizzare dopo; promemoria di scadenza via notifica push (su iPhone solo con l'app aggiunta alla Home).</span></li>
+        <li><b>Cifratura nel browser</b><span>I dati vengono cifrati sul dispositivo prima di partire: il server riceve e conserva solo testo illeggibile. Protegge dal furto del database e dagli occhi curiosi, non da chi modificasse il plugin.</span></li>
+        <li><b>Recupero via email legato all'indirizzo</b><span>Facoltativo e spento di default. Vale per l'email che l'utente ha al momento dell'attivazione: se cambia email o password di WordPress si spegne da solo.</span></li>
+        <li><b>Senza rete: sola lettura</b><span>Si leggono le note già scaricate sul dispositivo. Per scrivere serve la rete, così non nascono conflitti tra dispositivi.</span></li>
+        <li><b>Tutte le funzioni nella prima versione</b><span>Cestino, preferiti, etichette, cronologia, tabelle, link, immagini, casella → attività, promemoria, esportazione Markdown.</span></li>
+        <li><b>Disegni</b><span>Tratti vettoriali su un foglio di misura fissa, uguale su telefono e PC, più un'anteprima. Tutto cifrato.</span></li>
+      </ol>
+      <p class="eyebrow" style="margin-top:18px">Ancora aperto</p>
+      <ol class="qs">
+        <li><b>Come arriva la posta</b><span>Lettura della casella via IMAP ogni pochi minuti, oppure webhook di un servizio email. Dipende dall'hosting.</span></li>
+        <li><b>Impronta e volto</b><span>Lo sblocco biometrico dipende dal dispositivo e dal browser: da verificare su iPhone.</span></li>
       </ol>
     </div>
     <p class="disclaimer">Lo stile è originale: le funzioni sono ispirate a un gestore di attività e a un taccuino a sezioni, senza riprodurne l'aspetto.</p>
@@ -477,6 +527,7 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
   <div class="device">
     <div class="wintitle"><span class="logo">ZN</span>ZNoteKeeper<span class="grow"></span><span class="wb">–</span><span class="wb">▢</span><span class="wb">✕</span></div>
     <div class="app" id="app">
+      <div class="offbar" id="offBar" hidden><svg class="i"><use href="#i-wifi-off"/></svg>Senza rete · sola lettura</div>
       <aside id="deskTree" hidden aria-label="Gruppi e sezioni"></aside>
       <section class="screen" data-screen="empty" hidden><div class="empty" id="emptyMsg" style="margin:auto"></div></section>
 
@@ -484,12 +535,13 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
       <section class="screen lock" data-screen="lock" hidden>
         <div class="logo">ZN</div>
         <h2>Bentornato</h2>
-        <p>Le tue note sono cifrate. Inserisci la password delle note per aprirle su questo telefono.</p>
+        <p>Le tue note sono cifrate. Inserisci la password delle note per aprirle su questo dispositivo.</p>
         <form id="unlockForm">
           <input class="field-in" id="pass" type="password" placeholder="Password delle note" autocomplete="current-password" aria-label="Password delle note">
           <button class="btn primary" type="submit" id="unlockBtn">Sblocca</button>
         </form>
-        <button class="bio" data-act="unlock">${ICON}</button>
+        <div class="lockerr" id="lockErr" role="alert"></div>
+        <button class="bio" data-act="unlock-bio">${ICON}</button>
         <button class="forgot" data-act="forgot">Password dimenticata?</button>
         <div class="tiny"><svg class="i sm"><use href="#i-shield"/></svg>Si blocca da solo dopo 5 minuti di inattività</div>
       </section>
@@ -513,6 +565,7 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
         <div class="topbar">
           <button class="ib" data-act="back-notes" aria-label="Indietro"><svg class="i"><use href="#i-back"/></svg></button>
           <div class="grow" style="display:flex;align-items:center;gap:8px"><span class="dot" id="pDot"></span><span class="crumb" id="pCrumb"></span></div>
+          <button class="ib" data-act="page-fav" id="pFav" aria-label="Preferita"><svg class="i"><use href="#i-star"/></svg></button>
           <button class="ib" data-act="page-menu" aria-label="Altre azioni"><svg class="i"><use href="#i-more"/></svg></button>
         </div>
         <div class="scroll">
@@ -524,6 +577,8 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
                 <button id="modeMd" aria-pressed="false" data-act="mode" data-mode="md">Markdown</button>
               </div>
             </div>
+            <div class="chips" id="pTags" style="margin:0 0 12px"></div>
+            <input type="file" id="imgFile" accept="image/*" hidden aria-label="Scegli immagine">
             <div id="pMail"></div>
             <div id="pEditor" class="editor" contenteditable="true" aria-label="Testo della pagina"></div>
             <div id="pMdWrap" hidden>
@@ -550,8 +605,12 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
           <button data-cmd="ol" title="Elenco numerato" aria-label="Elenco numerato"><svg class="i"><use href="#i-ol"/></svg></button>
           <button data-cmd="todo" title="Caselle da spuntare" aria-label="Caselle da spuntare"><svg class="i"><use href="#i-todo"/></svg></button>
           <button data-cmd="quote" title="Citazione" aria-label="Citazione"><svg class="i"><use href="#i-quote"/></svg></button>
+          <button data-cmd="link" title="Link" aria-label="Link"><svg class="i"><use href="#i-link"/></svg></button>
+          <button data-cmd="table" title="Tabella" aria-label="Tabella"><svg class="i"><use href="#i-table"/></svg></button>
           <span class="sep"></span>
+          <button data-cmd="image" title="Immagine o foto" aria-label="Immagine o foto"><svg class="i"><use href="#i-photo"/></svg></button>
           <button data-cmd="sketch" title="Inserisci disegno" aria-label="Inserisci disegno"><svg class="i"><use href="#i-pen"/></svg></button>
+          <button data-cmd="totask" title="Trasforma la casella in attività" aria-label="Trasforma la casella in attività"><svg class="i"><use href="#i-tasks"/></svg></button>
         </div>
       </section>
 
@@ -579,12 +638,14 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
         <div class="scroll">
           <div class="form">
             <textarea id="dTitle" class="title-in" rows="1" placeholder="Titolo" aria-label="Titolo attività"></textarea>
-            <textarea id="dNotes" class="notes-in" rows="2" placeholder="Aggiungi dettagli" aria-label="Dettagli"></textarea>
+            <div id="dNotes" class="notes-in rich" contenteditable="true" role="textbox" aria-multiline="true" data-ph="Aggiungi dettagli" aria-label="Dettagli"></div>
+            <div class="ntools" id="dNTools" aria-label="Formattazione dettagli"><button data-ncmd="bold" aria-label="Grassetto">B</button><button data-ncmd="italic" aria-label="Corsivo" style="font-style:italic;font-family:Georgia,serif">I</button><button data-ncmd="insertUnorderedList" aria-label="Elenco puntato"><svg class="i sm"><use href="#i-list"/></svg></button></div>
             <div id="dMail"></div>
             <div class="frow"><svg class="i"><use href="#i-cal"/></svg>
               <div class="grow" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-                <input type="date" id="dDate" aria-label="Data di scadenza"><input type="time" id="dTime" aria-label="Ora">
-                <button class="ib" data-act="clear-date" aria-label="Togli data" style="width:34px;height:34px"><svg class="i sm"><use href="#i-close"/></svg></button>
+                <label class="datebtn" id="dDateBtn"><span id="dDateLab"></span><input type="date" id="dDate" aria-label="Data di scadenza"></label>
+                <label class="datebtn" id="dTimeBtn"><span id="dTimeLab"></span><input type="time" id="dTime" aria-label="Ora"></label>
+                <button class="ib" data-act="clear-date" id="dClear" aria-label="Togli data" style="width:44px;height:44px"><svg class="i sm"><use href="#i-close"/></svg></button>
               </div>
             </div>
             <div class="frow"><svg class="i"><use href="#i-repeat"/></svg>
@@ -629,6 +690,8 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
             <button class="tool" data-tool="pen" aria-pressed="true" aria-label="Penna"><svg class="i"><use href="#i-pen"/></svg></button>
             <button class="tool" data-tool="hl" aria-pressed="false" aria-label="Evidenziatore"><svg class="i"><use href="#i-hl"/></svg></button>
             <button class="tool" data-tool="eraser" aria-pressed="false" aria-label="Gomma"><svg class="i"><use href="#i-eraser"/></svg></button>
+            <button class="tool" data-tool="line" aria-pressed="false" aria-label="Linea dritta"><svg class="i"><use href="#i-line"/></svg></button>
+            <button class="tool" data-tool="rect" aria-pressed="false" aria-label="Rettangolo"><svg class="i"><use href="#i-rect"/></svg></button>
             <span style="flex:1"></span>
             <button class="tool" data-act="draw-clear" aria-label="Cancella tutto"><svg class="i"><use href="#i-trash"/></svg></button>
           </div>
@@ -642,6 +705,7 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
         <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
         <div class="topbar"><div class="grow" style="padding-left:8px"><div class="apptitle">Cerca</div></div></div>
         <label class="searchbox"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Cerca in pagine e attività" value="cifr" aria-label="Cerca"></label>
+        <div class="sfilters" id="sFilters"></div>
         <div class="scroll" id="searchRes"></div>
       </section>
 
@@ -651,7 +715,7 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
         <div class="topbar"><div class="grow" style="padding-left:8px"><div class="apptitle">Impostazioni</div></div></div>
         <div class="scroll" id="setScroll">
           <div class="sect">
-            <div class="secure"><svg class="i"><use href="#i-shield"/></svg><div><b>Tutti i dati sono cifrati</b><span>Titoli, testi, disegni ed email importate sono salvati nel database WordPress solo in forma cifrata (AES-256-GCM).</span></div></div>
+            <div class="secure"><svg class="i"><use href="#i-shield"/></svg><div><b>Tutti i dati sono cifrati nel browser</b><span>Titoli, testi, disegni, immagini ed email vengono cifrati su questo dispositivo prima di partire (AES-256-GCM): nel database WordPress arriva solo testo illeggibile. Protegge dal furto del database e dagli occhi curiosi, non da chi modificasse il plugin stesso.</span></div></div>
           </div>
 
           <div class="sect" id="emailSect">
@@ -660,10 +724,16 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
               <div class="srow"><svg class="i"><use href="#i-mail"/></svg><div class="grow">
                 <div class="lab">Inoltra a questo indirizzo</div>
                 <div class="addr" id="addr">note-7f3k9q@note.tuodominio.it</div>
+                <div class="hint">Segreto e solo tuo. Se finisce in mani sbagliate, <button class="linkbtn" data-act="regen-addr" style="padding:0;display:inline">creane uno nuovo</button>.</div>
               </div><button class="ib" data-act="copy-addr" aria-label="Copia indirizzo"><svg class="i"><use href="#i-copy"/></svg></button></div>
               <div class="srow"><div class="grow">
                 <div class="lab">Cosa viene importato</div>
-                <div class="flow"><span>Oggetto → titolo</span><span>Corpo → testo (Markdown)</span><s>allegati</s><s>immagini</s><s>firma HTML</s></div>
+                <div class="flow"><span>Oggetto → titolo</span><span>Corpo → testo (Markdown)</span><s>firma HTML</s></div>
+                <select id="attSel" aria-label="Allegati" style="margin-top:8px;width:100%"><option selected>Scarta allegati e immagini</option><option>Importa anche le immagini (fino a 5 MB)</option><option>Importa immagini e PDF (fino a 10 MB)</option></select>
+              </div></div>
+              <div class="srow"><div class="grow">
+                <div class="lab">Smistamento con #parola</div>
+                <div class="hint">Scrivi <b>#ricette</b> o <b>#lavoro</b> nell'oggetto: l'email va nella sezione o nella lista con quel nome e la parola sparisce dal titolo. Senza #parola finisce nella destinazione qui sotto.</div>
               </div></div>
               <div class="srow"><div class="grow">
                 <div class="lab">Dove finisce</div>
@@ -671,12 +741,12 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
               </div></div>
               <div class="srow"><div class="grow">
                 <div class="lab">Mittenti ammessi</div>
-                <div class="hint">Le email da altri indirizzi vengono scartate.</div>
+                <div class="hint">Le email da altri indirizzi vengono scartate, e anche quelle che non superano i controlli di autenticità del mittente (SPF/DKIM).</div>
                 <div class="senders" id="senders"></div>
               </div></div>
               <div class="srow"><div class="grow">
                 <div class="lab">Controllo casella</div>
-                <div class="hint">Ultimo controllo: 2 minuti fa · ogni 5 minuti</div>
+                <div class="hint">Ultimo controllo: 2 minuti fa · ogni 5 minuti · al massimo 30 email l'ora. Ogni email viene cifrata all'arrivo con la tua chiave pubblica e poi cancellata dalla casella.</div>
               </div><button class="btn ghost" data-act="sim-mail" style="height:36px;padding:0 12px;font-size:13px">Prova invio</button></div>
             </div>
           </div>
@@ -686,24 +756,28 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
             <div class="card">
               <div class="srow"><svg class="i"><use href="#i-lock"/></svg><div class="grow"><div class="lab">Blocco automatico</div></div>
                 <select id="autolock" aria-label="Blocco automatico"><option>Subito</option><option>1 minuto</option><option selected>5 minuti</option><option>15 minuti</option></select></div>
-              <div class="srow"><svg class="i"><use href="#i-finger"/></svg><div class="grow"><div class="lab">Sblocco con impronta o volto</div><div class="hint">Su questo telefono</div></div>
+              <div class="srow"><svg class="i"><use href="#i-finger"/></svg><div class="grow"><div class="lab">Sblocco con impronta o volto</div><div class="hint">Solo su questo dispositivo, dove il browser lo consente</div></div>
                 <label class="switch"><input type="checkbox" id="bio" checked aria-label="Sblocco biometrico"><span></span></label></div>
+              <div class="srow"><svg class="i"><use href="#i-key"/></svg><div class="grow"><div class="lab">PIN rapido</div><div class="hint">6 cifre, solo su questo dispositivo. Dopo 5 errori serve la password</div></div>
+                <label class="switch"><input type="checkbox" id="pin" aria-label="PIN rapido"><span></span></label></div>
+              <div class="srow"><svg class="i"><use href="#i-phone"/></svg><div class="grow"><div class="lab">Resta sbloccato dopo la chiusura</div><div class="hint">Su un PC condiviso lascia "Mai"</div></div>
+                <select id="keep" aria-label="Resta sbloccato"><option selected>Mai</option><option>8 ore</option><option>7 giorni</option></select></div>
               <div class="srow"><svg class="i"><use href="#i-shield"/></svg><div class="grow"><div class="lab">Codice di recupero</div><div class="hint">Creato il 24 nov · quello vecchio smette di valere</div></div><button class="btn ghost" data-act="new-code" style="height:36px;padding:0 12px;font-size:13px">Nuovo</button></div>
-              <div class="srow"><svg class="i"><use href="#i-mail"/></svg><div class="grow"><div class="lab">Recupero via email</div><div class="hint">Facoltativo · link monouso con 24 ore di attesa</div></div>
+              <div class="srow"><svg class="i"><use href="#i-mail"/></svg><div class="grow"><div class="lab">Recupero via email</div><div class="hint" id="mailrecHint">Spento · il server non conserva nulla della tua chiave</div></div>
                 <label class="switch"><input type="checkbox" id="mailrec" aria-label="Recupero via email"><span></span></label></div>
               <div class="srow"><svg class="i"><use href="#i-phone"/></svg><div class="grow"><div class="lab">Dispositivi collegati</div><div class="hint">Questo telefono · portatile di casa</div></div><button class="btn ghost" data-act="devices" style="height:36px;padding:0 12px;font-size:13px">Gestisci</button></div>
-              <div class="srow"><svg class="i"><use href="#i-key"/></svg><div class="grow"><div class="lab">Cambia password delle note</div><div class="hint">Immediato: le note restano come sono</div></div><svg class="i"><use href="#i-back" transform="rotate(180 12 12)"/></svg></div>
-              <div class="srow"><svg class="i"><use href="#i-download"/></svg><div class="grow"><div class="lab">Esporta backup cifrato</div><div class="hint">File .znk leggibile solo con la tua password</div></div><svg class="i"><use href="#i-back" transform="rotate(180 12 12)"/></svg></div>
+              <div class="srow" data-act="chg-pass" role="button" tabindex="0"><svg class="i"><use href="#i-key"/></svg><div class="grow"><div class="lab">Cambia password delle note</div><div class="hint">Immediato: le note restano come sono</div></div><svg class="i"><use href="#i-back" transform="rotate(180 12 12)"/></svg></div>
+              <div class="srow" data-act="backup" role="button" tabindex="0"><svg class="i"><use href="#i-download"/></svg><div class="grow"><div class="lab">Backup ed esportazione</div><div class="hint">Backup cifrato .znk, esportazione in Markdown, ripristino</div></div><svg class="i"><use href="#i-back" transform="rotate(180 12 12)"/></svg></div>
             </div>
           </div>
 
           <div class="sect">
             <h3>App sul telefono e sul PC</h3>
             <div class="card">
-              <div class="srow"><svg class="i"><use href="#i-phone"/></svg><div class="grow"><div class="lab">Installa ZNoteKeeper</div><div class="hint">Su telefono e PC: finestra propria, funziona anche offline</div></div>
+              <div class="srow"><svg class="i"><use href="#i-phone"/></svg><div class="grow"><div class="lab">Installa ZNoteKeeper</div><div class="hint">Su telefono e PC: finestra propria, senza rete resta in sola lettura</div></div>
                 <button class="btn primary" data-act="install" style="height:36px;padding:0 12px;font-size:13px">Installa</button></div>
-              <div class="srow"><svg class="i"><use href="#i-bell"/></svg><div class="grow"><div class="lab">Promemoria scadenze</div><div class="hint">Notifica all'ora dell'attività</div></div>
-                <label class="switch"><input type="checkbox" id="notif" checked aria-label="Promemoria"><span></span></label></div>
+              <div class="srow"><svg class="i"><use href="#i-bell"/></svg><div class="grow"><div class="lab">Promemoria scadenze</div><div class="hint">Il server non conosce i titoli: la notifica dice solo "Hai una scadenza". Il titolo compare se l'app è aperta e sbloccata.</div></div>
+                <select id="notif" aria-label="Promemoria"><option>Spenti</option><option selected>Notifica generica</option><option>Anche email generica</option></select></div>
             </div>
           </div>
 
@@ -730,13 +804,13 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
         <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
         <div class="topbar">
           <button class="ib" data-act="admin-back" aria-label="Indietro"><svg class="i"><use href="#i-back"/></svg></button>
-          <div class="grow"><div class="apptitle">Utenti ZNoteKeeper</div><div class="crumb">Amministrazione WordPress</div></div>
+          <div class="grow"><div class="apptitle">Utenti ZNoteKeeper</div><div class="crumb">Pannello di WordPress › Impostazioni › ZNoteKeeper</div></div>
         </div>
         <div class="scroll"><div class="sect">
           <div class="secure"><svg class="i"><use href="#i-shield"/></svg><div><b>Vedi chi usa il plugin, non cosa scrive</b><span>Ogni utente ha uno spazio separato chiuso con la propria password. Puoi abilitarlo, disabilitarlo o cancellarne lo spazio, ma non aprirlo né reimpostarne la password.</span></div></div>
           <h3>Utenti del sito</h3>
           <div class="card" id="userList"></div>
-          <p class="ok" style="margin-top:12px">Gli utenti abilitati ricevono un'email di invito al primo avvio.</p>
+          <p class="ok" style="margin-top:12px">Questa pagina sta nel pannello di amministrazione di WordPress, non nell'app. Gli utenti abilitati ricevono un'email di invito.</p>
         </div></div>
       </section>
 
@@ -803,7 +877,7 @@ const S = {
     { id:'s-man', name:'Manutenzione', color:2, group:'g-casa' },
   ],
   pages: [
-    { id:'p1', section:'s-prog', title:'Requisiti iniziali', date:iso(0), html:
+    { id:'p1', section:'s-prog', title:'Requisiti iniziali', date:iso(0), fav:true, tags:['progetto'], html:
       `<h1>Obiettivo</h1><p>Un plugin WordPress per tenere <b>note e attività riservate</b>, da usare sul telefono come un'app.</p><h2>Must have</h2><ul><li>Dati <b>cifrati</b> nel database</li><li>Liste di attività con scadenze e sotto-attività</li><li>Email inoltrata → nuova nota</li><li>Disegno a mano libera nelle note</li></ul><h2>Prossimi passi</h2><ul class="todo"><li class="done">Mockup delle schermate</li><li>Documento di analisi</li><li>Modello dati e schema di cifratura</li></ul><blockquote>Testo salvato in Markdown, scritto con un editor visuale.</blockquote>` },
     { id:'p2', section:'s-prog', title:'Note sulla cifratura', sub:true, date:iso(0), html:
       `<p>Due strade da confrontare nell'analisi:</p><ol><li><b>Chiave sul server</b>: più semplice, le email si cifrano subito all'arrivo.</li><li><b>Chiave solo sul telefono</b>: il server non legge mai il contenuto.</li></ol><img class="sketch" data-sk="sk2" src="" alt="Disegno"><p>Algoritmo proposto: <code>AES-256-GCM</code>, chiave derivata con <code>Argon2id</code>.</p>` },
@@ -811,9 +885,9 @@ const S = {
       `<p>Schizzo della lista attività fatto sul telefono:</p><img class="sketch" data-sk="sk1" src="" alt="Disegno"><ul><li>Pulsante grande per aggiungere</li><li>Maniglia per trascinare</li></ul>` },
     { id:'p4', section:'s-riun', title:'Riunione hosting 18 novembre', date:iso(-6), html:
       `<h2>Presenti</h2><p>Io, fornitore hosting</p><h2>Decisioni</h2><ul><li>Certificato HTTPS già attivo (serve per la PWA)</li><li>PHP 8.2 disponibile</li></ul><h2>Da fare</h2><ul class="todo"><li>Chiedere accesso IMAP alla casella note</li><li class="done">Verificare spazio database</li></ul>` },
-    { id:'p5', section:'s-ric', title:'Lasagne della nonna', date:iso(-20), html:
+    { id:'p5', section:'s-ric', title:'Lasagne della nonna', date:iso(-20), fav:true, tags:['cucina','famiglia'], html:
       `<h2>Ingredienti</h2><ul><li>500 g di sfoglia fresca</li><li>Ragù: 400 g di macinato misto, 700 g di passata</li><li>Besciamella: 1 l di latte, 80 g di burro, 80 g di farina</li><li>Parmigiano grattugiato</li></ul><h2>Procedimento</h2><ol><li>Ragù a fuoco lento per almeno 2 ore</li><li>Alternare sfoglia, ragù, besciamella e parmigiano</li><li>Forno a 180 °C per 35 minuti</li></ol>` },
-    { id:'p6', section:'s-ric', title:'Pane in cassetta', date:iso(-34), html:`<p>500 g farina, 300 ml latte tiepido, 7 g lievito, 30 g burro, 10 g sale. Lievitazione 2 ore, forno 190 °C per 30 minuti.</p>` },
+    { id:'p6', section:'s-ric', title:'Pane in cassetta', date:iso(-34), tags:['cucina'], html:`<p>500 g farina, 300 ml latte tiepido, 7 g lievito, 30 g burro, 10 g sale. Lievitazione 2 ore, forno 190 °C per 30 minuti.</p>` },
     { id:'p7', section:'s-man', title:'Caldaia: scadenze', date:iso(-60), html:`<ul><li>Revisione annuale: <b>dicembre</b></li><li>Libretto nel cassetto dell'ingresso</li><li>Tecnico: chiamare la mattina</li></ul>` },
     { id:'p8', section:'s-inbox', title:'Fwd: Verbale assemblea condominio', date:iso(-1), mail:{ from:'tu@esempio.it', when:'ieri 21:04' }, html:
       `<p>Approvato il rifacimento della facciata. Prima rata entro il 15 gennaio.</p><p>Prossima assemblea a marzo, data da definire.</p>` },
@@ -831,7 +905,7 @@ const S = {
     ]},
     { id:'l-lav', name:'Lavoro', sort:'my', tasks:[
       { id:uid(), title:'Scrivere l\'analisi di ZNoteKeeper', notes:'Partire dal mockup approvato.', due:iso(1), time:'18:00', repeat:'none', starred:true, done:false,
-        subs:[{id:uid(),title:'Mockup delle schermate',done:true},{id:uid(),title:'Documento dei requisiti',done:false},{id:uid(),title:'Modello dati cifrato',done:false}], sketches:['sk1'] },
+        subs:[{id:uid(),title:'Mockup delle schermate',done:true},{id:uid(),title:'Documento dei requisiti',done:false,due:iso(0)},{id:uid(),title:'Modello dati cifrato',done:false}], sketches:['sk1'] },
       { id:uid(), title:'Chiamare il fornitore hosting', notes:'Chiedere accesso IMAP per la casella delle note.', due:iso(0), time:'15:00', repeat:'none', starred:false, done:false, subs:[], sketches:[] },
       { id:uid(), title:'Inviare la fattura di novembre', notes:'', due:iso(-1), time:'', repeat:'month', starred:false, done:false, subs:[], sketches:[] },
     ]},
@@ -862,6 +936,7 @@ function fakeCipher(str) {
 }
 
 /* ---------- Markdown from editor HTML ---------- */
+const imgMd = c => c.classList.contains('sketch') ? `![Disegno](znk://disegno/${c.dataset.sk || ''})` : `![Immagine](znk://immagine/${c.dataset.im || 'foto'})`;
 function htmlToMd(root) {
   const inline = n => [...n.childNodes].map(c => {
     if (c.nodeType === 3) return c.textContent;
@@ -873,7 +948,8 @@ function htmlToMd(root) {
     if (t === 'CODE') return '`' + inner + '`';
     if (t === 'A') return `[${inner}](${c.getAttribute('href') || ''})`;
     if (t === 'BR') return '  \n';
-    if (t === 'IMG') return `![Disegno](znk://disegno/${c.dataset.sk || ''})`;
+    if (t === 'IMG') return imgMd(c);
+    if (t === 'SPAN' && c.classList.contains('tlink')) return ` [→ attività](znk://attivita/${c.dataset.task})`;
     if (t === 'UL' || t === 'OL') return '\n' + block(c, 1);
     return inner;
   }).join('');
@@ -896,7 +972,9 @@ function htmlToMd(root) {
     if (t === 'H3') return '### ' + inline(c).trim() + '\n\n';
     if (t === 'UL' || t === 'OL') return list(c, 0) + '\n';
     if (t === 'BLOCKQUOTE') return block(c).trim().split('\n').map(l => '> ' + l).join('\n') + '\n\n';
-    if (t === 'IMG') return `![Disegno](znk://disegno/${c.dataset.sk || ''})\n\n`;
+    if (t === 'IMG') return imgMd(c) + '\n\n';
+    if (t === 'TABLE') { const rows = [...c.querySelectorAll('tr')].map(tr => [...tr.children].map(td => inline(td).trim() || ' ')); if (!rows.length) return '';
+      return '| ' + rows[0].join(' | ') + ' |\n| ' + rows[0].map(() => '---').join(' | ') + ' |\n' + rows.slice(1).map(r => '| ' + r.join(' | ') + ' |').join('\n') + '\n\n'; }
     if (t === 'HR') return '---\n\n';
     if (t === 'PRE') return '```\n' + c.textContent + '\n```\n\n';
     const s = inline(c).trim(); return s ? s + '\n\n' : '';
@@ -928,24 +1006,24 @@ function show(name) {
   const navName = name === 'page' ? 'notes' : name === 'detail' ? 'tasks' : name;
   $('#nav').hidden = !(NAV_SCREENS.includes(name) || (desk && ['page', 'detail', 'draw', 'admin'].includes(name)));
   $$('#nav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.to === navName)));
-  closeOverlay();
+  closeOverlay(); applyOffline();
   updateGuide(name);
 }
 
 /* ---------- guide ---------- */
 const GUIDE = {
-  admin: { t:'Utenti (admin)', a:['L\'amministratore WordPress abilita i singoli utenti con un interruttore.','Vede ruolo, data di abilitazione, spazio usato e ultimo accesso. Mai titoli o contenuti.','Disabilitare un utente non cancella i dati: restano cifrati e si possono riattivare. Cancellare lo spazio è definitivo.'], b:['L\'admin non può reimpostare la password delle note di nessuno: se l\'utente perde password e codice, l\'unica strada è cancellare lo spazio.','Prova: abilita Luca Bianchi.'] },
-  setup: { t:'Primo avvio', a:['Passo 1: l\'utente sceglie la password delle note (almeno 10 caratteri), diversa da quella di WordPress. Un indicatore ne mostra la robustezza.','Passo 2: riceve il codice di recupero di 24 caratteri, mostrato una sola volta, e ne riscrive 4 per confermare di averlo salvato.','Passo 3: decide se attivare il recupero via email (spento di default).'], b:['La password non viene mai salvata: il server conserva solo un\'impronta che la riconosce senza poterla ricostruire.','Prova: password di almeno 10 caratteri, poi i caratteri sottolineati del codice.'] },
-  recover: { t:'Recupero', a:['Dalla schermata di sblocco: "Password dimenticata?".','Con il codice di recupero: nuova password subito e nuovo codice da salvare, il vecchio smette di valere.','Con il link via email (se attivato): monouso, valido 30 minuti, funziona solo con l\'accesso WordPress già fatto, poi 24 ore di attesa con avvisi e possibilità di annullare.'], b:['Senza password, codice e link i dati non si possono più aprire: scelta voluta, va scritta chiaramente all\'utente.','A recupero completato gli altri dispositivi vengono scollegati.'] },
-  lock: { t:'Sblocco', a:['All\'apertura l\'app chiede la password delle note, oppure impronta o volto se attivati.','Dallo sblocco si ottiene la chiave che decifra i dati: senza sblocco non si legge nulla.','L\'app si blocca da sola dopo il tempo scelto in Impostazioni, o con il lucchetto in alto.'], b:['Sblocco biometrico tramite WebAuthn: richiede HTTPS sul sito WordPress.','Prova: scrivi qualsiasi cosa e premi Sblocca.'] },
-  notes: { t:'Taccuino', a:['Organizzazione come un quaderno a schede: gruppi di sezioni › sezioni › pagine.','Il menu in alto a sinistra apre l\'albero: gruppi apribili, sezioni colorate con il numero di pagine, e "Posta in arrivo" fuori dai gruppi.','Le pagine possono avere sottopagine (rientrate), come "Note sulla cifratura".','Icona busta = arrivata via email; miniatura = contiene un disegno.'], b:['Da definire quanti livelli servono: qui gruppo › sezione › pagina › sottopagina.','Prova: apri il menu, crea una sezione con un colore, poi una pagina.'] },
-  page: { t:'Pagina', a:['Editor visuale: titoli, grassetto, corsivo, barrato, codice, elenchi, caselle da spuntare, citazioni.','Il testo è salvato in Markdown: il pulsante "Markdown" mostra il file come viene salvato, aggiornato mentre scrivi.','La penna nella barra inserisce un disegno nella pagina; tocca un disegno per modificarlo.','Tocca il quadratino di una casella per spuntarla.'], b:['Nel Markdown i disegni sono riferimenti (znk://disegno/…) a immagini salvate a parte, anch\'esse cifrate.','"Come viene salvata nel database" è una simulazione grafica, non vera crittografia.'] },
-  tasks: { t:'Attività', a:['Liste come schede in alto, più "Speciali" che raccoglie le attività con la stella da tutte le liste.','Tocca il cerchio per completare: va in "Completate" e puoi annullare dal messaggio in basso.','Trascina la maniglia a sinistra per riordinare (solo in ordine manuale).','Le sotto-attività stanno rientrate sotto l\'attività principale.','Menu ⋯: ordina per data, rinomina, elimina completate, elimina lista.'], b:['Le attività ricorrenti, quando completate, creano la prossima occorrenza.','Data in rosso = scaduta, arancio = oggi.'] },
-  detail: { t:'Dettaglio attività', a:['Titolo e dettagli si salvano mentre scrivi.','Data, ora e ripetizione (giorno, settimana, mese, anno).','Sotto-attività su un solo livello.','Sposta in un\'altra lista dal pulsante in alto; stella e cestino a destra.','Disegni allegati all\'attività.'], b:['I dettagli delle attività sono testo semplice, salvati anch\'essi in Markdown.'] },
-  draw: { t:'Disegno', a:['Disegno a mano libera con dito o pennino: penna, evidenziatore, gomma.','Sei colori, spessore regolabile, annulla e ripristina, cancella tutto.','Salva inserisce il disegno nella pagina o nell\'attività; riaprendolo si continua da dove si era rimasti.'], b:['Da scegliere: salvare come PNG cifrato o come tratti vettoriali.'] },
-  search: { t:'Cerca', a:['Una sola ricerca su pagine e attività di tutte le sezioni e liste.','Con i dati cifrati la ricerca avviene dopo la decifratura (sul server o sul telefono, secondo la scelta sulla chiave).'], b:['Prova a cercare "lasagne" o "dominio".'] },
-  email: { t:'Email → nota', a:['Ogni utente ha un indirizzo dedicato: inoltri una email e diventa una nota.','Si importano solo oggetto (titolo) e corpo (testo in Markdown). Allegati, immagini e firme HTML sono scartati.','Destinazione a scelta: una sezione del taccuino (nuova pagina) oppure una lista attività.','Solo i mittenti ammessi sono accettati, gli altri vengono scartati.'], b:['Prova invio simula tre email di fila: due ammesse e una da mittente sconosciuto.'] },
-  settings: { t:'Impostazioni', a:['Stato della cifratura sempre visibile in alto.','Email → nota, sicurezza (blocco automatico, biometria, codice di recupero, recupero via email, dispositivi, password, backup cifrato), app sul telefono.','"Installa" spiega come aggiungere l\'app alla schermata Home su Android e iPhone.','Gli amministratori trovano qui anche "Utenti abilitati".'], b:['Cambiare password non ricifra le note: cambia solo la serratura della chiave del tuo spazio.'] },
+  admin: { t:'Utenti (admin)', a:['Questa pagina vive nel pannello di amministrazione di WordPress, non dentro l\'app.','L\'amministratore abilita i singoli utenti con un interruttore. Vede ruolo, data, spazio usato e ultimo accesso. Mai titoli o contenuti.','Togliere l\'accesso chiede conferma e non cancella i dati: restano cifrati e si possono riattivare.','"Cancella lo spazio" compare solo per chi è disabilitato, è definitivo e chiede di riscrivere il nome.'], b:['L\'admin non può reimpostare la password delle note di nessuno.','Promessa onesta: la cifratura protegge dal furto del database e dalla curiosità, non da un amministratore che modificasse il codice del plugin.','Prova: togli l\'accesso a Marta Rossi, poi cancellane lo spazio.'] },
+  setup: { t:'Primo avvio', a:['Passo 1: password delle note (almeno 10 caratteri), diversa da quella di WordPress. Non lascia mai il dispositivo.','Passo 2: codice di recupero di 24 caratteri, da copiare, stampare o scaricare. Si riscrivono 4 caratteri e si spunta una casella di presa visione.','Passo 3: recupero via email, spento di default e legato all\'indirizzo attuale.'], b:['La chiave che cifra i dati nasce nel browser ed è chiusa due volte: con la password e con il codice di recupero. Al server arrivano solo le due "scatole" chiuse.','Prova: password di almeno 10 caratteri, poi i caratteri sottolineati del codice.'] },
+  recover: { t:'Recupero', a:['Dalla schermata di sblocco: "Password dimenticata?".','Con il codice di recupero: nuova password subito e nuovo codice da salvare, il vecchio smette di valere.','Con il link via email (se attivato): monouso, valido 30 minuti, funziona solo con l\'accesso WordPress già fatto, poi 24 ore di attesa con avvisi e possibilità di annullare.','Il link vale solo per l\'indirizzo che avevi quando l\'hai attivato: cambiando email o password di WordPress si spegne da solo.'], b:['Senza password, codice e link i dati non si possono più aprire: scelta voluta, scritta chiaramente all\'utente.','A recupero completato gli altri dispositivi vengono scollegati.'] },
+  lock: { t:'Sblocco', a:['All\'apertura l\'app chiede la password delle note, oppure impronta, volto o PIN rapido se attivati.','Lo sblocco avviene sul dispositivo: la password non viene mai inviata al server.','Dopo 5 tentativi sbagliati parte un\'attesa che si allunga a ogni serie di errori.','L\'app si blocca da sola dopo il tempo scelto in Impostazioni, con il lucchetto o con Ctrl+Maiusc+L.'], b:['Funziona anche senza rete, sui dati già scaricati.','Prova: premi Sblocca a campo vuoto per vedere l\'errore, poi scrivi qualcosa.'] },
+  notes: { t:'Taccuino', a:['Organizzazione come un quaderno a schede: gruppi di sezioni › sezioni › pagine › sottopagine.','In alto le raccolte: Preferiti, Recenti e Cestino (le pagine eliminate restano 30 giorni e si ripristinano).','Sul telefono le sezioni scorrono come schede; sul PC c\'è l\'albero sempre visibile a sinistra.','Il menu ⋯ della sezione ordina le pagine (manuale, data, titolo), rinomina, sposta, elimina.','Icona busta = arrivata via email; miniatura = contiene un disegno; # = etichette.'], b:['Scorciatoie sul PC: Alt+N nuova pagina, Alt+T nuova attività, Ctrl+K cerca.','Prova: elimina una pagina e ripristinala dal Cestino.'] },
+  page: { t:'Pagina', a:['Editor visuale: titoli, grassetto, corsivo, barrato, codice, elenchi, caselle, citazioni, link, tabelle, immagini e disegni.','Il testo è salvato in Markdown: il pulsante "Markdown" mostra il file come viene salvato.','Stella = preferita. Sotto il titolo le etichette (#).','L\'ultimo pulsante della barra trasforma una casella in attività con scadenza: la casella resta collegata.','Menu ⋯: sposta, ordina su/giù, sottopagina, cronologia versioni, cestino.'], b:['Immagini e disegni sono salvati a parte, cifrati, e richiamati dal Markdown (znk://…).','"Come viene salvata nel database" è una simulazione grafica, non vera crittografia.'] },
+  tasks: { t:'Attività', a:['Liste come schede in alto, più "Speciali" che raccoglie le attività con la stella da tutte le liste.','Tocca il cerchio per completare: va in "Completate" e puoi annullare dal messaggio in basso.','Trascina la maniglia a sinistra per riordinare (solo in ordine manuale).','Le sotto-attività stanno rientrate sotto l\'attività principale, con la loro scadenza.','Menu ⋯: ordina per data, rinomina, elimina completate, elimina lista.'], b:['Le attività ricorrenti, quando completate, creano la prossima occorrenza.','Data in rosso = scaduta, arancio = oggi.','Da "Speciali" una nuova attività finisce nella prima lista, e il messaggio lo dice.'] },
+  detail: { t:'Dettaglio attività', a:['Titolo e dettagli si salvano mentre scrivi. I dettagli accettano grassetto, corsivo ed elenchi.','Data e ora scritte per esteso in italiano; tocca per cambiarle.','Ogni sotto-attività ha il suo menu ⋯: scadenza propria, su/giù, trasforma in attività, elimina.','Se l\'attività nasce da una casella di una pagina, c\'è il collegamento "Dalla pagina".','Sposta in un\'altra lista dal pulsante in alto; disegni allegati in fondo.'], b:['Anche i dettagli sono salvati in Markdown e cifrati.','Scadenza e stato restano in chiaro: servono al server per ordinare e mandare i promemoria.'] },
+  draw: { t:'Disegno', a:['Foglio di misura fissa: il disegno è identico su telefono e PC, e viene ritagliato sul contenuto quando lo salvi.','Penna, evidenziatore, gomma, linea dritta e rettangolo. Sei colori, spessore regolabile.','La gomma cancella solo i tratti, non il foglio. Annulla e ripristina funzionano anche riaprendo il disegno.','Salvare un foglio vuoto non è possibile; chiudendo con modifiche in sospeso viene chiesta conferma.'], b:['Deciso: si salvano i tratti (vettoriali) più un\'anteprima, entrambi cifrati.','Prova: disegna, salva, riapri il disegno dalla pagina e usa Annulla.'] },
+  search: { t:'Cerca', a:['Una sola ricerca su pagine, attività ed etichette.','Filtri rapidi: tutto, pagine, attività, con disegni, da email.','Ogni risultato mostra il percorso gruppo › sezione. Tornando indietro da un risultato si ritrova la ricerca.'], b:['La ricerca avviene sul dispositivo dopo lo sblocco: il server non può cercare nei testi cifrati.','Prova a cercare "lasagne", "cucina" o "dominio".'] },
+  email: { t:'Email → nota', a:['Ogni utente ha un indirizzo segreto: inoltri una email e diventa una nota. Se l\'indirizzo trapela se ne crea uno nuovo.','Si importano oggetto (titolo) e corpo (testo in Markdown). Gli allegati sono scartati, salvo scelta diversa.','#parola nell\'oggetto smista l\'email nella sezione o nella lista con quel nome.','Solo i mittenti ammessi e autenticati (SPF/DKIM) sono accettati; c\'è un limite orario.'], b:['Le email arrivano quando l\'app è chiusa: il server le cifra subito con la chiave pubblica dell\'utente e cancella l\'originale. Solo la password le riapre.','Prova invio simula quattro email: una va in Ricette grazie a #ricette, una viene scartata.'] },
+  settings: { t:'Impostazioni', a:['In alto la promessa, detta in modo onesto: cosa protegge la cifratura e cosa no.','Sicurezza: blocco automatico, impronta, PIN rapido, durata della sessione, codice di recupero, recupero via email, dispositivi, cambio password, backup.','Le azioni delicate chiedono di nuovo la password delle note.','Backup cifrato, esportazione in Markdown (non cifrata, con avviso) e ripristino.','Promemoria: il server non conosce i titoli, quindi la notifica è generica.'], b:['Cambiare password non ricifra le note: cambia solo la serratura della chiave.','Interruttore "Simula assenza di rete" qui a fianco: tutto resta leggibile, niente è modificabile.'] },
 };
 let guideKey = 'notes';
 function updateGuide(name) {
@@ -957,32 +1035,51 @@ function updateGuide(name) {
 }
 
 /* ---------- notes ---------- */
+const VIRT = { fav:{ name:'Preferiti', color:'var(--due)' }, recent:{ name:'Recenti', color:'var(--muted)' }, trash:{ name:'Cestino', color:'var(--danger)' } };
+const live = () => S.pages.filter(p => !p.trashed);
+function notesView() {
+  const id = S.curSection, v = VIRT[id];
+  if (id === 'fav') return { ...v, crumb:'Raccolte ›', virt:true, pages: live().filter(p => p.fav) };
+  if (id === 'recent') return { ...v, crumb:'Raccolte ›', virt:true, pages: [...live()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6) };
+  if (id === 'trash') return { ...v, crumb:'Raccolte ›', virt:true, trash:true, pages: S.pages.filter(p => p.trashed) };
+  const s = sec(id), g = s.group ? grp(s.group) : null; let pages = live().filter(p => p.section === id);
+  if (s.sort === 'date') pages = [...pages].sort((a, b) => b.date.localeCompare(a.date));
+  if (s.sort === 'title') pages = [...pages].sort((a, b) => a.title.localeCompare(b.title, 'it'));
+  return { name:s.name, crumb:(g ? g.name : 'Senza gruppo') + ' ›', color:secColor(s), pages, s };
+}
 function renderNotes() {
-  const s = sec(S.curSection); const g = s.group ? grp(s.group) : null;
-  const pages = S.pages.filter(p => p.section === s.id);
-  $('#secBar').style.background = secColor(s);
-  $('#notesScroll').innerHTML = `
-    <div class="head" style="padding-top:12px"><div class="grow">
-      <div class="crumb">${g ? esc(g.name) + ' ›' : 'Senza gruppo ›'}</div>
-      <h2 class="big">${esc(s.name)}</h2>
-      <div class="meta">${pages.length} ${pages.length === 1 ? 'pagina' : 'pagine'}</div></div>
-      <button class="ib" data-act="sec-menu" aria-label="Azioni sezione">${ic('more')}</button></div>
-    ${pages.length ? pages.map(p => { const sk = firstSketch(p.html);
-      return `<div class="page-row ${p.sub ? 'sub' : ''} ${isDesk() && p.id === S.curPage && screen === 'page' ? 'sel' : ''}" data-act="open-page" data-id="${p.id}">
-        <div class="pg"><div class="pt">${esc(p.title || 'Senza titolo')}</div><div class="ps">${esc(textOf(p.html).slice(0, 140)) || '<i>Pagina vuota</i>'}</div>
-        ${p.mail ? `<div class="chips"><span class="chip mail">${ic('mail')}da email</span></div>` : ''}</div>
+  const v = notesView(), sibs = v.s ? S.sections.filter(x => x.group === v.s.group) : [];
+  $('#secBar').style.background = v.color; $('[data-act="new-page"]').hidden = !!v.trash;
+  const row = p => { const sk = firstSketch(p.html), ps = sec(p.section);
+    if (v.trash) return `<div class="page-row" style="cursor:default"><div class="pg"><div class="pt">${esc(p.title || 'Senza titolo')}</div><div class="ps">Eliminata ${shortDate(p.trashed).toLowerCase()}${ps ? ' · da ' + esc(ps.name) : ''}</div>
+      <div class="chips"><button class="chip today" data-act="restore-page" data-id="${p.id}">Ripristina</button><button class="chip late" data-act="purge-page" data-id="${p.id}">Elimina per sempre</button></div></div></div>`;
+    const chips = [p.mail ? `<span class="chip mail">${ic('mail')}da email</span>` : '', v.virt && ps ? `<span class="chip list"><span class="dot" style="background:${secColor(ps)};width:8px;height:8px"></span>${esc(ps.name)}</span>` : '', ...(p.tags || []).map(t => `<span class="chip">#${esc(t)}</span>`)].join('');
+    return `<div class="page-row ${p.sub && !v.virt ? 'sub' : ''} ${isDesk() && p.id === S.curPage && screen === 'page' ? 'sel' : ''}" data-act="open-page" data-id="${p.id}">
+        <div class="pg"><div class="pt">${p.fav ? ic('star', 'sm fill') + ' ' : ''}${esc(p.title || 'Senza titolo')}</div><div class="ps">${esc(textOf(p.html).slice(0, 140)) || '<i>Pagina vuota</i>'}</div>
+        ${chips ? `<div class="chips">${chips}</div>` : ''}</div>
         ${sk ? `<img class="thumb" src="${sketches[sk]}" alt="">` : ''}
-        <div class="pd">${shortDate(p.date)}</div></div>`; }).join('')
-      : `<div class="empty"><b>Sezione vuota</b>Tocca "Pagina" per scrivere la prima nota.</div>`}
+        <div class="pd">${shortDate(p.date)}</div></div>`; };
+  const empty = v.trash ? '<b>Cestino vuoto</b>Le pagine eliminate restano qui 30 giorni.' : S.curSection === 'fav' ? '<b>Nessuna preferita</b>Tocca la stella in alto in una pagina.' : '<b>Sezione vuota</b>Tocca "Pagina" per scrivere la prima nota.';
+  $('#notesScroll').innerHTML = `
+    ${sibs.length > 1 ? `<div class="tabs sectabs" style="padding-top:10px;padding-bottom:0">${sibs.map(x => `<button class="tab" data-act="pick-sec" data-id="${x.id}" aria-selected="${x.id === v.s.id}"><span class="dot" style="background:${secColor(x)}"></span>${esc(x.name)}</button>`).join('')}</div>` : ''}
+    <div class="head" style="padding-top:12px"><div class="grow">
+      <div class="crumb">${esc(v.crumb)}</div>
+      <h2 class="big">${esc(v.name)}</h2>
+      <div class="meta">${v.pages.length} ${v.pages.length === 1 ? 'pagina' : 'pagine'}${v.s && v.s.sort === 'date' ? ' · per data' : v.s && v.s.sort === 'title' ? ' · per titolo' : ''}${v.trash ? ' · eliminate dopo 30 giorni' : ''}</div></div>
+      ${v.virt ? (v.trash && v.pages.length ? `<button class="btn ghost" data-act="empty-trash" style="height:36px;padding:0 12px;font-size:13px">Svuota</button>` : '') : `<button class="ib" data-act="sec-menu" aria-label="Azioni sezione">${ic('more')}</button>`}</div>
+    ${v.pages.length ? v.pages.map(row).join('') : `<div class="empty">${empty}</div>`}
     <div style="height:84px"></div>`;
 }
 function renderDeskTree() { $('#deskTree').innerHTML = treeHTML(); }
 function openDrawer() { $('#overlay').innerHTML = `<div class="backdrop" data-act="close"></div><aside class="drawer" aria-label="Gruppi e sezioni">${treeHTML()}</aside>`; }
 function treeHTML() {
   const secRow = (s, top) => `<button class="sec ${top ? 'top' : ''}" data-act="pick-sec" data-id="${s.id}" aria-current="${s.id === S.curSection}">
-      <span class="tab-color" style="background:${secColor(s)}"></span>${esc(s.name)}<span class="cnt">${S.pages.filter(p => p.section === s.id).length}</span></button>`;
+      <span class="tab-color" style="background:${secColor(s)}"></span>${esc(s.name)}<span class="cnt">${live().filter(p => p.section === s.id).length}</span></button>`;
+  const vRow = (id, icon, n) => `<button class="sec top" data-act="pick-sec" data-id="${id}" aria-current="${id === S.curSection}">${ic(icon)}${VIRT[id].name}<span class="cnt">${n}</span></button>`;
   return `<div class="dh"><div class="crumb">Il mio taccuino</div><h2 class="big" style="font-size:24px">Sezioni</h2></div>
     <div class="tree">
+      ${vRow('fav', 'star', live().filter(p => p.fav).length)}${vRow('recent', 'history', Math.min(6, live().length))}
+      <hr>
       ${S.sections.filter(s => !s.group).map(s => secRow(s, true)).join('')}
       <hr>
       ${S.groups.map(g => `<button class="grp" data-act="toggle-grp" data-id="${g.id}" aria-expanded="${g.open}">${ic('folder')}${esc(g.name)}${ic('chev', 'chev')}</button>
@@ -990,6 +1087,8 @@ function treeHTML() {
       <hr>
       <button class="add" data-act="new-sec">${ic('plus')}Nuova sezione</button>
       <button class="add" data-act="new-grp">${ic('folder')}Nuovo gruppo di sezioni</button>
+      <hr>
+      ${vRow('trash', 'trash', S.pages.filter(p => p.trashed).length)}
     </div>`;
 }
 
@@ -1003,10 +1102,14 @@ function openPage(id) {
   $('#pTitle').value = p.title;
   $('#pDate').textContent = 'Modificata ' + shortDate(p.date).toLowerCase();
   $('#pMail').innerHTML = p.mail ? mailCard(p.mail) : '';
+  $('#pFav').classList.toggle('on', !!p.fav); $('#pFav').innerHTML = ic('star', p.fav ? 'fill' : ''); renderTags();
   ed.innerHTML = p.html; hydrateSketches(ed);
   setMode('vis'); $('#pCrypto').open = false; refreshPageCrypto();
   show('page'); autosize($('#pTitle'));
 }
+function renderTags() { const p = page(S.curPage); if (!p) return;
+  $('#pTags').innerHTML = (p.tags || []).map(t => `<span class="tagchip">#${esc(t)}<button data-act="rm-tag" data-tag="${esc(t)}" aria-label="Togli etichetta ${esc(t)}">${ic('close', 'sm')}</button></span>`).join('') + `<button class="tagchip add" data-act="add-tag">${ic('tag', 'sm')}Etichetta</button>`; }
+let pageFrom = 'notes', pendingLi = null;
 function savePage() { const p = page(S.curPage); if (!p) return; if (isDesk()) queueMicrotask(renderNotes);
   const clone = ed.cloneNode(true); $$('img.sketch', clone).forEach(im => im.setAttribute('src', ''));
   p.html = clone.innerHTML; p.title = $('#pTitle').value; p.date = iso(0); refreshPageCrypto(); if (S.mode === 'md') $('#pMd').textContent = htmlToMd(ed); }
@@ -1015,18 +1118,26 @@ function refreshPageCrypto() { if (!$('#pCrypto').open) return; const md = htmlT
 function setMode(m) { S.mode = m; $('#modeVis').setAttribute('aria-pressed', String(m === 'vis')); $('#modeMd').setAttribute('aria-pressed', String(m === 'md'));
   ed.hidden = m !== 'vis'; $('#pMdWrap').hidden = m !== 'md'; $('#eTools').style.visibility = m === 'vis' ? 'visible' : 'hidden';
   if (m === 'md') $('#pMd').textContent = htmlToMd(ed); }
-ed.addEventListener('input', savePage);
+ed.addEventListener('input', e => {
+  if (e.inputType === 'insertParagraph') { const n = getSelection().anchorNode, li = n && (n.nodeType === 1 ? n : n.parentElement).closest('ul.todo > li');
+    if (li) { li.classList.remove('done'); li.removeAttribute('data-task'); $$('.tlink', li).forEach(x => x.remove()); } }
+  savePage(); });
+$('#imgFile').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const fr = new FileReader();
+  fr.onload = () => { ed.focus(); const sel = getSelection(); if (savedRange && ed.contains(savedRange.startContainer)) { sel.removeAllRanges(); sel.addRange(savedRange); }
+    document.execCommand('insertHTML', false, `<img class="photo" data-im="${uid()}" src="${fr.result}" alt="Immagine"><p><br></p>`); savedRange = null; savePage(); toast('Immagine inserita e cifrata con la nota'); };
+  fr.readAsDataURL(f); e.target.value = ''; });
 $('#pTitle').addEventListener('input', e => { autosize(e.target); savePage(); });
 $('#pCrypto').addEventListener('toggle', refreshPageCrypto);
 ed.addEventListener('click', e => {
   const li = e.target.closest('ul.todo > li');
-  if (li && e.offsetX < 24 && e.target === li) { li.classList.toggle('done'); savePage(); return; }
-  const im = e.target.closest('img.sketch'); if (im) openDraw({ kind:'page', sk: im.dataset.sk });
+  if (li && e.offsetX < 24 && e.target === li) { if (S.offline) { toast(OFFMSG); return; } li.classList.toggle('done'); savePage(); return; }
+  const tl = e.target.closest('.tlink'); if (tl) { if (task(tl.dataset.task)) openTask(tl.dataset.task); else toast('L\'attività collegata non esiste più'); return; }
+  const im = e.target.closest('img.sketch'); if (im) { if (S.offline) { toast(OFFMSG); return; } openDraw({ kind:'page', sk: im.dataset.sk }); }
 });
 let savedRange = null;
 $('#eTools').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
 $('#eTools').addEventListener('click', e => {
-  const b = e.target.closest('button[data-cmd]'); if (!b) return; const c = b.dataset.cmd;
+  const b = e.target.closest('button[data-cmd]'); if (!b) return; const c = b.dataset.cmd; if (S.offline) { toast(OFFMSG); return; }
   ed.focus();
   const sel = getSelection(); if (!sel.rangeCount || !ed.contains(sel.anchorNode)) { const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); sel.removeAllRanges(); sel.addRange(r); }
   if (c === 'p') document.execCommand('formatBlock', false, '<p>');
@@ -1036,6 +1147,17 @@ $('#eTools').addEventListener('click', e => {
   else if (c === 'ol') document.execCommand('insertOrderedList');
   else if (c === 'todo') { const txt = sel.toString() || 'Nuova cosa da fare'; document.execCommand('insertHTML', false, `<ul class="todo"><li>${esc(txt)}</li></ul><p><br></p>`); }
   else if (c === 'code') { const txt = sel.toString() || 'codice'; document.execCommand('insertHTML', false, `<code>${esc(txt)}</code>&nbsp;`); }
+  else if (c === 'table') document.execCommand('insertHTML', false, '<table><tr><th>Colonna 1</th><th>Colonna 2</th></tr><tr><td><br></td><td><br></td></tr><tr><td><br></td><td><br></td></tr></table><p><br></p>');
+  else if (c === 'image') { savedRange = sel.getRangeAt(0).cloneRange(); $('#imgFile').click(); return; }
+  else if (c === 'link') { const r = sel.getRangeAt(0).cloneRange(), txt = sel.toString();
+    sheet(`<h3>Inserisci link</h3><label class="flab" for="lkT">Testo</label><input class="field-in" id="lkT" value="${esc(txt)}"><label class="flab" for="lkU">Indirizzo</label><input class="field-in" id="lkU" placeholder="https://" inputmode="url">
+      <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn primary" id="lkOk">Inserisci</button></div>`);
+    $('#lkOk').onclick = () => { const u = $('#lkU').value.trim(), t = $('#lkT').value.trim() || u; if (!/^https?:\/\//.test(u)) { toast('Scrivi un indirizzo che inizia con https://'); return; }
+      closeOverlay(); ed.focus(); const s2 = getSelection(); s2.removeAllRanges(); s2.addRange(r); document.execCommand('insertHTML', false, `<a href="${esc(u)}">${esc(t)}</a>&nbsp;`); savePage(); };
+    return; }
+  else if (c === 'totask') { const n = sel.anchorNode, li = (n.nodeType === 1 ? n : n.parentElement).closest('ul.todo > li');
+    if (!li) { toast('Metti il cursore su una casella da spuntare'); return; } if (li.dataset.task) { toast('Questa casella è già un\'attività'); return; }
+    pendingLi = li; sheet(`<h3>Crea attività in</h3>${S.lists.map(l => `<button class="opt" data-act="do-totask" data-id="${l.id}">${ic('list')}${esc(l.name)}</button>`).join('')}`); return; }
   else if (c === 'sketch') { savedRange = sel.getRangeAt(0).cloneRange(); openDraw({ kind:'page', sk:null }); return; }
   else document.execCommand(c);
   savePage();
@@ -1050,11 +1172,11 @@ function taskRow(t, opts = {}) {
   const chips = [dueChip(t), t.mail ? `<span class="chip mail">${ic('mail')}email</span>` : '', t.sketches.length ? `<span class="chip">${ic('pen')}${t.sketches.length}</span>` : '',
     t.subs.length ? `<span class="chip">${ic('sub')}${t.subs.filter(s => s.done).length}/${t.subs.length}</span>` : '', opts.listName ? `<span class="chip list">${esc(opts.listName)}</span>` : ''].join('');
   const subs = t.done ? '' : t.subs.map(s => `<div class="task sub ${s.done ? 'done' : ''}"><span></span><button class="check" data-act="toggle-sub" data-id="${t.id}" data-sid="${s.id}" aria-label="Completa sotto-attività"><span>${ic('check')}</span></button>
-      <div class="body" data-act="open-task" data-id="${t.id}"><div class="t">${esc(s.title)}</div></div><span></span></div>`).join('');
+      <div class="body" data-act="open-task" data-id="${t.id}"><div class="t">${esc(s.title)}</div>${s.due && !s.done ? `<div class="chips">${dueChip({ due:s.due, time:'', repeat:'none', done:s.done })}</div>` : ''}</div><span></span></div>`).join('');
   return `<div class="group ${isDesk() && t.id === S.curTask && screen === 'detail' ? 'sel' : ''}" data-id="${t.id}"><div class="task ${t.done ? 'done' : ''}">
     ${opts.drag ? `<span class="handle" data-handle aria-label="Trascina per riordinare">${ic('drag')}</span>` : '<span></span>'}
     <button class="check" data-act="toggle" data-id="${t.id}" aria-label="${t.done ? 'Segna da fare' : 'Segna come completata'}"><span>${ic('check')}</span></button>
-    <div class="body" data-act="open-task" data-id="${t.id}"><div class="t">${esc(t.title || 'Senza titolo')}</div>${t.notes ? `<div class="n">${esc(t.notes)}</div>` : ''}${chips ? `<div class="chips">${chips}</div>` : ''}</div>
+    <div class="body" data-act="open-task" data-id="${t.id}"><div class="t">${esc(t.title || 'Senza titolo')}</div>${textOf(t.notes) ? `<div class="n">${esc(textOf(t.notes))}</div>` : ''}${chips ? `<div class="chips">${chips}</div>` : ''}</div>
     <button class="star ${t.starred ? 'on' : ''}" data-act="star" data-id="${t.id}" aria-label="Speciale">${ic('star', t.starred ? 'fill' : '')}</button>
   </div>${subs}</div>`;
 }
@@ -1102,7 +1224,7 @@ function toggleTask(id) {
 
 /* drag to reorder */
 $('#app').addEventListener('pointerdown', e => {
-  const h = e.target.closest('[data-handle]'); if (!h) return; e.preventDefault();
+  const h = e.target.closest('[data-handle]'); if (!h) return; e.preventDefault(); if (S.offline) { toast(OFFMSG); return; }
   const g = h.closest('.group'), box = g.parentElement, scroller = $('#taskScroll');
   g.classList.add('dragging'); h.setPointerCapture(e.pointerId);
   const move = ev => {
@@ -1128,24 +1250,33 @@ function openTask(id) {
   const t = task(id); S.curTask = id; const l = listOf(id);
   $('#dList').innerHTML = `${esc(l.name)} ${ic('chev', 'sm')}`;
   $('#dStar').classList.toggle('on', t.starred); $('#dStar').innerHTML = ic('star', t.starred ? 'fill' : '');
-  $('#dTitle').value = t.title; $('#dNotes').value = t.notes; $('#dDate').value = t.due; $('#dTime').value = t.time; $('#dRepeat').value = t.repeat;
-  $('#dMail').innerHTML = t.mail ? mailCard(t.mail) : '';
+  $('#dTitle').value = t.title; $('#dNotes').innerHTML = t.notes; $('#dDate').value = t.due; $('#dTime').value = t.time; $('#dRepeat').value = t.repeat;
+  $('#dMail').innerHTML = (t.mail ? mailCard(t.mail) : '') + (t.pageId && page(t.pageId) ? `<button class="linkbtn" data-act="open-page" data-id="${t.pageId}">${ic('book', 'sm')}Dalla pagina: ${esc(page(t.pageId).title || 'Senza titolo')}</button>` : '');
+  dateLabels();
   $('#dDone').textContent = t.done ? 'Segna come da fare' : 'Segna come completata';
   renderSubs(); renderTaskSketches(); $('#dCrypto').open = false;
-  show('detail'); autosize($('#dTitle')); autosize($('#dNotes'));
+  show('detail'); autosize($('#dTitle'));
 }
+function dateLabels() { const t = task(S.curTask); if (!t) return;
+  $('#dDateLab').textContent = t.due ? new Date(t.due + 'T00:00').toLocaleDateString('it-IT', { weekday:'long', day:'numeric', month:'long' }) : 'Aggiungi data';
+  $('#dDateBtn').classList.toggle('empty', !t.due);
+  $('#dTimeLab').textContent = t.time ? 'ore ' + t.time : 'Aggiungi ora'; $('#dTimeBtn').classList.toggle('empty', !t.time);
+  $('#dTimeBtn').hidden = !t.due; $('#dClear').hidden = !t.due; }
 function renderSubs() { const t = task(S.curTask);
   $('#dSubs').innerHTML = t.subs.map(s => `<div class="subrow ${s.done ? 'done' : ''}"><button class="mini" data-act="d-sub-toggle" data-sid="${s.id}" aria-label="Completa">${ic('check')}</button>
-    <input type="text" id="sub-${s.id}" value="${esc(s.title)}" data-sid="${s.id}" aria-label="Sotto-attività"><button class="ib" style="width:32px;height:32px" data-act="d-sub-del" data-sid="${s.id}" aria-label="Elimina sotto-attività">${ic('close', 'sm')}</button></div>`).join(''); }
+    <input type="text" id="sub-${s.id}" value="${esc(s.title)}" data-sid="${s.id}" aria-label="Sotto-attività" ${S.offline ? 'disabled' : ''}>${s.due ? dueChip({ due:s.due, time:'', repeat:'none', done:s.done }) : ''}<button class="ib" style="width:44px;height:44px" data-act="d-sub-menu" data-sid="${s.id}" aria-label="Azioni sotto-attività">${ic('more', 'sm')}</button></div>`).join(''); }
 function renderTaskSketches() { const t = task(S.curTask);
   $('#dSketches').innerHTML = t.sketches.map((k, i) => `<img src="${sketches[k]}" alt="Disegno ${i + 1}" data-act="edit-task-sketch" data-sk="${k}">`).join(''); }
 function refreshTaskCrypto() { if (!$('#dCrypto').open) return; const t = task(S.curTask);
-  $('#dCryptoBody').innerHTML = `<div class="k">titolo</div><code>${fakeCipher(t.title).slice(0, 90)}…</code><div class="k">dettagli</div><code>${fakeCipher(t.notes || ' ').slice(0, 140)}…</code><div class="k">scadenza, stato, ordine</div><code>due=${t.due || 'null'} · done=${t.done ? 1 : 0} · non cifrati, servono per ordinare e per i promemoria</code>`; }
+  $('#dCryptoBody').innerHTML = `<div class="k">titolo</div><code>${fakeCipher(t.title).slice(0, 90)}…</code><div class="k">dettagli</div><code>${fakeCipher(htmlToMd($('#dNotes')) || ' ').slice(0, 140)}…</code><div class="k">scadenza, stato, ordine</div><code>due=${t.due || 'null'} · done=${t.done ? 1 : 0} · non cifrati, servono per ordinare e per i promemoria</code>`; }
 $('#dCrypto').addEventListener('toggle', refreshTaskCrypto);
 $('#dTitle').addEventListener('input', e => { task(S.curTask).title = e.target.value; if (isDesk()) renderTasks(); autosize(e.target); refreshTaskCrypto(); });
-$('#dNotes').addEventListener('input', e => { task(S.curTask).notes = e.target.value; autosize(e.target); refreshTaskCrypto(); });
-$('#dDate').addEventListener('change', e => task(S.curTask).due = e.target.value);
-$('#dTime').addEventListener('change', e => task(S.curTask).time = e.target.value);
+const saveNotes = () => { const el = $('#dNotes'); if (!el.textContent.trim() && !el.querySelector('li')) el.innerHTML = ''; task(S.curTask).notes = el.innerHTML; refreshTaskCrypto(); };
+$('#dNotes').addEventListener('input', saveNotes);
+$('#dNTools').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+$('#dNTools').addEventListener('click', e => { const b = e.target.closest('[data-ncmd]'); if (!b) return; if (S.offline) { toast(OFFMSG); return; } $('#dNotes').focus(); document.execCommand(b.dataset.ncmd); saveNotes(); });
+$('#dDate').addEventListener('change', e => { const t = task(S.curTask); t.due = e.target.value; if (!t.due) t.time = ''; dateLabels(); if (isDesk()) renderTasks(); });
+$('#dTime').addEventListener('change', e => { task(S.curTask).time = e.target.value; dateLabels(); if (isDesk()) renderTasks(); });
 $('#dRepeat').addEventListener('change', e => task(S.curTask).repeat = e.target.value);
 $('#dSubs').addEventListener('input', e => { const s = task(S.curTask).subs.find(x => x.id === e.target.dataset.sid); if (s) s.title = e.target.value; });
 $('#dNewSub').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.value.trim()) { task(S.curTask).subs.push({ id: uid(), title: e.target.value.trim(), done: false }); e.target.value = ''; renderSubs(); } });
@@ -1153,48 +1284,73 @@ $('#dNewSub').addEventListener('keydown', e => { if (e.key === 'Enter' && e.targ
 /* ---------- drawing ---------- */
 const cv = $('#cv'), cx = cv.getContext('2d'), paper = $('#paper');
 const COLORS = ['#1D2A26', '#136F5E', '#2F62C9', '#C2366B', '#D9640F', '#F2C200'];
-let D = { tool:'pen', color:COLORS[0], size:4, strokes:[], redo:[], base:null, target:null, cache:null, cur:null, dpr:1, w:0, h:0 };
+const PAGE = { w: 800, h: 1000 }, strokeStore = {};
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+let D = { tool:'pen', color:COLORS[0], size:4, strokes:[], redo:[], base:null, baseUrl:null, baseBox:null, target:null, layer:null, tmp:null, cur:null, k:1, n0:0 };
 $('#swatches').innerHTML = COLORS.map((c, i) => `<button class="sw" style="background:${c}" data-color="${c}" aria-pressed="${i === 0}" aria-label="Colore ${i + 1}"></button>`).join('');
 function openDraw(target) {
-  D.target = target; D.strokes = []; D.redo = []; D.base = null;
-  const who = target.kind === 'page' ? 'In: ' + (page(S.curPage)?.title || 'pagina') : 'In: ' + (task(S.curTask)?.title || 'attività');
-  $('#drawFor').textContent = who;
+  const st = target.sk && strokeStore[target.sk];
+  D.target = target; D.redo = []; D.cur = null; D.strokes = st ? structuredClone(st.strokes) : []; D.n0 = D.strokes.length; D.base = null; D.baseUrl = null; D.baseBox = null;
+  $('#drawFor').textContent = target.kind === 'page' ? 'In: ' + (page(S.curPage)?.title || 'pagina') : 'In: ' + (task(S.curTask)?.title || 'attività');
   show('draw');
   requestAnimationFrame(() => {
-    const r = paper.getBoundingClientRect(); D.dpr = window.devicePixelRatio || 1; D.w = r.width; D.h = r.height;
-    cv.width = r.width * D.dpr; cv.height = r.height * D.dpr;
-    D.cache = document.createElement('canvas'); D.cache.width = cv.width; D.cache.height = cv.height;
-    if (target.sk && sketches[target.sk]) { const im = new Image(); im.onload = () => { D.base = im; rebuild(); }; im.src = sketches[target.sk]; } else rebuild();
+    const r = paper.getBoundingClientRect(), dpr = window.devicePixelRatio || 1, sc = Math.min((r.width - 16) / PAGE.w, (r.height - 16) / PAGE.h);
+    cv.style.width = PAGE.w * sc + 'px'; cv.style.height = PAGE.h * sc + 'px';
+    cv.width = Math.round(PAGE.w * sc * dpr); cv.height = Math.round(PAGE.h * sc * dpr); D.k = cv.width / PAGE.w;
+    D.layer = mk(cv.width, cv.height); D.tmp = mk(cv.width, cv.height);
+    const url = st ? st.base : (target.sk && sketches[target.sk]);
+    if (url) { const im = new Image(); im.onload = () => { D.base = im; D.baseUrl = url; D.baseBox = (st && st.box) || { x:40, y:40, w:720, h:720 * im.height / im.width }; rebuild(); }; im.src = url; }
+    rebuild();
   });
 }
+const widthOf = s => (s.tool === 'hl' ? s.size * 3.5 : s.tool === 'eraser' ? s.size * 3 : s.size) * 1.8;
 function drawStroke(c, s) {
   if (s.pts.length < 1) return;
   c.save(); c.lineCap = c.lineJoin = 'round';
   c.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
-  c.globalAlpha = s.tool === 'hl' ? .35 : 1; c.strokeStyle = s.color; c.lineWidth = s.tool === 'hl' ? s.size * 3.5 : s.tool === 'eraser' ? s.size * 3 : s.size;
-  c.beginPath(); const p = s.pts; c.moveTo(p[0][0], p[0][1]);
-  if (p.length === 1) c.lineTo(p[0][0] + .1, p[0][1]);
-  for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; c.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
-  if (p.length > 1) c.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
+  c.globalAlpha = s.tool === 'hl' ? .35 : 1; c.strokeStyle = s.color; c.lineWidth = widthOf(s);
+  c.beginPath(); const p = s.pts, a = p[0], b = p[p.length - 1];
+  if (s.tool === 'line') { c.moveTo(a[0], a[1]); c.lineTo(b[0] + .1, b[1]); }
+  else if (s.tool === 'rect') c.rect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+  else { c.moveTo(a[0], a[1]);
+    if (p.length === 1) c.lineTo(a[0] + .1, a[1]);
+    for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; c.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
+    if (p.length > 1) c.lineTo(b[0], b[1]); }
   c.stroke(); c.restore();
 }
-function rebuild() {
-  const c = D.cache.getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0, 0, D.cache.width, D.cache.height); c.setTransform(D.dpr,0,0,D.dpr,0,0);
-  if (D.base) { const s = Math.min(D.w / D.base.width, D.h / D.base.height); c.drawImage(D.base, (D.w - D.base.width * s) / 2, (D.h - D.base.height * s) / 2, D.base.width * s, D.base.height * s); }
-  D.strokes.forEach(s => drawStroke(c, s)); paint();
+/* i tratti stanno su un livello a parte: la gomma cancella i tratti, mai il foglio o l'immagine di base */
+function strokesOn(cnv, k, list) { const c = cnv.getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0, 0, cnv.width, cnv.height); c.setTransform(k,0,0,k,0,0); list.forEach(s => drawStroke(c, s)); }
+function rebuild() { if (!D.layer) return; strokesOn(D.layer, D.k, D.strokes); paint(); }
+function paint() {
+  cx.setTransform(1,0,0,1,0,0); cx.fillStyle = '#fff'; cx.fillRect(0, 0, cv.width, cv.height);
+  if (D.base) { cx.setTransform(D.k,0,0,D.k,0,0); const b = D.baseBox; cx.drawImage(D.base, b.x, b.y, b.w, b.h); cx.setTransform(1,0,0,1,0,0); }
+  let src = D.layer;
+  if (D.cur) { const t = D.tmp.getContext('2d'); t.setTransform(1,0,0,1,0,0); t.clearRect(0, 0, D.tmp.width, D.tmp.height); t.drawImage(D.layer, 0, 0); t.setTransform(D.k,0,0,D.k,0,0); drawStroke(t, D.cur); src = D.tmp; }
+  cx.drawImage(src, 0, 0);
 }
-function paint() { cx.setTransform(1,0,0,1,0,0); cx.clearRect(0, 0, cv.width, cv.height); cx.drawImage(D.cache, 0, 0); cx.setTransform(D.dpr,0,0,D.dpr,0,0); if (D.cur) drawStroke(cx, D.cur); }
-const pt = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+const pt = e => { const r = cv.getBoundingClientRect(); const c = (v, m) => Math.max(0, Math.min(m, v)); return [c((e.clientX - r.left) * PAGE.w / r.width, PAGE.w), c((e.clientY - r.top) * PAGE.h / r.height, PAGE.h)]; };
 cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); D.cur = { tool:D.tool, color:D.color, size:D.size, pts:[pt(e)] }; paint(); });
 cv.addEventListener('pointermove', e => { if (!D.cur) return; D.cur.pts.push(pt(e)); paint(); });
-const endStroke = () => { if (!D.cur) return; D.strokes.push(D.cur); D.redo = []; const c = D.cache.getContext('2d'); c.setTransform(D.dpr,0,0,D.dpr,0,0); drawStroke(c, D.cur); D.cur = null; paint(); };
+const endStroke = () => { if (!D.cur) return; if (D.cur.tool === 'line' || D.cur.tool === 'rect') D.cur.pts = [D.cur.pts[0], D.cur.pts[D.cur.pts.length - 1]]; D.strokes.push(D.cur); D.redo = []; D.cur = null; rebuild(); };
 cv.addEventListener('pointerup', endStroke); cv.addEventListener('pointercancel', endStroke);
 $('#size').addEventListener('input', e => D.size = +e.target.value);
+function bbox() {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; const add = (x, y, m) => { x0 = Math.min(x0, x - m); y0 = Math.min(y0, y - m); x1 = Math.max(x1, x + m); y1 = Math.max(y1, y + m); };
+  D.strokes.forEach(s => { if (s.tool === 'eraser') return; const m = widthOf(s) / 2 + 2; s.pts.forEach(p => add(p[0], p[1], m)); });
+  if (D.base) { const b = D.baseBox; add(b.x, b.y, 0); add(b.x + b.w, b.y + b.h, 0); }
+  if (x1 < x0) return null;
+  x0 = Math.max(0, x0 - 16); y0 = Math.max(0, y0 - 16); x1 = Math.min(PAGE.w, x1 + 16); y1 = Math.min(PAGE.h, y1 + 16);
+  return { x: x0, y: y0, w: Math.max(40, x1 - x0), h: Math.max(40, y1 - y0) };
+}
 function saveDrawing() {
-  const out = document.createElement('canvas'); out.width = cv.width; out.height = cv.height; const o = out.getContext('2d');
-  o.fillStyle = '#fff'; o.fillRect(0, 0, out.width, out.height); o.drawImage(D.cache, 0, 0);
+  const b = bbox(); if (!b) { toast('Il foglio è vuoto: disegna qualcosa, oppure chiudi con la ✕'); return; }
+  /* l'anteprima è ritagliata sul disegno: stesso risultato su telefono e PC */
+  const q = 2, out = mk(Math.round(b.w * q), Math.round(b.h * q)), o = out.getContext('2d');
+  o.fillStyle = '#fff'; o.fillRect(0, 0, out.width, out.height);
+  if (D.base) { o.setTransform(q,0,0,q,-b.x * q,-b.y * q); const bb = D.baseBox; o.drawImage(D.base, bb.x, bb.y, bb.w, bb.h); o.setTransform(1,0,0,1,0,0); }
+  const lay = mk(PAGE.w * q, PAGE.h * q); strokesOn(lay, q, D.strokes); o.drawImage(lay, -b.x * q, -b.y * q);
   const url = out.toDataURL('image/png'); const t = D.target;
-  const key = t.sk || ('sk' + uid()); sketches[key] = url;
+  const key = t.sk || ('sk' + uid()); sketches[key] = url; strokeStore[key] = { strokes: D.strokes, base: D.baseUrl, box: D.baseBox };
   if (t.kind === 'page') {
     show('page'); setMode('vis');
     if (t.sk) { $$(`img.sketch[data-sk="${key}"]`, ed).forEach(im => im.src = url); }
@@ -1207,18 +1363,23 @@ function saveDrawing() {
     const tk = task(S.curTask); if (!t.sk) tk.sketches.push(key); openTask(S.curTask); toast('Disegno salvato nell\'attività');
   }
 }
+const leaveDraw = () => { if (D.target.kind === 'page') show('page'); else openTask(S.curTask); };
 
 /* ---------- search ---------- */
+const SF = [['all', 'Tutto'], ['pages', 'Pagine'], ['tasks', 'Attività'], ['draw', 'Con disegni'], ['mail', 'Da email']];
 function renderSearch() {
-  const q = $('#q').value.trim().toLowerCase(); const box = $('#searchRes');
-  if (!q) { box.innerHTML = `<div class="empty"><b>Cerca ovunque</b>Titoli e testi di pagine e attività.</div>`; return; }
+  const q = $('#q').value.trim().toLowerCase(); const box = $('#searchRes'), f = S.sFilter || 'all';
+  $('#sFilters').innerHTML = SF.map(([id, n]) => `<button class="fchip" data-act="s-filter" data-id="${id}" aria-pressed="${f === id}">${n}</button>`).join('');
+  if (!q) { box.innerHTML = `<div class="empty"><b>Cerca ovunque</b>Titoli, testi ed etichette di pagine e attività. La ricerca avviene su questo dispositivo, dopo lo sblocco.</div>`; return; }
   const hl = s => esc(s).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), m => `<mark>${m}</mark>`);
-  const ps = S.pages.filter(p => (p.title + ' ' + textOf(p.html)).toLowerCase().includes(q));
-  const ts = S.lists.flatMap(l => l.tasks.map(t => ({ t, l }))).filter(x => (x.t.title + ' ' + x.t.notes).toLowerCase().includes(q));
-  box.innerHTML = (ps.length ? `<div class="rhead">Pagine · ${ps.length}</div>` + ps.map(p => { const s = sec(p.section); const txt = textOf(p.html); const i = Math.max(0, txt.toLowerCase().indexOf(q) - 40);
-      return `<div class="page-row" data-act="open-page" data-id="${p.id}"><span class="tab-color dot" style="background:${secColor(s)};height:34px;width:5px;border-radius:3px"></span><div class="pg"><div class="pt">${hl(p.title)}</div><div class="ps">${i ? '…' : ''}${hl(txt.slice(i, i + 120))}</div><div class="crumb">${esc(s.name)}</div></div></div>`; }).join('') : '')
+  let ps = f === 'tasks' ? [] : live().filter(p => (p.title + ' ' + textOf(p.html) + ' #' + (p.tags || []).join(' #')).toLowerCase().includes(q));
+  let ts = f === 'pages' ? [] : S.lists.flatMap(l => l.tasks.map(t => ({ t, l }))).filter(x => (x.t.title + ' ' + textOf(x.t.notes)).toLowerCase().includes(q));
+  if (f === 'draw') { ps = ps.filter(p => firstSketch(p.html)); ts = ts.filter(x => x.t.sketches.length); }
+  if (f === 'mail') { ps = ps.filter(p => p.mail); ts = ts.filter(x => x.t.mail); }
+  box.innerHTML = (ps.length ? `<div class="rhead">Pagine · ${ps.length}</div>` + ps.map(p => { const s = sec(p.section), g = s.group ? grp(s.group) : null; const txt = textOf(p.html); const i = Math.max(0, txt.toLowerCase().indexOf(q) - 40);
+      return `<div class="page-row" data-act="open-page" data-id="${p.id}"><span class="tab-color dot" style="background:${secColor(s)};height:34px;width:5px;border-radius:3px"></span><div class="pg"><div class="pt">${hl(p.title)}</div><div class="ps">${i ? '…' : ''}${hl(txt.slice(i, i + 120))}</div><div class="crumb">${g ? esc(g.name) + ' › ' : ''}${esc(s.name)}${(p.tags || []).length ? ' · ' + p.tags.map(t => '#' + hl(t)).join(' ') : ''}</div></div></div>`; }).join('') : '')
     + (ts.length ? `<div class="rhead">Attività · ${ts.length}</div>` + ts.map(x => taskRow(x.t, { listName: x.l.name })).join('') : '')
-    + (!ps.length && !ts.length ? `<div class="empty"><b>Nessun risultato</b>Prova con un'altra parola.</div>` : '');
+    + (!ps.length && !ts.length ? `<div class="empty"><b>Nessun risultato</b>Prova con un'altra parola${f !== 'all' ? ' o togli il filtro' : ''}.</div>` : '');
 }
 $('#q').addEventListener('input', renderSearch);
 
@@ -1234,19 +1395,23 @@ $('#dest').addEventListener('change', e => S.dest = e.target.value);
 const MAILS = [
   { from:'tu@esempio.it', subject:'Fwd: Codice cancello garage', body:'Il nuovo codice del cancello è 4471#.\nValido da lunedì 1 dicembre.' },
   { from:'sconosciuto@offerte-esempio.com', subject:'Hai vinto un buono!', body:'Clicca qui…' },
+  { from:'tu@esempio.it', subject:'Torta di mele della zia #ricette', body:'6 mele, 200 g di farina, 150 g di zucchero, 3 uova.\nForno a 180 °C per 45 minuti.' },
   { from:'lavoro@esempio.it', subject:'Appunti chiamata cliente', body:'Vuole l\'export PDF delle note.\nRichiamare giovedì mattina.' },
 ];
 let mailIdx = 0;
 function simulateMail() {
-  const m = MAILS[mailIdx++ % MAILS.length];
+  let m = MAILS[mailIdx++ % MAILS.length];
   if (!S.senders.includes(m.from)) { toast(`Email scartata: ${m.from} non è tra i mittenti ammessi`); return; }
   const meta = { from: m.from, when: 'oggi ' + new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' }) };
-  const [kind, id] = S.dest.split(':');
+  let [kind, id] = S.dest.split(':'); const tag = /\s*#([\wàèéìòù]+)/i.exec(m.subject); let subject = m.subject;
+  if (tag) { const w = tag[1].toLowerCase(), sx = S.sections.find(x => x.name.toLowerCase().startsWith(w)), lx = S.lists.find(x => x.name.toLowerCase().startsWith(w));
+    if (sx || lx) { kind = sx ? 'sec' : 'list'; id = (sx || lx).id; subject = m.subject.replace(tag[0], '').trim(); } }
+  m = { ...m, subject };
   if (kind === 'sec') {
     const p = { id: 'p' + uid(), section: id, title: m.subject, date: iso(0), mail: meta, html: m.body.split('\n').map(l => `<p>${esc(l)}</p>`).join('') };
     S.pages.unshift(p); toast(`Nuova pagina in "${sec(id).name}": ${m.subject}`, 'Apri', () => { S.curSection = id; renderNotes(); openPage(p.id); });
   } else {
-    const l = S.lists.find(x => x.id === id); const t = { id: uid(), title: m.subject, notes: m.body, due:'', time:'', repeat:'none', starred:false, done:false, subs:[], sketches:[], mail: meta };
+    const l = S.lists.find(x => x.id === id); const t = { id: uid(), title: m.subject, notes: m.body.split('\n').map(x => `<p>${esc(x)}</p>`).join(''), due:'', time:'', repeat:'none', starred:false, done:false, subs:[], sketches:[], mail: meta };
     l.tasks.unshift(t); toast(`Nuova attività in "${l.name}": ${m.subject}`, 'Apri', () => openTask(t.id));
   }
   refresh();
@@ -1277,10 +1442,11 @@ function quickAdd() {
   $('#qaS').onclick = () => { star = !star; $('#qaS').classList.toggle('on', star); $('#qaS').innerHTML = ic('star', star ? 'fill' : ''); };
   const make = () => { const v = $('#qaTitle').value.trim(); if (!v) { $('#qaTitle').focus(); return null; }
     const l = S.curList === 'starred' ? S.lists[0] : curList();
-    const t = { id: uid(), title: v, notes: $('#qaNotes').value, due: $('#qaDate').hidden ? '' : $('#qaDate').value, time:'', repeat:'none', starred: star || S.curList === 'starred', done:false, subs:[], sketches:[] };
+    const t = { id: uid(), title: v, notes: esc($('#qaNotes').value), due: $('#qaDate').hidden ? '' : $('#qaDate').value, time:'', repeat:'none', starred: star || S.curList === 'starred', done:false, subs:[], sketches:[] };
     l.tasks.unshift(t); closeOverlay(); refresh(); return t; };
-  $('#qaOk').onclick = () => { if (make()) toast('Attività aggiunta'); };
-  $('#qaTitle').onkeydown = e => { if (e.key === 'Enter') { if (make()) toast('Attività aggiunta'); } };
+  const added = () => toast(S.curList === 'starred' ? `Aggiunta con la stella nella lista "${S.lists[0].name}"` : 'Attività aggiunta');
+  $('#qaOk').onclick = () => { if (make()) added(); };
+  $('#qaTitle').onkeydown = e => { if (e.key === 'Enter') { if (make()) added(); } };
   $('#qaP').onclick = () => { const t = make(); if (t) { S.curTask = t.id; openTask(t.id); openDraw({ kind:'task', sk:null }); } };
 }
 
@@ -1296,16 +1462,29 @@ function toast(msg, action, fn) {
 function refresh() { renderNotes(); renderTasks(); renderSettings(); if (screen === 'search') renderSearch(); }
 
 /* ---------- actions ---------- */
+const OFFMSG = 'Senza rete puoi solo leggere. Le modifiche tornano disponibili appena sei online.';
+const READ_ACTS = new Set(['nav', 'close', 'lock', 'unlock', 'unlock-bio', 'drawer', 'pick-sec', 'toggle-grp', 'dev', 'open-page', 'back-notes', 'mode', 'pick-list', 'toggle-done', 'open-task', 'back-tasks', 'forgot', 'go-admin', 'admin-back', 'install', 's-filter', 'copy-addr']);
+function applyOffline() { const off = !!S.offline; $('#offBar').hidden = !off || ['setup', 'admin'].includes(screen);
+  ed.contentEditable = String(!off); $('#dNotes').contentEditable = String(!off);
+  $$('#pTitle, [data-screen="detail"] input, [data-screen="detail"] select, [data-screen="detail"] textarea').forEach(x => x.disabled = off); }
+function askPass(title, fn, note = '') {
+  sheet(`<h3>${title}</h3><p style="margin:0 0 10px;color:var(--muted)">${note || 'Per sicurezza conferma la password delle note.'}</p><input class="field-in" type="password" id="apIn" placeholder="Password delle note" autocomplete="current-password" aria-label="Password delle note">
+    <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn primary" id="apOk">Conferma</button></div>`);
+  const ok = () => { if (!$('#apIn').value) { toast('Scrivi la password delle note'); $('#apIn').focus(); return; } closeOverlay(); fn(); };
+  $('#apOk').onclick = ok; $('#apIn').onkeydown = e => { if (e.key === 'Enter') ok(); };
+}
 document.addEventListener('click', e => {
   const tool = e.target.closest('[data-tool]'); if (tool) { D.tool = tool.dataset.tool; $$('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b === tool))); return; }
   const sw = e.target.closest('[data-color]'); if (sw) { D.color = sw.dataset.color; $$('[data-color]').forEach(b => b.setAttribute('aria-pressed', String(b === sw))); if (D.tool === 'eraser') $('[data-tool="pen"]').click(); return; }
   const go = e.target.closest('[data-go]'); if (go) { guide(go.dataset.go); return; }
   const a = e.target.closest('[data-act]'); if (!a) return; const id = a.dataset.id;
+  if (S.offline && !READ_ACTS.has(a.dataset.act)) { toast(OFFMSG); return; }
   switch (a.dataset.act) {
     case 'nav': show(a.dataset.to); if (a.dataset.to === 'search') renderSearch(); break;
     case 'close': closeOverlay(); break;
-    case 'lock': $('#pass').value = ''; show('lock'); break;
-    case 'unlock': unlock(); break;
+    case 'lock': $('#pass').value = ''; $('#lockErr').textContent = ''; show('lock'); break;
+    case 'unlock': unlock(false); break;
+    case 'unlock-bio': unlock(true); break;
     // notes
     case 'drawer': openDrawer(); break;
     case 'pick-sec': S.curSection = id; closeOverlay(); if (isDesk()) { S.curPage = null; show('notes'); } else renderNotes(); break;
@@ -1322,32 +1501,59 @@ document.addEventListener('click', e => {
     case 'new-grp': nameSheet('Nuovo gruppo di sezioni', '', 'Nome del gruppo', v => { S.groups.push({ id: 'g' + uid(), name: v, open: true }); toast(`Gruppo "${v}" creato`); setTimeout(openDrawer, 50); }); break;
     case 'sec-menu': { const s = sec(S.curSection);
       sheet(`<h3>${esc(s.name)}</h3>
+        <p class="eyebrow">Ordina le pagine</p>
+        <button class="opt" data-act="sec-sort" data-id="my" aria-checked="${!s.sort || s.sort === 'my'}">${ic('drag')}Ordine manuale</button>
+        <button class="opt" data-act="sec-sort" data-id="date" aria-checked="${s.sort === 'date'}">${ic('cal')}Ultima modifica</button>
+        <button class="opt" data-act="sec-sort" data-id="title" aria-checked="${s.sort === 'title'}">${ic('list')}Titolo</button>
+        <p class="eyebrow" style="margin-top:10px">Sezione</p>
         <button class="opt" data-act="rename-sec">${ic('pen')}Rinomina sezione</button>
         <button class="opt" data-act="move-sec">${ic('move')}Sposta in un altro gruppo</button>
         <button class="opt danger" data-act="del-sec">${ic('trash')}Elimina sezione e pagine</button>`); break; }
     case 'rename-sec': nameSheet('Rinomina sezione', sec(S.curSection).name, 'Nome', v => sec(S.curSection).name = v); break;
     case 'move-sec': sheet(`<h3>Sposta in</h3><button class="opt" data-act="do-move-sec" data-id="">${ic('book')}Nessun gruppo</button>${S.groups.map(g => `<button class="opt" data-act="do-move-sec" data-id="${g.id}" aria-checked="${sec(S.curSection).group === g.id}">${ic('folder')}${esc(g.name)}</button>`).join('')}`); break;
     case 'do-move-sec': sec(S.curSection).group = id || null; closeOverlay(); refresh(); toast('Sezione spostata'); break;
-    case 'del-sec': sheet(`<h3>Eliminare "${esc(sec(S.curSection).name)}"?</h3><p style="margin:0 0 4px;color:var(--muted)">Le ${S.pages.filter(p => p.section === S.curSection).length} pagine della sezione verranno eliminate.</p>
+    case 'del-sec': sheet(`<h3>Eliminare "${esc(sec(S.curSection).name)}"?</h3><p style="margin:0 0 4px;color:var(--muted)">Le ${live().filter(p => p.section === S.curSection).length} pagine della sezione verranno eliminate per sempre.</p>
         <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn danger" data-act="do-del-sec">Elimina</button></div>`); break;
     case 'do-del-sec': { if (S.sections.length < 2) { closeOverlay(); toast('Serve almeno una sezione'); break; }
       const name = sec(S.curSection).name; S.pages = S.pages.filter(p => p.section !== S.curSection); S.sections = S.sections.filter(s => s.id !== S.curSection); S.curSection = S.sections[0].id;
       if (!S.sections.some(s => 'sec:' + s.id === S.dest) && S.dest.startsWith('sec')) S.dest = 'sec:' + S.sections[0].id; closeOverlay(); refresh(); toast(`Sezione "${name}" eliminata`); break; }
-    case 'new-page': { const p = { id: 'p' + uid(), section: S.curSection, title: '', date: iso(0), html: '<p><br></p>' }; S.pages.unshift(p); renderNotes(); openPage(p.id); $('#pTitle').focus(); break; }
-    case 'open-page': { const p = page(id); S.curSection = p.section; renderNotes(); openPage(id); break; }
-    case 'back-notes': renderNotes(); show('notes'); break;
+    case 'new-page': { const p = { id: 'p' + uid(), section: VIRT[S.curSection] ? S.sections[0].id : S.curSection, fav: S.curSection === 'fav', title: '', date: iso(0), html: '<p><br></p>' }; pageFrom = 'notes'; S.pages.unshift(p); renderNotes(); openPage(p.id); $('#pTitle').focus(); break; }
+    case 'open-page': { const p = page(id); pageFrom = screen === 'search' ? 'search' : 'notes'; if ((pageFrom === 'search' && isDesk()) || screen === 'detail') S.curSection = p.section; renderNotes(); openPage(id); break; }
+    case 'back-notes': if (pageFrom === 'search') { show('search'); renderSearch(); } else { renderNotes(); show('notes'); } break;
+    case 'page-fav': { const p = page(S.curPage); p.fav = !p.fav; $('#pFav').classList.toggle('on', p.fav); $('#pFav').innerHTML = ic('star', p.fav ? 'fill' : ''); renderNotes(); toast(p.fav ? 'Aggiunta ai preferiti' : 'Tolta dai preferiti'); break; }
+    case 'add-tag': nameSheet('Nuova etichetta', '', 'es. cucina', v => { const p = page(S.curPage), t = v.replace(/^#/, '').toLowerCase(); p.tags = [...new Set([...(p.tags || []), t])]; setTimeout(renderTags, 0); }); break;
+    case 'rm-tag': { const p = page(S.curPage); p.tags = (p.tags || []).filter(t => t !== a.dataset.tag); renderTags(); renderNotes(); break; }
+    case 'restore-page': { const p = page(id); delete p.trashed; if (!sec(p.section)) p.section = S.sections[0].id; renderNotes(); if (isDesk()) renderDeskTree(); toast(`"${p.title || 'Senza titolo'}" ripristinata in ${sec(p.section).name}`); break; }
+    case 'purge-page': sheet(`<h3>Eliminare per sempre?</h3><p style="margin:0;color:var(--muted)">"${esc(page(id).title || 'Senza titolo')}" non si potrà più recuperare.</p><div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn danger" data-act="do-purge" data-id="${id}">Elimina</button></div>`); break;
+    case 'do-purge': S.pages = S.pages.filter(p => p.id !== id); closeOverlay(); refresh(); break;
+    case 'empty-trash': sheet(`<h3>Svuotare il cestino?</h3><p style="margin:0;color:var(--muted)">Le ${S.pages.filter(p => p.trashed).length} pagine nel cestino non si potranno più recuperare.</p><div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn danger" data-act="do-empty-trash">Svuota</button></div>`); break;
+    case 'do-empty-trash': S.pages = live(); closeOverlay(); refresh(); break;
+    case 'do-totask': { const l = S.lists.find(x => x.id === id), li = pendingLi; closeOverlay(); if (!li) break;
+      const clone = li.cloneNode(true); const t = { id: uid(), title: clone.textContent.trim() || 'Senza titolo', notes:'', due:'', time:'', repeat:'none', starred:false, done: li.classList.contains('done'), subs:[], sketches:[], pageId: S.curPage };
+      l.tasks.unshift(t); li.dataset.task = t.id; li.insertAdjacentHTML('beforeend', `<span class="tlink" contenteditable="false" data-task="${t.id}">attività</span>`); pendingLi = null; savePage(); renderTasks();
+      toast(`Attività creata in "${l.name}"`, 'Apri', () => openTask(t.id)); break; }
+    case 'sec-sort': sec(S.curSection).sort = id; closeOverlay(); renderNotes(); break;
+    case 'page-up': case 'page-down': { const p = page(S.curPage), sib = live().filter(x => x.section === p.section), i = sib.indexOf(p), o = sib[i + (a.dataset.act === 'page-up' ? -1 : 1)]; closeOverlay();
+      if (!o) { toast('È già in ' + (a.dataset.act === 'page-up' ? 'cima' : 'fondo')); break; } const ia = S.pages.indexOf(p), ib = S.pages.indexOf(o); S.pages[ia] = o; S.pages[ib] = p; sec(p.section).sort = 'my'; renderNotes(); break; }
+    case 'page-history': sheet(`<h3>Cronologia versioni</h3><p style="margin:0 0 8px;color:var(--muted)">Ogni salvataggio importante viene conservato per 90 giorni.</p>
+      ${[['Oggi 17:02', 'versione attuale'], ['Oggi 16:40', '+ 3 righe'], ['Ieri 21:15', 'aggiunto un disegno'], ['18 nov 09:30', 'prima stesura']].map((v, i) => `<div class="urow"><div class="grow"><div class="lab">${v[0]}</div><div class="hint">${v[1]}</div></div>${i ? `<button class="btn ghost" data-act="do-restore-ver" data-id="${v[0]}" style="height:34px;padding:0 10px;font-size:13px">Ripristina</button>` : ''}</div>`).join('')}`); break;
+    case 'do-restore-ver': closeOverlay(); toast(`Versione "${id}" ripristinata (nel mockup il testo non cambia)`); break;
     case 'mode': setMode(a.dataset.mode); break;
     case 'page-menu': { const p = page(S.curPage);
       sheet(`<h3>${esc(p.title || 'Pagina')}</h3>
         <button class="opt" data-act="page-move">${ic('move')}Sposta in un'altra sezione</button>
         <button class="opt" data-act="page-sub">${ic('sub')}${p.sub ? 'Promuovi a pagina' : 'Rendi sottopagina'}</button>
-        <button class="opt danger" data-act="page-del">${ic('trash')}Elimina pagina</button>`); break; }
+        <button class="opt" data-act="page-up">${ic('up')}Sposta su</button>
+        <button class="opt" data-act="page-down">${ic('down')}Sposta giù</button>
+        <button class="opt" data-act="page-history">${ic('history')}Cronologia versioni</button>
+        <button class="opt danger" data-act="page-del">${ic('trash')}Sposta nel cestino</button>`); break; }
     case 'page-move': sheet(`<h3>Sposta in</h3>${S.sections.map(s => `<button class="opt" data-act="do-page-move" data-id="${s.id}" aria-checked="${page(S.curPage).section === s.id}"><span class="dot" style="background:${secColor(s)}"></span>${esc(s.name)}</button>`).join('')}`); break;
     case 'do-page-move': page(S.curPage).section = id; S.curSection = id; closeOverlay(); refresh(); openPage(S.curPage); toast(`Spostata in "${sec(id).name}"`); break;
     case 'page-sub': page(S.curPage).sub = !page(S.curPage).sub; closeOverlay(); renderNotes(); toast(page(S.curPage).sub ? 'Ora è una sottopagina' : 'Ora è una pagina'); break;
-    case 'page-del': { const p = page(S.curPage), i = S.pages.indexOf(p); S.pages.splice(i, 1); S.curPage = null; closeOverlay(); renderNotes(); show('notes');
-      toast('Pagina eliminata', 'Annulla', () => { S.pages.splice(i, 0, p); renderNotes(); }); break; }
+    case 'page-del': { const p = page(S.curPage); p.trashed = iso(0); S.curPage = null; closeOverlay(); renderNotes(); show('notes');
+      toast('Spostata nel cestino', 'Annulla', () => { delete p.trashed; renderNotes(); }); break; }
     // tasks
+    case 's-filter': S.sFilter = id; renderSearch(); break;
     case 'pick-list': S.curList = id; S.showDone = false; renderTasks(); break;
     case 'new-list': nameSheet('Nuova lista', '', 'Nome della lista', v => { const l = { id: 'l' + uid(), name: v, sort: 'my', tasks: [] }; S.lists.push(l); S.curList = l.id; toast(`Lista "${v}" creata`); }); break;
     case 'list-menu': { const l = curList();
@@ -1372,21 +1578,36 @@ document.addEventListener('click', e => {
     case 'quick-add': quickAdd(); break;
     case 'back-tasks': renderTasks(); show(screen === 'detail' && $('#q').value && lastNav === 'search' ? 'search' : 'tasks'); if (screen === 'search') renderSearch(); break;
     case 'star-detail': { const t = task(S.curTask); t.starred = !t.starred; $('#dStar').classList.toggle('on', t.starred); $('#dStar').innerHTML = ic('star', t.starred ? 'fill' : ''); break; }
-    case 'clear-date': $('#dDate').value = ''; $('#dTime').value = ''; Object.assign(task(S.curTask), { due:'', time:'' }); break;
+    case 'clear-date': $('#dDate').value = ''; $('#dTime').value = ''; Object.assign(task(S.curTask), { due:'', time:'' }); dateLabels(); if (isDesk()) renderTasks(); break;
     case 'detail-done': { const tid = S.curTask; S.curTask = null; renderTasks(); show('tasks'); toggleTask(tid); break; }
     case 'del-task': { const t = task(S.curTask), l = listOf(t.id), i = l.tasks.indexOf(t); l.tasks.splice(i, 1); S.curTask = null; renderTasks(); show('tasks');
       toast('Attività eliminata', 'Annulla', () => { l.tasks.splice(i, 0, t); refresh(); }); break; }
     case 'move-task': sheet(`<h3>Sposta in</h3>${S.lists.map(l => `<button class="opt" data-act="do-move-task" data-id="${l.id}" aria-checked="${listOf(S.curTask).id === l.id}">${ic('list')}${esc(l.name)}</button>`).join('')}`); break;
     case 'do-move-task': { const t = task(S.curTask), from = listOf(t.id), to = S.lists.find(l => l.id === id); if (from !== to) { from.tasks.splice(from.tasks.indexOf(t), 1); to.tasks.unshift(t); } closeOverlay(); openTask(t.id); toast(`Spostata in "${to.name}"`); break; }
     case 'd-sub-toggle': { const s = task(S.curTask).subs.find(x => x.id === a.dataset.sid); s.done = !s.done; renderSubs(); break; }
-    case 'd-sub-del': { const t = task(S.curTask); t.subs = t.subs.filter(x => x.id !== a.dataset.sid); renderSubs(); break; }
+    case 'd-sub-del': { const t = task(S.curTask); t.subs = t.subs.filter(x => x.id !== a.dataset.sid); closeOverlay(); renderSubs(); break; }
+    case 'd-sub-menu': { const t = task(S.curTask), sid = a.dataset.sid, sb = t.subs.find(x => x.id === sid), i = t.subs.indexOf(sb);
+      sheet(`<h3>${esc(sb.title)}</h3><label class="datebtn ${sb.due ? '' : 'empty'}" style="margin-bottom:8px">${ic('cal', 'sm')}<span>${sb.due ? 'Scadenza: ' + fmtDay(sb.due).toLowerCase() : 'Aggiungi scadenza'}</span><input type="date" id="subDate" value="${sb.due || ''}" aria-label="Scadenza della sotto-attività"></label>
+        ${sb.due ? `<button class="opt" data-act="d-sub-nodate" data-sid="${sid}">${ic('close')}Togli scadenza</button>` : ''}
+        ${i > 0 ? `<button class="opt" data-act="d-sub-up" data-sid="${sid}">${ic('up')}Sposta su</button>` : ''}${i < t.subs.length - 1 ? `<button class="opt" data-act="d-sub-down" data-sid="${sid}">${ic('down')}Sposta giù</button>` : ''}
+        <button class="opt" data-act="d-sub-promote" data-sid="${sid}">${ic('tasks')}Trasforma in attività</button>
+        <button class="opt danger" data-act="d-sub-del" data-sid="${sid}">${ic('trash')}Elimina</button>`);
+      $('#subDate').onchange = e => { sb.due = e.target.value; closeOverlay(); renderSubs(); }; break; }
+    case 'd-sub-nodate': { delete task(S.curTask).subs.find(x => x.id === a.dataset.sid).due; closeOverlay(); renderSubs(); break; }
+    case 'd-sub-up': case 'd-sub-down': { const t = task(S.curTask), i = t.subs.findIndex(x => x.id === a.dataset.sid), j = i + (a.dataset.act === 'd-sub-up' ? -1 : 1);
+      [t.subs[i], t.subs[j]] = [t.subs[j], t.subs[i]]; closeOverlay(); renderSubs(); break; }
+    case 'd-sub-promote': { const t = task(S.curTask), l = listOf(t.id), sb = t.subs.find(x => x.id === a.dataset.sid); t.subs = t.subs.filter(x => x !== sb);
+      l.tasks.splice(l.tasks.indexOf(t) + 1, 0, { id: uid(), title: sb.title, notes:'', due: sb.due || '', time:'', repeat:'none', starred:false, done: sb.done, subs:[], sketches:[] });
+      closeOverlay(); renderSubs(); if (isDesk()) renderTasks(); toast(`"${sb.title}" ora è un'attività della lista ${l.name}`); break; }
     case 'draw-task': openDraw({ kind:'task', sk:null }); break;
     case 'edit-task-sketch': openDraw({ kind:'task', sk:a.dataset.sk }); break;
     // draw
     case 'undo': if (D.strokes.length) { D.redo.push(D.strokes.pop()); rebuild(); } break;
     case 'redo': if (D.redo.length) { D.strokes.push(D.redo.pop()); rebuild(); } break;
-    case 'draw-clear': D.redo = [...D.strokes.reverse()]; D.strokes = []; D.base = null; rebuild(); toast('Foglio pulito', 'Annulla', () => { D.strokes = D.redo.reverse(); D.redo = []; rebuild(); }); break;
-    case 'draw-cancel': if (D.target.kind === 'page') { show('page'); } else openTask(S.curTask); break;
+    case 'draw-clear': { const prev = { strokes: D.strokes, base: D.base, baseUrl: D.baseUrl, baseBox: D.baseBox }; Object.assign(D, { strokes: [], redo: [], base: null, baseUrl: null, baseBox: null }); rebuild();
+      toast('Foglio pulito', 'Annulla', () => { Object.assign(D, prev); rebuild(); }); break; }
+    case 'draw-cancel': if (D.strokes.length !== D.n0) sheet(`<h3>Chiudere senza salvare?</h3><p style="margin:0;color:var(--muted)">Le modifiche al disegno andranno perse.</p><div class="row-end"><button class="btn ghost" data-act="close">Continua a disegnare</button><button class="btn danger" data-act="draw-leave">Chiudi senza salvare</button></div>`); else leaveDraw(); break;
+    case 'draw-leave': closeOverlay(); leaveDraw(); break;
     case 'draw-save': saveDrawing(); break;
     // settings
     case 'copy-addr': { const txt = $('#addr').textContent;
@@ -1404,16 +1625,38 @@ document.addEventListener('click', e => {
       try { navigator.clipboard.writeText(setup.code).then(() => toast('Codice copiato'), sel); } catch { sel(); } break; }
     case 'go-admin': renderAdmin(); show('admin'); break;
     case 'admin-back': show('settings'); break;
-    case 'new-code': sheet(`<h3>Nuovo codice di recupero</h3><p style="margin:0 0 12px;color:var(--muted)">Il codice precedente ha smesso di valere. Salva questo.</p><div class="codebox">${esc(newCode())}</div><div class="row-end"><button class="btn primary" data-act="close">L'ho salvato</button></div>`); break;
+    case 'new-code': askPass('Nuovo codice di recupero', () => sheet(`<h3>Nuovo codice di recupero</h3><p style="margin:0 0 12px;color:var(--muted)">Il codice precedente ha smesso di valere. Salva questo.</p><div class="codebox">${esc(newCode())}</div><div class="row-end"><button class="btn primary" data-act="close">L'ho salvato</button></div>`)); break;
     case 'devices': sheet(`<h3>Dispositivi collegati</h3>
       <div class="urow">${ic('phone')}<div class="grow"><div class="lab">Questo telefono</div><div class="hint">App installata · attivo ora</div></div></div>
       <div class="urow">${ic('sliders')}<div class="grow"><div class="lab">Portatile di casa</div><div class="hint">Browser · 3 giorni fa</div></div><button class="btn ghost" data-act="dev-off" style="height:34px;padding:0 10px;font-size:13px">Scollega</button></div>`); break;
-    case 'dev-off': closeOverlay(); toast('Portatile scollegato: dovrà inserire di nuovo la password'); break;
+    case 'dev-off': askPass('Scollegare il portatile?', () => toast('Portatile scollegato: dovrà inserire di nuovo la password')); break;
+    case 'regen-addr': askPass('Nuovo indirizzo per le email', () => { $('#addr').textContent = `note-${uid().slice(0, 6)}@note.tuodominio.it`; toast('Nuovo indirizzo creato: quello vecchio non funziona più'); }, 'Il vecchio indirizzo smette subito di funzionare. Conferma con la password delle note.'); break;
+    case 'chg-pass': sheet(`<h3>Cambia password delle note</h3><p style="margin:0 0 4px;color:var(--muted)">Le note non vengono ricifrate: cambia solo la serratura della tua chiave. Il codice di recupero resta valido.</p>
+      <label class="flab" for="cp0">Password attuale</label><input class="field-in" type="password" id="cp0" autocomplete="current-password">
+      <label class="flab" for="cp1">Nuova password</label><input class="field-in" type="password" id="cp1" autocomplete="new-password" placeholder="Almeno 10 caratteri">
+      <label class="flab" for="cp2">Ripeti la nuova password</label><input class="field-in" type="password" id="cp2" autocomplete="new-password">
+      <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn primary" id="cpOk">Cambia</button></div>`);
+      $('#cpOk').onclick = () => { if (!$('#cp0').value) { toast('Scrivi la password attuale'); return; } if ($('#cp1').value.length < 10) { toast('La nuova password deve avere almeno 10 caratteri'); return; } if ($('#cp1').value !== $('#cp2').value) { toast('Le due password non coincidono'); return; }
+        closeOverlay(); toast('Password cambiata. Gli altri dispositivi dovranno sbloccare di nuovo'); }; break;
+    case 'backup': sheet(`<h3>Backup ed esportazione</h3>
+      <button class="opt" data-act="bk-znk">${ic('lock')}<span><b>Backup cifrato (.znk)</b><br><span class="ok">Tutto il tuo spazio, leggibile solo con la tua password</span></span></button>
+      <button class="opt" data-act="bk-md">${ic('md')}<span><b>Esporta in Markdown (.zip)</b><br><span class="ok">File leggibili da chiunque: non cifrati</span></span></button>
+      <button class="opt" data-act="bk-restore">${ic('history')}<span><b>Ripristina da un backup</b><br><span class="ok">Sceglie un file .znk e chiede la password di allora</span></span></button>`); break;
+    case 'bk-znk': askPass('Backup cifrato', () => toast('Backup creato: znotekeeper-2026-11-24.znk (4,2 MB)')); break;
+    case 'bk-md': askPass('Esporta in Markdown', () => toast('Esportate 9 pagine e 8 attività in znotekeeper-markdown.zip'), 'Attenzione: i file esportati <b>non sono cifrati</b>. Conservali in un posto sicuro. Conferma con la password delle note.'); break;
+    case 'bk-restore': closeOverlay(); toast('Nel plugin: scegli il file .znk e inserisci la password di quel backup'); break;
+    case 'print-code': toast('Nel plugin si apre la stampa di un foglio con il solo codice'); break;
+    case 'dl-code': toast('Nel plugin scarica un file di testo con il codice'); break;
+    case 'do-user-off': { const u = USERS.find(x => x.id === id); u.on = false; u.kept = true; u.info = 'Disabilitato oggi · dati cifrati conservati'; closeOverlay(); renderAdmin(); toast(`Accesso tolto a ${u.name}. I dati restano cifrati e si possono riattivare`); break; }
+    case 'user-wipe': { const u = USERS.find(x => x.id === id);
+      sheet(`<h3>Cancellare lo spazio di ${esc(u.name)}?</h3><p style="margin:0 0 10px;color:var(--muted)">Note, attività e disegni vengono eliminati per sempre. Nessuno li potrà recuperare. Per confermare scrivi <b>${esc(u.name)}</b>.</p><input class="field-in" id="wipeIn" aria-label="Nome utente" autocomplete="off">
+        <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn danger" id="wipeOk">Cancella per sempre</button></div>`);
+      $('#wipeOk').onclick = () => { if ($('#wipeIn').value.trim().toLowerCase() !== u.name.toLowerCase()) { toast('Il nome non coincide'); return; } u.kept = false; u.info = 'Non abilitato · spazio cancellato oggi'; closeOverlay(); renderAdmin(); toast(`Spazio di ${u.name} cancellato`); }; break; }
     case 'install': sheet(`<h3>Installa ZNoteKeeper</h3>
       <p class="eyebrow">Android · Chrome</p><p style="margin:0 0 12px">Tocca <b>Installa app</b> nel banner o nel menu ⋮. L'icona ZNoteKeeper compare nella schermata Home.</p>
       <p class="eyebrow">iPhone · Safari</p><p style="margin:0 0 12px">Tocca <b>Condividi</b>, poi <b>Aggiungi alla schermata Home</b>. Le notifiche di scadenza funzionano solo da qui.</p>
       <p class="eyebrow">PC · Chrome o Edge</p><p style="margin:0 0 12px">Clicca l'icona <b>Installa</b> a destra nella barra degli indirizzi. ZNoteKeeper compare nel menu Start o nel Launchpad e si apre in una finestra sua.</p>
-      <p style="margin:0;color:var(--muted);font-size:13px">Una volta installata si apre a schermo intero e mostra le note già scaricate anche senza rete.</p>
+      <p style="margin:0;color:var(--muted);font-size:13px">Una volta installata si apre in una finestra sua. Senza rete mostra le note già scaricate, in sola lettura.</p>
       <div class="row-end"><button class="btn primary" data-act="close">Ho capito</button></div>`); break;
   }
 });
@@ -1421,12 +1664,26 @@ let lastNav = 'tasks';
 $('#nav').addEventListener('click', e => { const b = e.target.closest('[data-to]'); if (b) lastNav = b.dataset.to; });
 $('#app').addEventListener('click', e => { if (e.target.closest('#searchRes [data-act="open-task"]')) lastNav = 'search'; }, true);
 
-function unlock() {
+let fails = 0, lockUntil = 0;
+function unlock(sure) {
+  const left = Math.ceil((lockUntil - Date.now()) / 1000);
+  if (left > 0) { $('#lockErr').textContent = `Troppi tentativi: riprova tra ${left} secondi.`; return; }
+  if (!sure && !$('#pass').value) { fails++;
+    if (fails >= 5) { lockUntil = Date.now() + 30000; fails = 0; $('#lockErr').textContent = 'Cinque tentativi sbagliati: attendi 30 secondi. Le attese si allungano a ogni serie di errori.'; }
+    else $('#lockErr').textContent = `Password errata. Tentativo ${fails} di 5.`;
+    return; }
+  fails = 0; $('#lockErr').textContent = '';
   const f = $('#unlockForm'); f.classList.add('unlocking'); $('#unlockBtn').textContent = 'Decifratura…';
-  setTimeout(() => { f.classList.remove('unlocking'); $('#unlockBtn').textContent = 'Sblocca'; show('notes'); toast('Sbloccato · note e attività decifrate'); }, 650);
+  setTimeout(() => { f.classList.remove('unlocking'); $('#unlockBtn').textContent = 'Sblocca'; show('notes'); toast(S.offline ? 'Sbloccato · note già scaricate, in sola lettura' : 'Sbloccato · note e attività decifrate su questo dispositivo'); }, 650);
 }
-$('#mailrec').addEventListener('change', e => toast(e.target.checked ? 'Recupero via email attivato' : 'Recupero via email disattivato'));
-$('#unlockForm').addEventListener('submit', e => { e.preventDefault(); unlock(); });
+$('#mailrec').addEventListener('change', e => { const on = e.target.checked; e.target.checked = !on;
+  askPass(on ? 'Attivare il recupero via email?' : 'Spegnere il recupero via email?', () => { e.target.checked = on;
+    $('#mailrecHint').textContent = on ? 'Attivo per b•••••@esempio.it · si spegne se cambi email o password di WordPress' : 'Spento · il server non conserva nulla della tua chiave';
+    toast(on ? 'Recupero via email attivato per b•••••@esempio.it' : 'Recupero via email spento: la copia protetta della chiave è stata cancellata dal server'); },
+    on ? 'Il server conserverà una copia protetta della tua chiave, legata all\'indirizzo <b>b•••••@esempio.it</b>. Conferma con la password delle note.' : ''); });
+$('#offSw').addEventListener('change', e => { S.offline = e.target.checked; $('#app').classList.toggle('offline', S.offline); applyOffline(); if (screen === 'detail') renderSubs();
+  toast(S.offline ? 'Senza rete: vedi le note già scaricate su questo dispositivo, in sola lettura' : 'Di nuovo online: puoi modificare'); });
+$('#unlockForm').addEventListener('submit', e => { e.preventDefault(); unlock(false); });
 $('.lock .bio').innerHTML = `${ic('finger')}Usa impronta o volto`;
 
 /* ---------- setup (primo avvio) ---------- */
@@ -1441,29 +1698,31 @@ function renderSetup() {
   $('#setupNext').textContent = st === 3 ? 'Inizia a usare ZNoteKeeper' : 'Continua';
   const bar = `<div class="steps">${[1,2,3].map(n => `<span class="${n <= st ? 'on' : ''}"></span>`).join('')}</div>`;
   if (st === 1) $('#setupBody').innerHTML = bar + `<h2 class="big" style="font-size:24px;margin-bottom:8px">Scegli la password delle note</h2>
-    <p class="lead">Apre il tuo spazio cifrato. È diversa da quella di WordPress e nessuno, nemmeno l'amministratore, la può vedere o reimpostare.</p>
+    <p class="lead">Apre il tuo spazio cifrato. È diversa da quella di WordPress e non lascia mai questo dispositivo: la cifratura avviene qui, nel browser. Nessuno, nemmeno l'amministratore, la può vedere o reimpostare.</p>
     <label class="flab" for="sp1">Password delle note</label><input class="field-in" type="password" id="sp1" autocomplete="new-password" placeholder="Almeno 10 caratteri">
     <div class="meter"><i id="spMeter"></i></div><div class="ok" id="spHint">Suggerimento: una frase di 4 parole è facile da ricordare e difficile da indovinare.</div>
     <label class="flab" for="sp2">Ripeti la password</label><input class="field-in" type="password" id="sp2" autocomplete="new-password">`;
   if (st === 2) $('#setupBody').innerHTML = bar + `<h2 class="big" style="font-size:24px;margin-bottom:8px">Salva il codice di recupero</h2>
     <p class="lead">Se dimentichi la password, questo codice è l'unico modo sicuro per rientrare. Lo vedi solo ora.</p>
     <div class="codebox" id="codeBox">${codeHtml(setup.code)}</div>
-    <div class="qa-tools"><button class="btn ghost" data-act="copy-code" style="flex:1">${ic('copy', 'sm')}Copia</button></div>
+    <div class="qa-tools"><button class="btn ghost" data-act="copy-code" style="flex:1">${ic('copy', 'sm')}Copia</button><button class="btn ghost" data-act="print-code" style="flex:1">Stampa</button><button class="btn ghost" data-act="dl-code" style="flex:1">${ic('download', 'sm')}Scarica</button></div>
     <div class="ok">Conservalo fuori dal telefono: su carta in un posto sicuro o in un gestore di password.</div>
-    <label class="flab" for="sp3">Per conferma, scrivi i 4 caratteri sottolineati</label><input class="field-in" id="sp3" maxlength="4" autocomplete="off" style="font-family:var(--f-mono);letter-spacing:.2em;text-transform:uppercase">`;
+    <label class="flab" for="sp3">Per conferma, scrivi i 4 caratteri sottolineati</label><input class="field-in" id="sp3" maxlength="4" autocomplete="off" style="font-family:var(--f-mono);letter-spacing:.2em;text-transform:uppercase">
+    <label class="ack"><input type="checkbox" id="spAck"><span>Ho capito che senza la password e senza questo codice le mie note non si possono più aprire, nemmeno dall'amministratore.</span></label>`;
   if (st === 3) $('#setupBody').innerHTML = bar + `<h2 class="big" style="font-size:24px;margin-bottom:8px">Recupero via email</h2>
-    <p class="lead">Facoltativo. Un link alla tua email WordPress per rientrare se perdi sia la password che il codice.</p>
+    <p class="lead">Facoltativo e spento di default. Un link all'email che hai oggi su WordPress (<b>b•••••@esempio.it</b>) per rientrare se perdi sia la password che il codice.</p>
     <div class="card"><div class="srow"><div class="grow"><div class="lab">Attiva il recupero via email</div><div class="hint">Puoi cambiarlo quando vuoi da Impostazioni</div></div><label class="switch"><input type="checkbox" id="sp4" ${setup.mail ? 'checked' : ''} aria-label="Attiva recupero via email"><span></span></label></div></div>
     <ul style="padding-left:18px;margin:14px 0 0;display:flex;flex-direction:column;gap:6px;font-size:14px">
       <li>Funziona solo se hai già fatto l'accesso a WordPress.</li><li>Vale una volta e scade dopo 30 minuti.</li>
-      <li>Dopo il clic c'è un'attesa di 24 ore: ricevi un avviso e puoi annullare.</li></ul>
-    <div class="warnbox">Più comodo ma meno riservato del codice: chi controllasse sia la tua casella sia il server potrebbe usarlo.</div>`;
+      <li>Dopo il clic c'è un'attesa di 24 ore: ricevi un avviso e puoi annullare.</li>
+      <li>Se cambi email o password di WordPress si spegne da solo: lo riattivi da Impostazioni con la password delle note.</li></ul>
+    <div class="warnbox">Più comodo ma meno riservato del codice. Per farlo funzionare il server conserva una copia protetta della tua chiave: chi controllasse insieme il server e la tua casella potrebbe usarla. Lasciandolo spento, il server non ha nulla.</div>`;
   if (st === 1) { const m = $('#spMeter'); $('#sp1').addEventListener('input', e => { const v = strength(e.target.value); m.style.width = (v / 4 * 100) + '%'; m.style.background = ['var(--danger)', 'var(--danger)', 'var(--due)', 'var(--accent)', 'var(--accent)'].at(v); $('#spHint').textContent = ['Troppo corta: servono almeno 10 caratteri.', 'Debole: aggiungi parole o simboli.', 'Discreta: ancora un po\' più lunga.', 'Buona.', 'Ottima.'].at(v); }); }
 }
 function setupNext() {
   if (setup.step === 1) { const a = $('#sp1').value, b = $('#sp2').value; if (a.length < 10) { toast('La password deve avere almeno 10 caratteri'); return; } if (a !== b) { toast('Le due password non coincidono'); return; } }
-  if (setup.step === 2) { if ($('#sp3').value.toUpperCase() !== setup.code.slice(5, 9)) { toast('I caratteri non coincidono: controlla il codice'); return; } }
-  if (setup.step === 3) { setup.mail = $('#sp4').checked; $('#mailrec').checked = setup.mail; S.lists.length; show('notes'); toast('Il tuo spazio cifrato è pronto'); setup.step = 1; return; }
+  if (setup.step === 2) { if ($('#sp3').value.toUpperCase() !== setup.code.slice(5, 9)) { toast('I caratteri non coincidono: controlla il codice'); return; } if (!$('#spAck').checked) { toast('Spunta la casella per confermare di aver capito'); return; } }
+  if (setup.step === 3) { setup.mail = $('#sp4').checked; $('#mailrec').checked = setup.mail; $('#mailrecHint').textContent = setup.mail ? 'Attivo per b•••••@esempio.it · si spegne se cambi email o password di WordPress' : 'Spento · il server non conserva nulla della tua chiave'; S.lists.length; show('notes'); toast('Il tuo spazio cifrato è pronto'); setup.step = 1; return; }
   setup.step++; renderSetup();
 }
 
@@ -1475,13 +1734,14 @@ const USERS = [
   { id:'u4', ini:'LB', name:'Luca Bianchi', role:'Autore', on:false, info:'Non abilitato' },
 ];
 function renderAdmin() {
-  $('#userList').innerHTML = USERS.map(u => `<div class="urow"><div class="av">${esc(u.ini)}</div><div class="grow"><div class="lab">${esc(u.name)} <span class="chip" style="margin-left:4px">${esc(u.role)}</span></div><div class="hint">${esc(u.info)}</div></div>
+  $('#userList').innerHTML = USERS.map(u => `<div class="urow"><div class="av">${esc(u.ini)}</div><div class="grow"><div class="lab">${esc(u.name)} <span class="chip" style="margin-left:4px">${esc(u.role)}</span></div><div class="hint">${esc(u.info)}</div>
+    ${!u.on && u.kept ? `<button class="linkbtn" data-act="user-wipe" data-id="${u.id}" style="color:var(--danger);font-size:13px">${ic('trash', 'sm')}Cancella lo spazio</button>` : ''}</div>
     <label class="switch"><input type="checkbox" data-user="${u.id}" ${u.on ? 'checked' : ''} ${u.id === 'u1' ? 'disabled' : ''} aria-label="Abilita ${esc(u.name)}"><span></span></label></div>`).join('');
 }
-$('#userList').addEventListener('change', e => { const u = USERS.find(x => x.id === e.target.dataset.user); if (!u) return; u.on = e.target.checked;
-  if (u.on) { u.info = 'Abilitato oggi · in attesa del primo avvio'; toast(`Accesso concesso a ${u.name}: riceverà un'email di invito`); }
-  else { u.info = 'Disabilitato oggi · dati cifrati conservati'; toast(`Accesso tolto a ${u.name}. I dati restano cifrati e si possono riattivare`); }
-  renderAdmin(); });
+$('#userList').addEventListener('change', e => { const u = USERS.find(x => x.id === e.target.dataset.user); if (!u) return;
+  if (e.target.checked) { u.on = true; u.info = u.kept ? 'Riabilitato oggi · ritrova i suoi dati con la sua password' : 'Abilitato oggi · in attesa del primo avvio'; toast(`Accesso concesso a ${u.name}: riceverà un'email di invito`); renderAdmin(); }
+  else { e.target.checked = true; sheet(`<h3>Togliere l'accesso a ${esc(u.name)}?</h3><p style="margin:0;color:var(--muted)">Non potrà più aprire ZNoteKeeper. I suoi dati restano cifrati sul server: se lo riabiliti li ritrova, oppure puoi cancellarne lo spazio.</p>
+    <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn danger" data-act="do-user-off" data-id="${u.id}">Togli l'accesso</button></div>`); } });
 
 /* ---------- recovery ---------- */
 function recoverSheet() { sheet(`<h3>Recupera l'accesso</h3><p style="margin:0 0 8px;color:var(--muted)">Le tue note restano intatte: scegli come dimostrare che sei tu.</p>
@@ -1494,7 +1754,7 @@ function recoverCode() { sheet(`<h3>Usa il codice di recupero</h3>
   $('#rcOk').onclick = () => { if ($('#rc1').value.replace(/[^A-Za-z0-9]/g, '').length < 24) { toast('Il codice ha 24 caratteri: controllalo'); return; } if ($('#rc2').value.length < 10) { toast('La password deve avere almeno 10 caratteri'); return; }
     const c = newCode(); sheet(`<h3>Fatto. Ecco il tuo nuovo codice</h3><p style="margin:0 0 12px;color:var(--muted)">Il codice che hai appena usato non vale più. Salva questo al suo posto.</p><div class="codebox">${esc(c)}</div>
       <div class="ok">Gli altri dispositivi sono stati scollegati per sicurezza.</div><div class="row-end"><button class="btn primary" id="rcDone">L'ho salvato</button></div>`);
-    $('#rcDone').onclick = () => { closeOverlay(); unlock(); }; }; }
+    $('#rcDone').onclick = () => { closeOverlay(); unlock(true); }; }; }
 function recoverMail() { sheet(`<h3>Link inviato</h3><p style="margin:0 0 10px">Abbiamo scritto a <b>b•••••@esempio.it</b>, l'indirizzo del tuo utente WordPress.</p>
   <ul style="padding-left:18px;margin:0 0 6px;display:flex;flex-direction:column;gap:6px;font-size:14px"><li>Il link vale una volta e scade tra 30 minuti.</li><li>Dopo il clic, il recupero si completa tra <b>24 ore</b>. Nel frattempo ricevi avvisi e puoi annullarlo.</li><li>Se non l'hai chiesto tu, ignora l'email: senza clic non succede nulla.</li></ul>
   <div class="row-end"><button class="btn primary" data-act="close">Ho capito</button></div>`); }
@@ -1514,9 +1774,13 @@ function guide(to) {
 }
 
 document.addEventListener('keydown', e => {
-  if (!(e.ctrlKey || e.metaKey) || ['lock', 'setup'].includes(screen)) return;
+  if (['lock', 'setup', 'draw', 'admin'].includes(screen)) return;
+  if (e.key === 'Escape' && $('#overlay').innerHTML) { closeOverlay(); return; }
+  if (e.altKey && !e.ctrlKey && !e.metaKey && ['n', 't'].includes(e.key.toLowerCase())) { e.preventDefault(); if (S.offline) { toast(OFFMSG); return; }
+    if (e.key.toLowerCase() === 'n') { if (!['notes', 'page'].includes(screen)) show('notes'); $('[data-act="new-page"]').click(); } else { if (!['tasks', 'detail'].includes(screen)) show('tasks'); quickAdd(); } return; }
+  if (!(e.ctrlKey || e.metaKey)) return;
   if (e.key.toLowerCase() === 'k') { e.preventDefault(); show('search'); renderSearch(); $('#q').focus(); }
-  if (e.key.toLowerCase() === 'l' && e.shiftKey) { e.preventDefault(); $('#pass').value = ''; show('lock'); }
+  if (e.key.toLowerCase() === 'l' && e.shiftKey) { e.preventDefault(); $('#pass').value = ''; $('#lockErr').textContent = ''; show('lock'); }
 });
 addEventListener('resize', () => { if (S.desk) show(screen); });
 refresh(); show('notes');
