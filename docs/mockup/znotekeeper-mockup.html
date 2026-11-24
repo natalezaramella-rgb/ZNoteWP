@@ -1,0 +1,1525 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body>
+<title>ZNoteKeeper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: guida dell'analisi a sinistra, telefono interattivo a destra; su telefono l'app occupa lo schermo e la guida segue sotto */
+:root{
+  --bg:#E8ECEA; --surface:#FBFCFB; --surface-2:#EFF3F1; --surface-3:#E3E9E6;
+  --ink:#17211E; --muted:#5A6762; --line:#D6DEDA;
+  --accent:#136F5E; --accent-ink:#FFFFFF; --accent-soft:#D9EEE8;
+  --due:#9A4E06; --due-soft:#FBE9D3; --danger:#B3261E; --danger-soft:#F9DEDC;
+  --mail:#3552A0; --mail-soft:#E2E8F7;
+  --paper:#FFFFFF; --paper-dot:#D5DCD9; --scrim:rgba(10,20,17,.38); --frame:#1B2421;
+  --s1:#D9640F; --s2:#1E8A4C; --s3:#2F62C9; --s4:#7A47C2; --s5:#C2366B; --s6:#0E8B95;
+  --f-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body:"Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --nav:64px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B100F; --surface:#131A18; --surface-2:#1A2321; --surface-3:#222D2A;
+  --ink:#E4ECE8; --muted:#93A39C; --line:#2A3633;
+  --accent:#4DC1A6; --accent-ink:#04201A; --accent-soft:#163A32;
+  --due:#F0A458; --due-soft:#3A2710; --danger:#F2857C; --danger-soft:#3D1A18;
+  --mail:#93ABEC; --mail-soft:#1D2744;
+  --paper:#FFFFFF; --paper-dot:#D5DCD9; --scrim:rgba(0,0,0,.55); --frame:#000000;
+  --s1:#F08A3E; --s2:#4CC07A; --s3:#6F95E8; --s4:#A881E3; --s5:#E9709B; --s6:#3CC0C9;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B100F; --surface:#131A18; --surface-2:#1A2321; --surface-3:#222D2A;
+  --ink:#E4ECE8; --muted:#93A39C; --line:#2A3633;
+  --accent:#4DC1A6; --accent-ink:#04201A; --accent-soft:#163A32;
+  --due:#F0A458; --due-soft:#3A2710; --danger:#F2857C; --danger-soft:#3D1A18;
+  --mail:#93ABEC; --mail-soft:#1D2744;
+  --paper:#FFFFFF; --paper-dot:#D5DCD9; --scrim:rgba(0,0,0,.55); --frame:#000000;
+  --s1:#F08A3E; --s2:#4CC07A; --s3:#6F95E8; --s4:#A881E3; --s5:#E9709B; --s6:#3CC0C9;
+  color-scheme:dark}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.i{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.i.sm{width:16px;height:16px}
+.i.fill{fill:currentColor;stroke:currentColor}
+
+/* ---------- stage ---------- */
+.stage{min-height:100%;display:grid;grid-template-columns:minmax(280px,400px) auto;gap:56px;justify-content:center;align-items:start;padding-block:32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.guide{position:sticky;top:32px;display:flex;flex-direction:column;gap:22px;max-height:calc(100vh - 64px);overflow:auto;padding-right:4px}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:44px;height:44px;border-radius:13px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:-.02em;flex:none}
+.brand h1{font-family:var(--f-display);font-size:30px;line-height:1;margin:0;letter-spacing:-.02em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.guide .intro{margin:0;color:var(--muted);max-width:60ch}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+.index{display:flex;flex-direction:column;gap:2px}
+.index button{display:flex;gap:10px;align-items:baseline;text-align:left;padding:8px 10px;border-radius:10px}
+.index button:hover{background:var(--surface-2)}
+.index button[aria-current="true"]{background:var(--accent-soft);color:var(--ink)}
+.index b{font-weight:600;min-width:9.5em}
+.index span{color:var(--muted);font-size:13px}
+.notes-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.notes-box h3{font-family:var(--f-display);font-size:19px;margin:0 0 8px}
+.notes-box ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.notes-box .sub{margin-top:12px}
+.qs{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.qs b{display:block}
+.qs span{color:var(--muted)}
+.disclaimer{font-size:12px;color:var(--muted);margin:0}
+
+.device{width:390px;height:min(844px,calc(100vh - 64px));min-height:660px;border:10px solid var(--frame);border-radius:46px;background:var(--surface);overflow:hidden;position:relative;box-shadow:0 30px 60px -20px rgba(10,30,25,.35)}
+@media (max-width:880px){
+  .stage{grid-template-columns:1fr;gap:0;padding:0}
+  .device{order:-1}
+  .device{width:100%;height:calc(100svh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:560px;border:0;border-radius:0;box-shadow:none}
+  .guide{position:static;max-height:none;padding:28px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px));border-top:1px solid var(--line)}
+}
+
+/* ---------- app ---------- */
+.app{position:absolute;inset:0;overflow:hidden;background:var(--surface)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--surface)}
+.screen.has-nav{bottom:var(--nav)}
+.statusbar{height:30px;flex:none;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+@media (max-width:880px){.statusbar{display:none}}
+.topbar{display:flex;align-items:center;gap:6px;padding:8px 10px 6px;flex:none;min-height:52px}
+.topbar .grow{flex:1;min-width:0}
+.ib{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--ink);flex:none}
+.ib:hover{background:var(--surface-2)}
+.ib.on{color:var(--accent)}
+.scroll{flex:1;overflow-y:auto;overscroll-behavior:contain;min-height:0}
+.apptitle{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:-.01em}
+.crumb{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:10px;height:10px;border-radius:3px;flex:none;display:inline-block}
+
+.nav{position:absolute;left:0;right:0;bottom:0;height:var(--nav);display:flex;border-top:1px solid var(--line);background:var(--surface);z-index:5}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:var(--muted)}
+.nav button[aria-current="true"]{color:var(--accent)}
+.nav button[aria-current="true"] .pill{background:var(--accent-soft)}
+.nav .pill{padding:3px 16px;border-radius:999px;display:grid;place-items:center}
+
+.fab{position:absolute;right:16px;bottom:16px;height:54px;padding:0 20px 0 16px;border-radius:18px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;gap:8px;font-weight:700;box-shadow:0 10px 24px -8px rgba(10,60,50,.55);z-index:3}
+
+h2.big{font-family:var(--f-display);font-size:28px;line-height:1.1;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.head{padding:4px 16px 10px;display:flex;align-items:flex-end;gap:8px}
+.head .grow{flex:1;min-width:0}
+.head .meta{color:var(--muted);font-size:13px;margin-top:4px}
+
+/* tabs */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 16px 12px;scrollbar-width:none;flex:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{white-space:nowrap;padding:7px 13px;border-radius:999px;border:1px solid var(--line);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.badge{font-size:11px;padding:0 6px;border-radius:999px;background:var(--mail);color:var(--surface);font-variant-numeric:tabular-nums}
+
+/* tasks */
+.group{background:var(--surface);transition:box-shadow .15s}
+.group.dragging{box-shadow:0 12px 30px -10px rgba(0,0,0,.35);position:relative;z-index:2;border-radius:12px}
+.task{display:grid;grid-template-columns:26px 34px 1fr 40px;align-items:start;padding:9px 6px 9px 4px;border-bottom:1px solid var(--line)}
+.task.sub{grid-template-columns:52px 30px 1fr 40px;padding-block:6px;border-bottom-style:dashed}
+.handle{height:30px;display:grid;place-items:center;color:var(--muted);cursor:grab;touch-action:none;opacity:.55}
+.handle:hover{opacity:1}
+.check{width:30px;height:30px;display:grid;place-items:center}
+.check span{width:22px;height:22px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center;color:transparent;transition:.15s}
+.check:hover span{color:var(--muted)}
+.task.done .check span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.task.sub .check span{width:18px;height:18px}
+.check .i{width:14px;height:14px;stroke-width:3}
+.task .body{min-width:0;cursor:pointer;padding-top:4px}
+.task .t{font-weight:600;overflow-wrap:anywhere}
+.task.sub .t{font-weight:500;font-size:14px}
+.task.done .t{text-decoration:line-through;color:var(--muted);font-weight:500}
+.task .n{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px;background:var(--surface-2);color:var(--muted)}
+.chip .i{width:13px;height:13px}
+.chip.today{background:var(--due-soft);color:var(--due)}
+.chip.late{background:var(--danger-soft);color:var(--danger)}
+.chip.mail{background:var(--mail-soft);color:var(--mail)}
+.chip.list{background:transparent;border:1px solid var(--line)}
+.star{width:40px;height:30px;display:grid;place-items:center;color:var(--muted)}
+.star.on{color:var(--due)}
+.donehead{display:flex;align-items:center;gap:8px;width:100%;padding:14px 16px;font-weight:700;font-size:14px;color:var(--muted)}
+.donehead .i{transition:transform .2s}
+.donehead[aria-expanded="true"] .i{transform:rotate(180deg)}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--f-display);font-size:18px;margin-bottom:4px}
+
+/* pages list */
+.page-row{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start}
+.page-row:hover{background:var(--surface-2)}
+.page-row.sub{padding-left:40px}
+.page-row .pg{min-width:0;flex:1}
+.page-row .pt{font-weight:700;overflow-wrap:anywhere}
+.page-row .ps{color:var(--muted);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.page-row .pd{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;padding-top:2px}
+.page-row .thumb{width:46px;height:46px;border-radius:8px;object-fit:cover;border:1px solid var(--line);flex:none;background:var(--paper)}
+.secbar{height:4px;flex:none}
+
+/* drawer */
+.backdrop{position:absolute;inset:0;background:var(--scrim);z-index:20;animation:fade .18s}
+.drawer{position:absolute;top:0;bottom:0;left:0;width:86%;max-width:340px;background:var(--surface);z-index:21;display:flex;flex-direction:column;animation:slidein .22s ease-out;box-shadow:10px 0 30px -10px rgba(0,0,0,.3)}
+.dh{padding:22px 18px 10px}
+.tree{padding:4px 8px 16px;overflow:auto;flex:1}
+.tree .grp{display:flex;align-items:center;gap:8px;width:100%;padding:10px;border-radius:10px;font-weight:700;font-size:14px}
+.tree .grp .i{color:var(--muted)}
+.tree .grp .chev{margin-left:auto;transition:transform .2s}
+.tree .grp[aria-expanded="false"] .chev{transform:rotate(-90deg)}
+.tree .sec{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px 9px 34px;border-radius:10px;font-size:14px;text-align:left}
+.tree .sec.top{padding-left:10px}
+.tree .sec:hover{background:var(--surface-2)}
+.tree .sec[aria-current="true"]{background:var(--accent-soft);font-weight:700}
+.tree .sec .cnt{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.tree .tab-color{width:6px;height:22px;border-radius:3px;flex:none}
+.tree hr{border:0;border-top:1px solid var(--line);margin:8px 10px}
+.tree .add{display:flex;align-items:center;gap:10px;padding:9px 10px;color:var(--accent);font-weight:600;font-size:14px;border-radius:10px;width:100%}
+
+/* sheets */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);border-radius:22px 22px 0 0;padding:8px 16px 22px;z-index:21;max-height:88%;overflow:auto;animation:up .22s ease-out}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 14px}
+.sheet h3{font-family:var(--f-display);font-size:20px;margin:0 0 12px}
+.opt{display:flex;align-items:center;gap:12px;width:100%;padding:12px 8px;border-radius:10px;text-align:left}
+.opt:hover{background:var(--surface-2)}
+.opt.danger{color:var(--danger)}
+.opt .i{color:var(--muted)}
+.opt.danger .i{color:var(--danger)}
+.opt[aria-checked="true"]::after{content:"";margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.field-in{width:100%;border:1px solid var(--line);background:var(--surface-2);border-radius:12px;padding:12px 14px;outline:none}
+.field-in:focus{border-color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:12px;font-weight:700}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border:1px solid var(--line)}
+.btn.danger{background:var(--danger);color:var(--surface)}
+.row-end{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;align-items:center}
+.qa-tools{display:flex;gap:4px;align-items:center;margin-top:10px}
+.qa-tools .grow{flex:1}
+.colors{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.colors button{width:30px;height:30px;border-radius:9px;border:3px solid transparent}
+.colors button[aria-checked="true"]{border-color:var(--ink)}
+
+/* toast */
+.toast{position:absolute;left:12px;right:12px;bottom:calc(var(--nav) + 12px);background:var(--ink);color:var(--surface);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;z-index:30;font-size:14px;animation:up .2s ease-out}
+.toast span{flex:1}
+.toast button{font-weight:700;color:var(--accent-soft)}
+
+/* detail */
+.form{padding:0 18px 24px;display:flex;flex-direction:column}
+.title-in{border:0;outline:none;background:transparent;resize:none;font-family:var(--f-display);font-weight:700;font-size:25px;line-height:1.15;letter-spacing:-.015em;padding:6px 0 10px;width:100%;overflow:hidden}
+.notes-in{border:0;outline:none;background:transparent;resize:none;width:100%;min-height:60px;padding:4px 0 12px;color:var(--ink);overflow:hidden}
+.frow{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);min-height:52px;flex-wrap:wrap}
+.frow > .i{color:var(--muted)}
+.frow .grow{flex:1;min-width:0}
+.frow input[type=date],.frow input[type=time],.frow select{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:7px 10px;outline:none;max-width:100%}
+.subs{display:flex;flex-direction:column;gap:2px;width:100%}
+.subrow{display:flex;align-items:center;gap:8px}
+.subrow input[type=text]{flex:1;min-width:0;border:0;background:transparent;outline:none;padding:6px 0}
+.subrow.done input[type=text]{text-decoration:line-through;color:var(--muted)}
+.subrow .mini{width:20px;height:20px;border-radius:50%;border:2px solid var(--muted);display:grid;place-items:center;color:transparent;flex:none}
+.subrow.done .mini{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.mini .i{width:12px;height:12px;stroke-width:3}
+.linkbtn{color:var(--accent);font-weight:700;display:inline-flex;align-items:center;gap:6px;padding:6px 0}
+.sketches{display:flex;gap:8px;flex-wrap:wrap;width:100%}
+.sketches img{width:96px;height:68px;object-fit:cover;border-radius:10px;border:1px solid var(--line);background:var(--paper);cursor:pointer}
+.mailcard{background:var(--mail-soft);color:var(--ink);border-radius:14px;padding:12px 14px;font-size:13px;display:flex;gap:10px;margin:8px 0}
+.mailcard .i{color:var(--mail)}
+.mailcard b{color:var(--mail)}
+details.crypto{border:1px dashed var(--line);border-radius:14px;padding:10px 14px;margin-top:12px;font-size:13px}
+details.crypto summary{cursor:pointer;font-weight:700;display:flex;align-items:center;gap:8px;list-style:none}
+details.crypto summary::-webkit-details-marker{display:none}
+.cbody{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.cbody code{font-family:var(--f-mono);font-size:11px;word-break:break-all;color:var(--muted);display:block;background:var(--surface-2);padding:8px;border-radius:8px}
+.cbody .k{font-weight:700;font-size:12px}
+.bottombar{flex:none;padding:10px 16px 14px;border-top:1px solid var(--line);display:flex;gap:8px}
+.bottombar .btn{flex:1}
+
+/* page editor */
+.pmeta{color:var(--muted);font-size:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-bottom:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:2px;gap:2px;margin-left:auto}
+.seg button{padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.editor{outline:none;min-height:200px;padding:4px 0 24px;font-size:15.5px;line-height:1.6}
+.editor h1{font-family:var(--f-display);font-size:24px;line-height:1.2;margin:18px 0 6px}
+.editor h2{font-family:var(--f-display);font-size:19px;line-height:1.25;margin:16px 0 4px}
+.editor p{margin:0 0 10px}
+.editor ul,.editor ol{margin:0 0 10px;padding-left:24px}
+.editor blockquote{margin:0 0 10px;padding:4px 0 4px 14px;border-left:3px solid var(--accent);color:var(--muted)}
+.editor code{font-family:var(--f-mono);font-size:13px;background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.editor ul.todo{list-style:none;padding-left:4px}
+.editor ul.todo li{position:relative;padding-left:30px;margin:4px 0}
+.editor ul.todo li::before{content:"";position:absolute;left:0;top:3px;width:18px;height:18px;border:2px solid var(--muted);border-radius:6px;cursor:pointer;box-sizing:border-box}
+.editor ul.todo li.done{color:var(--muted);text-decoration:line-through}
+.editor ul.todo li.done::before{background:var(--accent);border-color:var(--accent)}
+.editor ul.todo li.done::after{content:"";position:absolute;left:6px;top:6px;width:5px;height:9px;border:solid var(--accent-ink);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.editor img.sketch{display:block;max-width:100%;border-radius:12px;border:1px solid var(--line);background:var(--paper);margin:6px 0 12px;cursor:pointer}
+.mdview{font-family:var(--f-mono);font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-word;background:var(--surface-2);border-radius:12px;padding:14px;margin:0 0 12px}
+.mdnote{font-size:12px;color:var(--muted);margin:0 0 8px}
+.etools{flex:none;display:flex;gap:2px;overflow-x:auto;padding:6px 8px;border-top:1px solid var(--line);background:var(--surface);scrollbar-width:none}
+.etools::-webkit-scrollbar{display:none}
+.etools button{min-width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:14px;flex:none}
+.etools button:hover{background:var(--surface-2)}
+.etools .sep{width:1px;background:var(--line);margin:8px 4px;flex:none}
+
+/* draw */
+.paper{flex:1;margin:0 12px;border-radius:16px;background-color:var(--paper);background-image:radial-gradient(var(--paper-dot) 1.2px,transparent 1.3px);background-size:22px 22px;position:relative;overflow:hidden;touch-action:none;min-height:0;border:1px solid var(--line)}
+.paper canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.dtools{flex:none;padding:12px 14px 14px;display:flex;flex-direction:column;gap:10px}
+.dtools .r{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tool{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line)}
+.tool[aria-pressed="true"]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.sw{width:30px;height:30px;border-radius:50%;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line)}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.dtools input[type=range]{flex:1;min-width:90px;accent-color:var(--accent)}
+.dtools .lbl{font-size:12px;color:var(--muted);font-weight:600}
+
+/* settings */
+.sect{padding:6px 16px 8px}
+.sect h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;font-weight:700}
+.card{background:var(--surface-2);border-radius:16px;padding:4px 14px}
+.srow{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:0}
+.srow .grow{flex:1;min-width:0}
+.srow .lab{font-weight:600}
+.srow .hint{color:var(--muted);font-size:12.5px}
+.srow > .i{color:var(--muted)}
+.srow select{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 8px;max-width:100%;outline:none}
+.addr{font-family:var(--f-mono);font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;overflow-wrap:anywhere;user-select:all;margin-top:6px}
+.senders{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sender{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;padding:4px 6px 4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line)}
+.sender button{width:20px;height:20px;border-radius:50%;display:grid;place-items:center}
+.secure{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);border-radius:16px;padding:14px}
+.secure .i{color:var(--accent);width:28px;height:28px}
+.secure b{display:block}
+.secure span{font-size:13px;color:var(--muted)}
+.switch{position:relative;width:46px;height:28px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:.15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--surface);transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch input:checked + span{background:var(--accent)}
+.switch input:checked + span::after{transform:translateX(18px)}
+.flow{display:flex;align-items:center;gap:6px;font-size:12px;flex-wrap:wrap;margin-top:6px}
+.flow span{background:var(--surface);border:1px solid var(--line);padding:3px 8px;border-radius:8px}
+.flow s{color:var(--muted)}
+
+/* lock */
+.lock{justify-content:center;align-items:center;text-align:center;padding:32px 28px;background:radial-gradient(120% 70% at 50% 0%,var(--accent-soft),var(--surface) 70%)}
+.lock .logo{width:72px;height:72px;border-radius:22px;font-size:30px;margin-bottom:18px}
+.lock h2{font-family:var(--f-display);font-size:28px;margin:0 0 6px}
+.lock p{color:var(--muted);margin:0 0 22px;max-width:30ch}
+.lock form{width:100%;display:flex;flex-direction:column;gap:10px}
+.lock .bio{margin-top:14px;display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-weight:700}
+.lock .tiny{margin-top:26px;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.unlocking{opacity:.6;pointer-events:none}
+.lock .forgot{margin-top:10px;font-size:13px;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.meter{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden;margin-top:8px}
+.meter i{display:block;height:100%;width:0;transition:width .2s,background .2s}
+.steps{display:flex;gap:6px;margin:4px 0 14px}
+.steps span{flex:1;height:4px;border-radius:2px;background:var(--surface-3)}
+.steps span.on{background:var(--accent)}
+.lead{color:var(--muted);margin:0 0 16px}
+.codebox{font-family:var(--f-mono);font-size:19px;letter-spacing:.06em;text-align:center;background:var(--surface-2);border:1px dashed var(--line);border-radius:14px;padding:18px 10px;font-weight:500;user-select:all;overflow-wrap:anywhere}
+.codebox b{color:var(--accent);font-weight:500;text-decoration:underline;text-underline-offset:4px}
+.flab{font-size:13px;font-weight:700;margin:14px 0 6px;display:block}
+.ok{font-size:12.5px;color:var(--muted);margin-top:6px}
+.warnbox{background:var(--due-soft);border-radius:12px;padding:10px 12px;font-size:13px;margin-top:12px}
+.urow{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.urow:last-child{border-bottom:0}
+.urow .grow{flex:1;min-width:0}
+.urow .lab{font-weight:600}
+.urow .hint{color:var(--muted);font-size:12.5px}
+.page-row.sel{background:var(--accent-soft)}
+.group.sel > .task:first-child{background:var(--accent-soft)}
+.devtoggle .seg{margin-left:0}
+.devtoggle .seg button{padding:7px 16px;font-size:13px}
+.wintitle{display:none}
+#deskTree{display:none}
+@media (max-width:880px){.devtoggle{display:none}}
+@media (min-width:881px){
+  .stage.deskmode{grid-template-columns:1fr;justify-items:center;gap:32px}
+  .stage.deskmode .device{order:-1;width:min(1180px,calc(100vw - 64px));height:min(760px,calc(100vh - 120px));min-height:600px;border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 60px -24px rgba(10,30,25,.4)}
+  .stage.deskmode .guide{position:static;max-height:none;width:min(1180px,calc(100vw - 64px));display:grid;grid-template-columns:1fr 1fr;gap:22px 48px;align-items:start}
+  .device.desk .wintitle{display:flex;align-items:center;gap:10px;height:36px;padding:0 12px;background:var(--surface-2);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600}
+  .device.desk .wintitle .logo{width:20px;height:20px;border-radius:6px;font-size:9px}
+  .device.desk .wintitle .grow{flex:1}
+  .device.desk .wintitle .wb{width:28px;text-align:center;color:var(--muted)}
+  .device.desk .app{top:36px}
+  .app.desk{--nav:0px}
+  .app.desk .statusbar{display:none}
+  .app.desk .nav{top:0;bottom:0;right:auto;width:84px;height:auto;flex-direction:column;justify-content:flex-start;gap:4px;padding-top:12px;border-top:0;border-right:1px solid var(--line)}
+  .app.desk .nav button{flex:none;height:62px}
+  .app.desk .screen{left:84px}
+  .app.desk [data-screen=lock],.app.desk [data-screen=setup]{left:0}
+  .app.desk .screen.pane-list{width:360px;right:auto;border-right:1px solid var(--line)}
+  .app.desk .screen.pane-list.after-tree{left:324px}
+  .app.desk .screen.pane-main{left:444px}
+  .app.desk .screen.pane-main.after-tree{left:684px}
+  .app.desk #deskTree{display:flex;flex-direction:column;position:absolute;left:84px;top:0;bottom:0;width:240px;background:var(--surface-2);border-right:1px solid var(--line);overflow:auto}
+  .app.desk #deskTree[hidden]{display:none}
+  .app.desk [data-act="drawer"],.app.desk .pane-main [data-act="back-notes"],.app.desk .pane-main [data-act="back-tasks"]{display:none}
+  .app.desk .pane-main .form,.app.desk [data-screen=setup] .form,.app.desk [data-screen=setup] .bottombar{max-width:760px;width:100%;margin-left:auto;margin-right:auto}
+  .app.desk [data-screen=setup] .form{max-width:560px}
+  .app.desk [data-screen=setup] .bottombar{max-width:560px;border-top:0}
+  .app.desk .lock > *{max-width:400px}
+  .app.desk .pane-full .sect,.app.desk .pane-full #searchRes > *{max-width:760px;margin-left:auto;margin-right:auto}
+  .app.desk .pane-full .searchbox{max-width:760px;margin:4px auto 10px;width:calc(100% - 32px)}
+  .app.desk .sheet{left:50%;right:auto;bottom:auto;top:50%;transform:translate(-50%,-50%);width:460px;max-height:80%;border-radius:18px;animation:fade .15s}
+  .app.desk .grab{display:none}
+  .app.desk .toast{left:auto;right:20px;width:400px;bottom:20px}
+}
+.av{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:700;background:var(--surface-3);flex:none}
+
+/* search */
+.searchbox{margin:4px 16px 10px;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface-2);border-radius:14px;padding:0 12px}
+.searchbox input{flex:1;border:0;background:transparent;outline:none;padding:12px 0;min-width:0}
+.rhead{padding:12px 16px 4px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+mark{background:var(--due-soft);color:inherit;border-radius:3px}
+
+@keyframes up{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+@keyframes slidein{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.25 4.1 1 5.8L12 16.9l-5.25 2.7 1-5.8L3.5 9.7l5.9-.9z"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M12 5h.01M12 12h.01M12 19h.01" stroke-width="3.2"/></symbol>
+  <symbol id="i-drag" viewBox="0 0 24 24"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7l8.5 6.5L20.5 7"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M17 2l3 3-3 3M20 5H8a4 4 0 0 0-4 4v1M7 22l-3-3 3-3M4 19h12a4 4 0 0 0 4-4v-1"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 0 0 0 12h3"/></symbol>
+  <symbol id="i-eraser" viewBox="0 0 24 24"><path d="M9 20h11M5.6 15.6l8.8-8.8a2 2 0 0 1 2.8 0l2 2a2 2 0 0 1 0 2.8L12 19H8.9zM10 11.2l4.8 4.8"/></symbol>
+  <symbol id="i-hl" viewBox="0 0 24 24"><path d="M14.5 4.5l5 5-8 8H7v-4.5zM4 20.5h7"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16zM14 6l3 3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18h2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-sketch" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M6.5 15c2.5-5 4.2-5 5.8-1.6s3.2 2.6 5.2-3.4"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" /></symbol>
+  <symbol id="i-ol" viewBox="0 0 24 24"><path d="M10 6h10M10 12h10M10 18h10M4 5l1.5-1v5M3.8 14.2a1.4 1.4 0 0 1 2.5.9c0 1-2.5 2.2-2.5 3h2.6"/></symbol>
+  <symbol id="i-todo" viewBox="0 0 24 24"><rect x="3.5" y="4" width="7" height="7" rx="2"/><path d="M5.2 7.6l1.4 1.4 2.4-2.6M14 7.5h7M3.5 14.5h7v6h-7zM14 17.5h7"/></symbol>
+  <symbol id="i-quote" viewBox="0 0 24 24"><path d="M5 5v14M10 8h10M10 12h10M10 16h6"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/><path d="M9 7h6"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+  <symbol id="i-tasks" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 5-5.2"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12l8.5-8.5M16.5 6.5l2.5 2.5M14.5 8.5l2 2"/></symbol>
+  <symbol id="i-finger" viewBox="0 0 24 24"><path d="M7 11a5 5 0 0 1 10 0v2M12 11v4c0 2.5-1 4.5-2.5 6M9 13c0 3-.6 5-1.8 6.7M15 14c0 2.5-.4 4.4-1.2 6M4.5 9A8 8 0 0 1 19.5 9M4 14v-2"/></symbol>
+  <symbol id="i-sub" viewBox="0 0 24 24"><path d="M6 4v8a3 3 0 0 0 3 3h9M15 12l3 3-3 3"/></symbol>
+  <symbol id="i-move" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM10 13h6M13.5 10.5L16 13l-2.5 2.5"/></symbol>
+  <symbol id="i-md" viewBox="0 0 24 24"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M6 15V9l2.5 3L11 9v6M16.5 9v6M14.5 13l2 2 2-2"/></symbol>
+</svg>
+
+<div class="stage">
+  <aside class="guide" aria-label="Guida al mockup">
+    <div class="brand">
+      <div class="logo">ZN</div>
+      <div>
+        <h1>ZNoteKeeper</h1>
+        <p>Mockup interattivo · bozza 0.3 · 24 novembre 2026</p>
+      </div>
+    </div>
+    <p class="intro">Plugin WordPress per note e attività riservate, usato come app installata (PWA) sul telefono e sul PC. Il mockup è cliccabile: i contenuti sono esempi e nulla viene salvato.</p>
+    <div class="devtoggle"><p class="eyebrow">Anteprima</p>
+      <div class="seg" role="group" aria-label="Dispositivo"><button data-act="dev" data-dev="phone" aria-pressed="true">Telefono</button><button data-act="dev" data-dev="pc" aria-pressed="false">PC</button></div>
+      <p class="ok" id="devNote">Sul telefono: una schermata alla volta, barra di navigazione in basso.</p></div>
+
+    <div>
+      <p class="eyebrow">Schermate</p>
+      <nav class="index" id="index">
+        <button data-go="admin"><b>Utenti (admin)</b><span>chi può usare il plugin</span></button>
+        <button data-go="setup"><b>Primo avvio</b><span>password e codice di recupero</span></button>
+        <button data-go="lock"><b>Sblocco</b><span>password o impronta</span></button>
+        <button data-go="recover"><b>Recupero</b><span>codice o link via email</span></button>
+        <button data-go="notes"><b>Taccuino</b><span>gruppi › sezioni › pagine</span></button>
+        <button data-go="page"><b>Pagina</b><span>editor visuale, salva in Markdown</span></button>
+        <button data-go="tasks"><b>Attività</b><span>liste, scadenze, sotto-attività</span></button>
+        <button data-go="detail"><b>Dettaglio attività</b><span>data, ripeti, sposta</span></button>
+        <button data-go="draw"><b>Disegno</b><span>penna, evidenziatore, gomma</span></button>
+        <button data-go="search"><b>Cerca</b><span>in pagine e attività</span></button>
+        <button data-go="email"><b>Email → nota</b><span>casella dedicata, mittenti ammessi</span></button>
+        <button data-go="settings"><b>Impostazioni</b><span>cifratura, app sul telefono</span></button>
+      </nav>
+    </div>
+
+    <div class="notes-box" id="notesBox" aria-live="polite"></div>
+
+    <div>
+      <p class="eyebrow">Da decidere nell'analisi</p>
+      <ol class="qs">
+        <li><b>Recupero via email</b><span>Deciso: ogni utente sceglie la propria password e il server non può leggere i dati. Il link via email però richiede una copia della chiave custodita dal server: confermare che resti facoltativo, spento di default e con attesa di 24 ore.</span></li>
+        <li><b>Come arriva la posta</b><span>Lettura della casella via IMAP ogni pochi minuti con WP-Cron, oppure webhook "inbound" di un servizio di invio email.</span></li>
+        <li><b>Email in arrivo e cifratura</b><span>Le email arrivano quando l'utente non ha l'app aperta: vanno chiuse con una chiave pubblica dell'utente, che solo la sua password può riaprire.</span></li>
+        <li><b>Note e attività</b><span>Nel mockup sono due aree collegate (una checklist in una pagina resta nella pagina). Valutare se una casella di una pagina può diventare un'attività con scadenza.</span></li>
+        <li><b>Formato dei disegni</b><span>Immagine PNG cifrata, oppure tratti vettoriali (più leggeri e modificabili in seguito).</span></li>
+        <li><b>Offline e notifiche</b><span>Modifiche senza rete da sincronizzare dopo; promemoria di scadenza via notifica push (su iPhone solo con l'app aggiunta alla Home).</span></li>
+      </ol>
+    </div>
+    <p class="disclaimer">Lo stile è originale: le funzioni sono ispirate a un gestore di attività e a un taccuino a sezioni, senza riprodurne l'aspetto.</p>
+  </aside>
+
+  <div class="device">
+    <div class="wintitle"><span class="logo">ZN</span>ZNoteKeeper<span class="grow"></span><span class="wb">–</span><span class="wb">▢</span><span class="wb">✕</span></div>
+    <div class="app" id="app">
+      <aside id="deskTree" hidden aria-label="Gruppi e sezioni"></aside>
+      <section class="screen" data-screen="empty" hidden><div class="empty" id="emptyMsg" style="margin:auto"></div></section>
+
+      <!-- LOCK -->
+      <section class="screen lock" data-screen="lock" hidden>
+        <div class="logo">ZN</div>
+        <h2>Bentornato</h2>
+        <p>Le tue note sono cifrate. Inserisci la password delle note per aprirle su questo telefono.</p>
+        <form id="unlockForm">
+          <input class="field-in" id="pass" type="password" placeholder="Password delle note" autocomplete="current-password" aria-label="Password delle note">
+          <button class="btn primary" type="submit" id="unlockBtn">Sblocca</button>
+        </form>
+        <button class="bio" data-act="unlock">${ICON}</button>
+        <button class="forgot" data-act="forgot">Password dimenticata?</button>
+        <div class="tiny"><svg class="i sm"><use href="#i-shield"/></svg>Si blocca da solo dopo 5 minuti di inattività</div>
+      </section>
+
+      <!-- NOTES -->
+      <section class="screen has-nav" data-screen="notes" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="ib" data-act="drawer" aria-label="Apri gruppi e sezioni"><svg class="i"><use href="#i-menu"/></svg></button>
+          <div class="grow"><div class="apptitle">Taccuino</div></div>
+          <button class="ib" data-act="lock" aria-label="Blocca"><svg class="i"><use href="#i-lock"/></svg></button>
+        </div>
+        <div class="secbar" id="secBar"></div>
+        <div class="scroll" id="notesScroll"></div>
+        <button class="fab" data-act="new-page"><svg class="i"><use href="#i-plus"/></svg>Pagina</button>
+      </section>
+
+      <!-- PAGE -->
+      <section class="screen" data-screen="page" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="ib" data-act="back-notes" aria-label="Indietro"><svg class="i"><use href="#i-back"/></svg></button>
+          <div class="grow" style="display:flex;align-items:center;gap:8px"><span class="dot" id="pDot"></span><span class="crumb" id="pCrumb"></span></div>
+          <button class="ib" data-act="page-menu" aria-label="Altre azioni"><svg class="i"><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="form">
+            <textarea id="pTitle" class="title-in" rows="1" placeholder="Titolo pagina" aria-label="Titolo pagina"></textarea>
+            <div class="pmeta"><span id="pDate"></span>
+              <div class="seg" role="group" aria-label="Modalità di visualizzazione">
+                <button id="modeVis" aria-pressed="true" data-act="mode" data-mode="vis">Visuale</button>
+                <button id="modeMd" aria-pressed="false" data-act="mode" data-mode="md">Markdown</button>
+              </div>
+            </div>
+            <div id="pMail"></div>
+            <div id="pEditor" class="editor" contenteditable="true" aria-label="Testo della pagina"></div>
+            <div id="pMdWrap" hidden>
+              <p class="mdnote">Questo è il testo esattamente come viene salvato (poi cifrato). Nell'uso normale non lo vedi: scrivi nell'editor visuale.</p>
+              <pre class="mdview" id="pMd"></pre>
+            </div>
+            <details class="crypto" id="pCrypto">
+              <summary><svg class="i sm"><use href="#i-lock"/></svg>Come viene salvata nel database</summary>
+              <div class="cbody" id="pCryptoBody"></div>
+            </details>
+          </div>
+        </div>
+        <div class="etools" id="eTools" aria-label="Formattazione">
+          <button data-cmd="p" title="Testo normale" aria-label="Testo normale">T</button>
+          <button data-cmd="h1" title="Titolo 1" aria-label="Titolo 1">H1</button>
+          <button data-cmd="h2" title="Titolo 2" aria-label="Titolo 2">H2</button>
+          <span class="sep"></span>
+          <button data-cmd="bold" title="Grassetto" aria-label="Grassetto">B</button>
+          <button data-cmd="italic" title="Corsivo" aria-label="Corsivo" style="font-style:italic;font-family:Georgia,serif">I</button>
+          <button data-cmd="strikeThrough" title="Barrato" aria-label="Barrato" style="text-decoration:line-through">S</button>
+          <button data-cmd="code" title="Codice" aria-label="Codice"><svg class="i"><use href="#i-code"/></svg></button>
+          <span class="sep"></span>
+          <button data-cmd="ul" title="Elenco puntato" aria-label="Elenco puntato"><svg class="i"><use href="#i-list"/></svg></button>
+          <button data-cmd="ol" title="Elenco numerato" aria-label="Elenco numerato"><svg class="i"><use href="#i-ol"/></svg></button>
+          <button data-cmd="todo" title="Caselle da spuntare" aria-label="Caselle da spuntare"><svg class="i"><use href="#i-todo"/></svg></button>
+          <button data-cmd="quote" title="Citazione" aria-label="Citazione"><svg class="i"><use href="#i-quote"/></svg></button>
+          <span class="sep"></span>
+          <button data-cmd="sketch" title="Inserisci disegno" aria-label="Inserisci disegno"><svg class="i"><use href="#i-pen"/></svg></button>
+        </div>
+      </section>
+
+      <!-- TASKS -->
+      <section class="screen has-nav" data-screen="tasks" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <div class="grow" style="padding-left:8px"><div class="apptitle">Attività</div></div>
+          <button class="ib" data-act="lock" aria-label="Blocca"><svg class="i"><use href="#i-lock"/></svg></button>
+        </div>
+        <div class="tabs" id="tabs" role="tablist" aria-label="Liste"></div>
+        <div class="scroll" id="taskScroll"></div>
+        <button class="fab" data-act="quick-add"><svg class="i"><use href="#i-plus"/></svg>Attività</button>
+      </section>
+
+      <!-- DETAIL -->
+      <section class="screen" data-screen="detail" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="ib" data-act="back-tasks" aria-label="Indietro"><svg class="i"><use href="#i-back"/></svg></button>
+          <div class="grow"><button class="chip list" data-act="move-task" id="dList" style="font-size:13px;padding:5px 10px"></button></div>
+          <button class="ib" data-act="star-detail" id="dStar" aria-label="Speciale"><svg class="i"><use href="#i-star"/></svg></button>
+          <button class="ib" data-act="del-task" aria-label="Elimina"><svg class="i"><use href="#i-trash"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="form">
+            <textarea id="dTitle" class="title-in" rows="1" placeholder="Titolo" aria-label="Titolo attività"></textarea>
+            <textarea id="dNotes" class="notes-in" rows="2" placeholder="Aggiungi dettagli" aria-label="Dettagli"></textarea>
+            <div id="dMail"></div>
+            <div class="frow"><svg class="i"><use href="#i-cal"/></svg>
+              <div class="grow" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <input type="date" id="dDate" aria-label="Data di scadenza"><input type="time" id="dTime" aria-label="Ora">
+                <button class="ib" data-act="clear-date" aria-label="Togli data" style="width:34px;height:34px"><svg class="i sm"><use href="#i-close"/></svg></button>
+              </div>
+            </div>
+            <div class="frow"><svg class="i"><use href="#i-repeat"/></svg>
+              <select id="dRepeat" aria-label="Ripeti">
+                <option value="none">Non si ripete</option><option value="day">Ogni giorno</option><option value="week">Ogni settimana</option><option value="month">Ogni mese</option><option value="year">Ogni anno</option>
+              </select>
+            </div>
+            <div class="frow" style="align-items:flex-start"><svg class="i" style="margin-top:6px"><use href="#i-sub"/></svg>
+              <div class="grow">
+                <div class="subs" id="dSubs"></div>
+                <div class="subrow"><span class="mini" style="border-style:dashed"></span><input type="text" id="dNewSub" placeholder="Aggiungi sotto-attività" aria-label="Nuova sotto-attività"></div>
+              </div>
+            </div>
+            <div class="frow" style="align-items:flex-start"><svg class="i" style="margin-top:6px"><use href="#i-sketch"/></svg>
+              <div class="grow">
+                <div class="sketches" id="dSketches"></div>
+                <button class="linkbtn" data-act="draw-task"><svg class="i sm"><use href="#i-pen"/></svg>Nuovo disegno</button>
+              </div>
+            </div>
+            <details class="crypto" id="dCrypto">
+              <summary><svg class="i sm"><use href="#i-lock"/></svg>Come viene salvata nel database</summary>
+              <div class="cbody" id="dCryptoBody"></div>
+            </details>
+          </div>
+        </div>
+        <div class="bottombar"><button class="btn primary" data-act="detail-done" id="dDone">Segna come completata</button></div>
+      </section>
+
+      <!-- DRAW -->
+      <section class="screen" data-screen="draw" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="ib" data-act="draw-cancel" aria-label="Chiudi senza salvare"><svg class="i"><use href="#i-close"/></svg></button>
+          <div class="grow"><div class="apptitle">Disegno</div><div class="crumb" id="drawFor"></div></div>
+          <button class="ib" data-act="undo" aria-label="Annulla"><svg class="i"><use href="#i-undo"/></svg></button>
+          <button class="ib" data-act="redo" aria-label="Ripristina"><svg class="i"><use href="#i-redo"/></svg></button>
+          <button class="btn primary" data-act="draw-save" style="height:38px;padding:0 14px">Salva</button>
+        </div>
+        <div class="paper" id="paper"><canvas id="cv"></canvas></div>
+        <div class="dtools">
+          <div class="r">
+            <button class="tool" data-tool="pen" aria-pressed="true" aria-label="Penna"><svg class="i"><use href="#i-pen"/></svg></button>
+            <button class="tool" data-tool="hl" aria-pressed="false" aria-label="Evidenziatore"><svg class="i"><use href="#i-hl"/></svg></button>
+            <button class="tool" data-tool="eraser" aria-pressed="false" aria-label="Gomma"><svg class="i"><use href="#i-eraser"/></svg></button>
+            <span style="flex:1"></span>
+            <button class="tool" data-act="draw-clear" aria-label="Cancella tutto"><svg class="i"><use href="#i-trash"/></svg></button>
+          </div>
+          <div class="r" id="swatches"></div>
+          <div class="r"><span class="lbl">Spessore</span><input type="range" id="size" min="1" max="24" value="4" aria-label="Spessore tratto"></div>
+        </div>
+      </section>
+
+      <!-- SEARCH -->
+      <section class="screen has-nav" data-screen="search" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar"><div class="grow" style="padding-left:8px"><div class="apptitle">Cerca</div></div></div>
+        <label class="searchbox"><svg class="i"><use href="#i-search"/></svg><input id="q" type="search" placeholder="Cerca in pagine e attività" value="cifr" aria-label="Cerca"></label>
+        <div class="scroll" id="searchRes"></div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="screen has-nav" data-screen="settings" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar"><div class="grow" style="padding-left:8px"><div class="apptitle">Impostazioni</div></div></div>
+        <div class="scroll" id="setScroll">
+          <div class="sect">
+            <div class="secure"><svg class="i"><use href="#i-shield"/></svg><div><b>Tutti i dati sono cifrati</b><span>Titoli, testi, disegni ed email importate sono salvati nel database WordPress solo in forma cifrata (AES-256-GCM).</span></div></div>
+          </div>
+
+          <div class="sect" id="emailSect">
+            <h3>Email → nota</h3>
+            <div class="card">
+              <div class="srow"><svg class="i"><use href="#i-mail"/></svg><div class="grow">
+                <div class="lab">Inoltra a questo indirizzo</div>
+                <div class="addr" id="addr">note-7f3k9q@note.tuodominio.it</div>
+              </div><button class="ib" data-act="copy-addr" aria-label="Copia indirizzo"><svg class="i"><use href="#i-copy"/></svg></button></div>
+              <div class="srow"><div class="grow">
+                <div class="lab">Cosa viene importato</div>
+                <div class="flow"><span>Oggetto → titolo</span><span>Corpo → testo (Markdown)</span><s>allegati</s><s>immagini</s><s>firma HTML</s></div>
+              </div></div>
+              <div class="srow"><div class="grow">
+                <div class="lab">Dove finisce</div>
+                <select id="dest" aria-label="Destinazione delle email" style="margin-top:6px;width:100%"></select>
+              </div></div>
+              <div class="srow"><div class="grow">
+                <div class="lab">Mittenti ammessi</div>
+                <div class="hint">Le email da altri indirizzi vengono scartate.</div>
+                <div class="senders" id="senders"></div>
+              </div></div>
+              <div class="srow"><div class="grow">
+                <div class="lab">Controllo casella</div>
+                <div class="hint">Ultimo controllo: 2 minuti fa · ogni 5 minuti</div>
+              </div><button class="btn ghost" data-act="sim-mail" style="height:36px;padding:0 12px;font-size:13px">Prova invio</button></div>
+            </div>
+          </div>
+
+          <div class="sect">
+            <h3>Sicurezza</h3>
+            <div class="card">
+              <div class="srow"><svg class="i"><use href="#i-lock"/></svg><div class="grow"><div class="lab">Blocco automatico</div></div>
+                <select id="autolock" aria-label="Blocco automatico"><option>Subito</option><option>1 minuto</option><option selected>5 minuti</option><option>15 minuti</option></select></div>
+              <div class="srow"><svg class="i"><use href="#i-finger"/></svg><div class="grow"><div class="lab">Sblocco con impronta o volto</div><div class="hint">Su questo telefono</div></div>
+                <label class="switch"><input type="checkbox" id="bio" checked aria-label="Sblocco biometrico"><span></span></label></div>
+              <div class="srow"><svg class="i"><use href="#i-shield"/></svg><div class="grow"><div class="lab">Codice di recupero</div><div class="hint">Creato il 24 nov · quello vecchio smette di valere</div></div><button class="btn ghost" data-act="new-code" style="height:36px;padding:0 12px;font-size:13px">Nuovo</button></div>
+              <div class="srow"><svg class="i"><use href="#i-mail"/></svg><div class="grow"><div class="lab">Recupero via email</div><div class="hint">Facoltativo · link monouso con 24 ore di attesa</div></div>
+                <label class="switch"><input type="checkbox" id="mailrec" aria-label="Recupero via email"><span></span></label></div>
+              <div class="srow"><svg class="i"><use href="#i-phone"/></svg><div class="grow"><div class="lab">Dispositivi collegati</div><div class="hint">Questo telefono · portatile di casa</div></div><button class="btn ghost" data-act="devices" style="height:36px;padding:0 12px;font-size:13px">Gestisci</button></div>
+              <div class="srow"><svg class="i"><use href="#i-key"/></svg><div class="grow"><div class="lab">Cambia password delle note</div><div class="hint">Immediato: le note restano come sono</div></div><svg class="i"><use href="#i-back" transform="rotate(180 12 12)"/></svg></div>
+              <div class="srow"><svg class="i"><use href="#i-download"/></svg><div class="grow"><div class="lab">Esporta backup cifrato</div><div class="hint">File .znk leggibile solo con la tua password</div></div><svg class="i"><use href="#i-back" transform="rotate(180 12 12)"/></svg></div>
+            </div>
+          </div>
+
+          <div class="sect">
+            <h3>App sul telefono e sul PC</h3>
+            <div class="card">
+              <div class="srow"><svg class="i"><use href="#i-phone"/></svg><div class="grow"><div class="lab">Installa ZNoteKeeper</div><div class="hint">Su telefono e PC: finestra propria, funziona anche offline</div></div>
+                <button class="btn primary" data-act="install" style="height:36px;padding:0 12px;font-size:13px">Installa</button></div>
+              <div class="srow"><svg class="i"><use href="#i-bell"/></svg><div class="grow"><div class="lab">Promemoria scadenze</div><div class="hint">Notifica all'ora dell'attività</div></div>
+                <label class="switch"><input type="checkbox" id="notif" checked aria-label="Promemoria"><span></span></label></div>
+            </div>
+          </div>
+
+          <div class="sect" style="padding-bottom:24px">
+            <h3>Account</h3>
+            <div class="card">
+              <div class="srow"><div class="logo" style="width:36px;height:36px;font-size:14px;border-radius:10px">B</div><div class="grow"><div class="lab">Benzene</div><div class="hint">Utente WordPress · amministratore</div></div></div>
+              <div class="srow"><svg class="i"><use href="#i-sliders"/></svg><div class="grow"><div class="lab">Utenti abilitati</div><div class="hint">Solo per gli amministratori del sito</div></div><button class="btn ghost" data-act="go-admin" style="height:36px;padding:0 12px;font-size:13px">Apri</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SETUP -->
+      <section class="screen" data-screen="setup" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar"><div class="grow" style="padding-left:8px"><div class="apptitle">Benvenuto in ZNoteKeeper</div><div class="crumb" id="setupStep"></div></div></div>
+        <div class="scroll"><div class="form" id="setupBody"></div></div>
+        <div class="bottombar"><button class="btn ghost" data-act="setup-back" id="setupBack">Indietro</button><button class="btn primary" data-act="setup-next" id="setupNext">Continua</button></div>
+      </section>
+
+      <!-- ADMIN -->
+      <section class="screen" data-screen="admin" hidden>
+        <div class="statusbar"><span>17:13</span><span>5G ▮▮▮</span></div>
+        <div class="topbar">
+          <button class="ib" data-act="admin-back" aria-label="Indietro"><svg class="i"><use href="#i-back"/></svg></button>
+          <div class="grow"><div class="apptitle">Utenti ZNoteKeeper</div><div class="crumb">Amministrazione WordPress</div></div>
+        </div>
+        <div class="scroll"><div class="sect">
+          <div class="secure"><svg class="i"><use href="#i-shield"/></svg><div><b>Vedi chi usa il plugin, non cosa scrive</b><span>Ogni utente ha uno spazio separato chiuso con la propria password. Puoi abilitarlo, disabilitarlo o cancellarne lo spazio, ma non aprirlo né reimpostarne la password.</span></div></div>
+          <h3>Utenti del sito</h3>
+          <div class="card" id="userList"></div>
+          <p class="ok" style="margin-top:12px">Gli utenti abilitati ricevono un'email di invito al primo avvio.</p>
+        </div></div>
+      </section>
+
+      <nav class="nav" id="nav" aria-label="Sezioni dell'app">
+        <button data-act="nav" data-to="notes"><span class="pill"><svg class="i"><use href="#i-book"/></svg></span>Taccuino</button>
+        <button data-act="nav" data-to="tasks"><span class="pill"><svg class="i"><use href="#i-tasks"/></svg></span>Attività</button>
+        <button data-act="nav" data-to="search"><span class="pill"><svg class="i"><use href="#i-search"/></svg></span>Cerca</button>
+        <button data-act="nav" data-to="settings"><span class="pill"><svg class="i"><use href="#i-sliders"/></svg></span>Impostazioni</button>
+      </nav>
+      <div id="overlay"></div>
+      <div id="toastRoot"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = () => Math.random().toString(36).slice(2, 9);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ic = (n, cls = '') => `<svg class="i ${cls}" aria-hidden="true"><use href="#i-${n}"/></svg>`;
+const T0 = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+const iso = off => { const d = new Date(T0); d.setDate(d.getDate() + off); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const fmtDay = s => { const d = new Date(s + 'T00:00'); const diff = Math.round((d - T0) / 864e5);
+  if (diff === 0) return 'Oggi'; if (diff === 1) return 'Domani'; if (diff === -1) return 'Ieri';
+  return d.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' }); };
+const shortDate = s => { const d = new Date(s + 'T00:00'); const diff = Math.round((d - T0) / 864e5); if (diff === 0) return 'Oggi'; if (diff === -1) return 'Ieri'; return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }); };
+
+/* ---------- sketches (generated sample drawings) ---------- */
+const sketches = {};
+function makeSketch(kind) {
+  const c = document.createElement('canvas'); c.width = 640; c.height = 420; const x = c.getContext('2d');
+  x.fillStyle = '#fff'; x.fillRect(0,0,640,420); x.lineCap = x.lineJoin = 'round';
+  const j = v => v + (Math.random() - .5) * 3;
+  const line = (pts, col, w) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); pts.forEach((p,i) => i ? x.lineTo(j(p[0]), j(p[1])) : x.moveTo(j(p[0]), j(p[1]))); x.stroke(); };
+  const rect = (a,b,w,h,col,lw) => line([[a,b],[a+w,b],[a+w,b+h],[a,b+h],[a,b]], col, lw);
+  if (kind === 'ui') {
+    rect(200,30,240,360,'#1d2a26',5); rect(220,60,200,34,'#1d2a26',3);
+    for (let i=0;i<5;i++){ x.strokeStyle='#1d2a26'; x.lineWidth=3; x.beginPath(); x.arc(238,128+i*44,9,0,7); x.stroke(); line([[256,128+i*44],[400-i*18,128+i*44]],'#1d2a26',3); }
+    x.globalAlpha=.35; line([[250,172],[392,172]],'#f2c200',18); x.globalAlpha=1;
+    rect(370,330,52,40,'#136f5e',4); line([[396,338],[396,362]],'#136f5e',4); line([[384,350],[408,350]],'#136f5e',4);
+    line([[460,140],[540,100]],'#c2366b',3); x.fillStyle='#c2366b'; x.font='bold 22px sans-serif'; x.fillText('trascina', 470, 92);
+    line([[120,340],[190,352]],'#2f62c9',3); x.fillStyle='#2f62c9'; x.fillText('nuova', 40, 335);
+  } else {
+    rect(80,90,140,90,'#1d2a26',4); rect(420,90,140,90,'#1d2a26',4); rect(250,270,140,90,'#136f5e',4);
+    x.fillStyle='#1d2a26'; x.font='bold 22px sans-serif'; x.fillText('Telefono',100,142); x.fillText('Server',450,142); x.fillStyle='#136f5e'; x.fillText('Database',262,322);
+    line([[220,135],[420,135]],'#1d2a26',3); line([[490,180],[360,270]],'#1d2a26',3);
+    x.fillStyle='#c2366b'; x.fillText('chiave?', 280, 118); x.fillText('solo cifrato', 440, 240);
+    x.globalAlpha=.35; line([[270,112],[370,112]],'#f2c200',20); x.globalAlpha=1;
+  }
+  return c.toDataURL('image/png');
+}
+sketches.sk1 = makeSketch('ui'); sketches.sk2 = makeSketch('arch');
+
+/* ---------- data ---------- */
+const S = {
+  groups: [ { id:'g-lav', name:'Lavoro', open:true }, { id:'g-casa', name:'Casa', open:true } ],
+  sections: [
+    { id:'s-inbox', name:'Posta in arrivo', color:6, group:null },
+    { id:'s-prog', name:'Progetto ZNoteKeeper', color:3, group:'g-lav' },
+    { id:'s-riun', name:'Riunioni', color:4, group:'g-lav' },
+    { id:'s-ric', name:'Ricette', color:1, group:'g-casa' },
+    { id:'s-man', name:'Manutenzione', color:2, group:'g-casa' },
+  ],
+  pages: [
+    { id:'p1', section:'s-prog', title:'Requisiti iniziali', date:iso(0), html:
+      `<h1>Obiettivo</h1><p>Un plugin WordPress per tenere <b>note e attività riservate</b>, da usare sul telefono come un'app.</p><h2>Must have</h2><ul><li>Dati <b>cifrati</b> nel database</li><li>Liste di attività con scadenze e sotto-attività</li><li>Email inoltrata → nuova nota</li><li>Disegno a mano libera nelle note</li></ul><h2>Prossimi passi</h2><ul class="todo"><li class="done">Mockup delle schermate</li><li>Documento di analisi</li><li>Modello dati e schema di cifratura</li></ul><blockquote>Testo salvato in Markdown, scritto con un editor visuale.</blockquote>` },
+    { id:'p2', section:'s-prog', title:'Note sulla cifratura', sub:true, date:iso(0), html:
+      `<p>Due strade da confrontare nell'analisi:</p><ol><li><b>Chiave sul server</b>: più semplice, le email si cifrano subito all'arrivo.</li><li><b>Chiave solo sul telefono</b>: il server non legge mai il contenuto.</li></ol><img class="sketch" data-sk="sk2" src="" alt="Disegno"><p>Algoritmo proposto: <code>AES-256-GCM</code>, chiave derivata con <code>Argon2id</code>.</p>` },
+    { id:'p3', section:'s-prog', title:'Idee per l\'interfaccia', date:iso(-1), html:
+      `<p>Schizzo della lista attività fatto sul telefono:</p><img class="sketch" data-sk="sk1" src="" alt="Disegno"><ul><li>Pulsante grande per aggiungere</li><li>Maniglia per trascinare</li></ul>` },
+    { id:'p4', section:'s-riun', title:'Riunione hosting 18 novembre', date:iso(-6), html:
+      `<h2>Presenti</h2><p>Io, fornitore hosting</p><h2>Decisioni</h2><ul><li>Certificato HTTPS già attivo (serve per la PWA)</li><li>PHP 8.2 disponibile</li></ul><h2>Da fare</h2><ul class="todo"><li>Chiedere accesso IMAP alla casella note</li><li class="done">Verificare spazio database</li></ul>` },
+    { id:'p5', section:'s-ric', title:'Lasagne della nonna', date:iso(-20), html:
+      `<h2>Ingredienti</h2><ul><li>500 g di sfoglia fresca</li><li>Ragù: 400 g di macinato misto, 700 g di passata</li><li>Besciamella: 1 l di latte, 80 g di burro, 80 g di farina</li><li>Parmigiano grattugiato</li></ul><h2>Procedimento</h2><ol><li>Ragù a fuoco lento per almeno 2 ore</li><li>Alternare sfoglia, ragù, besciamella e parmigiano</li><li>Forno a 180 °C per 35 minuti</li></ol>` },
+    { id:'p6', section:'s-ric', title:'Pane in cassetta', date:iso(-34), html:`<p>500 g farina, 300 ml latte tiepido, 7 g lievito, 30 g burro, 10 g sale. Lievitazione 2 ore, forno 190 °C per 30 minuti.</p>` },
+    { id:'p7', section:'s-man', title:'Caldaia: scadenze', date:iso(-60), html:`<ul><li>Revisione annuale: <b>dicembre</b></li><li>Libretto nel cassetto dell'ingresso</li><li>Tecnico: chiamare la mattina</li></ul>` },
+    { id:'p8', section:'s-inbox', title:'Fwd: Verbale assemblea condominio', date:iso(-1), mail:{ from:'tu@esempio.it', when:'ieri 21:04' }, html:
+      `<p>Approvato il rifacimento della facciata. Prima rata entro il 15 gennaio.</p><p>Prossima assemblea a marzo, data da definire.</p>` },
+    { id:'p9', section:'s-inbox', title:'Conferma prenotazione hotel Bolzano', date:iso(-3), mail:{ from:'tu@esempio.it', when:'21 nov 09:12' }, html:
+      `<p>Check-in 12 dicembre dalle 15:00, check-out 14 dicembre entro le 11:00.</p><p>Codice prenotazione: BZ-48213. Colazione inclusa.</p>` },
+  ],
+  curSection: 's-prog', curPage: null, mode: 'vis',
+  lists: [
+    { id:'l-pers', name:'Personale', sort:'my', tasks:[
+      { id:uid(), title:'Rinnovare assicurazione auto', notes:'Confrontare almeno tre preventivi prima della scadenza.', due:iso(4), time:'', repeat:'year', starred:false, done:false,
+        subs:[{id:uid(),title:'Chiedere tre preventivi',done:true},{id:uid(),title:'Verificare la classe di merito',done:false}], sketches:[] },
+      { id:uid(), title:'Comprare il regalo per Giulia', notes:'', due:iso(1), time:'', repeat:'none', starred:true, done:false, subs:[], sketches:[] },
+      { id:uid(), title:'Prenotare la revisione della caldaia', notes:'', due:iso(9), time:'10:00', repeat:'none', starred:false, done:false, subs:[], sketches:[] },
+      { id:uid(), title:'Pagare la bolletta della luce', notes:'', due:iso(-2), time:'', repeat:'month', starred:false, done:true, subs:[], sketches:[] },
+    ]},
+    { id:'l-lav', name:'Lavoro', sort:'my', tasks:[
+      { id:uid(), title:'Scrivere l\'analisi di ZNoteKeeper', notes:'Partire dal mockup approvato.', due:iso(1), time:'18:00', repeat:'none', starred:true, done:false,
+        subs:[{id:uid(),title:'Mockup delle schermate',done:true},{id:uid(),title:'Documento dei requisiti',done:false},{id:uid(),title:'Modello dati cifrato',done:false}], sketches:['sk1'] },
+      { id:uid(), title:'Chiamare il fornitore hosting', notes:'Chiedere accesso IMAP per la casella delle note.', due:iso(0), time:'15:00', repeat:'none', starred:false, done:false, subs:[], sketches:[] },
+      { id:uid(), title:'Inviare la fattura di novembre', notes:'', due:iso(-1), time:'', repeat:'month', starred:false, done:false, subs:[], sketches:[] },
+    ]},
+    { id:'l-mail', name:'Da email', sort:'my', tasks:[
+      { id:uid(), title:'Fwd: Rinnovo dominio in scadenza', notes:'Il dominio scade il 10 dicembre. Rinnovo automatico disattivato.', due:'', time:'', repeat:'none', starred:false, done:false, subs:[], sketches:[], mail:{from:'tu@esempio.it', when:'oggi 08:41'} },
+    ]},
+  ],
+  curList: 'l-pers', showDone: false, curTask: null,
+  senders: ['tu@esempio.it', 'lavoro@esempio.it'],
+  dest: 'sec:s-inbox',
+};
+
+/* ---------- helpers ---------- */
+const sec = id => S.sections.find(s => s.id === id);
+const grp = id => S.groups.find(g => g.id === id);
+const page = id => S.pages.find(p => p.id === id);
+const listOf = tid => S.lists.find(l => l.tasks.some(t => t.id === tid));
+const task = tid => { for (const l of S.lists) { const t = l.tasks.find(t => t.id === tid); if (t) return t; } };
+const secColor = s => `var(--s${s.color})`;
+const textOf = html => { const d = document.createElement('div'); d.innerHTML = html.replace(/<(?!\/?(b|i|s|code|strong|em)\b)/g, ' <'); return d.textContent.replace(/\s+/g, ' ').trim(); };
+const firstSketch = html => { const m = /data-sk="([^"]+)"/.exec(html); return m ? m[1] : null; };
+
+function fakeCipher(str) {
+  let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  const n = Math.min(Math.max(16, Math.ceil(str.length * 1.02)), 180) + 28; let b = '';
+  for (let i = 0; i < n; i++) { h ^= h << 13; h ^= h >>> 17; h ^= h << 5; b += String.fromCharCode(h & 255); }
+  return 'enc:v1:' + btoa(b);
+}
+
+/* ---------- Markdown from editor HTML ---------- */
+function htmlToMd(root) {
+  const inline = n => [...n.childNodes].map(c => {
+    if (c.nodeType === 3) return c.textContent;
+    if (c.nodeType !== 1) return '';
+    const t = c.tagName, inner = inline(c);
+    if (t === 'B' || t === 'STRONG') return inner.trim() ? `**${inner}**` : inner;
+    if (t === 'I' || t === 'EM') return inner.trim() ? `*${inner}*` : inner;
+    if (t === 'S' || t === 'STRIKE' || t === 'DEL') return `~~${inner}~~`;
+    if (t === 'CODE') return '`' + inner + '`';
+    if (t === 'A') return `[${inner}](${c.getAttribute('href') || ''})`;
+    if (t === 'BR') return '  \n';
+    if (t === 'IMG') return `![Disegno](znk://disegno/${c.dataset.sk || ''})`;
+    if (t === 'UL' || t === 'OL') return '\n' + block(c, 1);
+    return inner;
+  }).join('');
+  const list = (n, depth) => {
+    const pad = '  '.repeat(depth); let i = 1;
+    return [...n.children].map(li => {
+      const nested = [...li.children].filter(x => x.tagName === 'UL' || x.tagName === 'OL');
+      const clone = li.cloneNode(true); [...clone.children].forEach(x => { if (x.tagName === 'UL' || x.tagName === 'OL') x.remove(); });
+      let mark = n.tagName === 'OL' ? `${i++}.` : '-';
+      if (n.classList.contains('todo')) mark = li.classList.contains('done') ? '- [x]' : '- [ ]';
+      return pad + mark + ' ' + inline(clone).trim() + '\n' + nested.map(x => list(x, depth + 1)).join('');
+    }).join('');
+  };
+  const block = (n) => [...n.childNodes].map(c => {
+    if (c.nodeType === 3) return c.textContent.trim() ? c.textContent.trim() + '\n\n' : '';
+    if (c.nodeType !== 1) return '';
+    const t = c.tagName;
+    if (t === 'H1') return '# ' + inline(c).trim() + '\n\n';
+    if (t === 'H2') return '## ' + inline(c).trim() + '\n\n';
+    if (t === 'H3') return '### ' + inline(c).trim() + '\n\n';
+    if (t === 'UL' || t === 'OL') return list(c, 0) + '\n';
+    if (t === 'BLOCKQUOTE') return block(c).trim().split('\n').map(l => '> ' + l).join('\n') + '\n\n';
+    if (t === 'IMG') return `![Disegno](znk://disegno/${c.dataset.sk || ''})\n\n`;
+    if (t === 'HR') return '---\n\n';
+    if (t === 'PRE') return '```\n' + c.textContent + '\n```\n\n';
+    const s = inline(c).trim(); return s ? s + '\n\n' : '';
+  }).join('');
+  return block(root).replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
+/* ---------- screens ---------- */
+const NAV_SCREENS = ['notes', 'tasks', 'search', 'settings'];
+let screen = 'notes';
+const isDesk = () => S.desk && matchMedia('(min-width: 881px)').matches;
+const scr = n => $(`.screen[data-screen="${n}"]`);
+function show(name) {
+  screen = name; const desk = isDesk(); let vis = [name], tree = false;
+  $('#app').classList.toggle('desk', desk); $('.device').classList.toggle('desk', desk); $('.stage').classList.toggle('deskmode', !!S.desk);
+  $$('.screen').forEach(x => x.classList.remove('pane-list', 'pane-main', 'pane-full', 'after-tree'));
+  if (desk) {
+    if (name === 'notes' || name === 'page') { vis = ['notes', S.curPage && page(S.curPage) ? 'page' : 'empty']; tree = true; }
+    else if (name === 'tasks' || name === 'detail') vis = ['tasks', S.curTask && task(S.curTask) ? 'detail' : 'empty'];
+    if (vis.length === 2) {
+      scr(vis[0]).classList.add('pane-list'); scr(vis[1]).classList.add('pane-main');
+      if (tree) { scr(vis[0]).classList.add('after-tree'); scr(vis[1]).classList.add('after-tree'); }
+      $('#emptyMsg').innerHTML = tree ? '<b>Nessuna pagina aperta</b>Scegli una pagina dall\'elenco o creane una nuova.' : '<b>Nessuna attività aperta</b>Scegli un\'attività per vederne i dettagli qui accanto.';
+      if (tree) { renderNotes(); renderDeskTree(); } else renderTasks();
+    } else scr(name).classList.add('pane-full');
+  }
+  $('#deskTree').hidden = !tree;
+  $$('.screen').forEach(x => x.hidden = !vis.includes(x.dataset.screen));
+  const navName = name === 'page' ? 'notes' : name === 'detail' ? 'tasks' : name;
+  $('#nav').hidden = !(NAV_SCREENS.includes(name) || (desk && ['page', 'detail', 'draw', 'admin'].includes(name)));
+  $$('#nav button').forEach(b => b.setAttribute('aria-current', String(b.dataset.to === navName)));
+  closeOverlay();
+  updateGuide(name);
+}
+
+/* ---------- guide ---------- */
+const GUIDE = {
+  admin: { t:'Utenti (admin)', a:['L\'amministratore WordPress abilita i singoli utenti con un interruttore.','Vede ruolo, data di abilitazione, spazio usato e ultimo accesso. Mai titoli o contenuti.','Disabilitare un utente non cancella i dati: restano cifrati e si possono riattivare. Cancellare lo spazio è definitivo.'], b:['L\'admin non può reimpostare la password delle note di nessuno: se l\'utente perde password e codice, l\'unica strada è cancellare lo spazio.','Prova: abilita Luca Bianchi.'] },
+  setup: { t:'Primo avvio', a:['Passo 1: l\'utente sceglie la password delle note (almeno 10 caratteri), diversa da quella di WordPress. Un indicatore ne mostra la robustezza.','Passo 2: riceve il codice di recupero di 24 caratteri, mostrato una sola volta, e ne riscrive 4 per confermare di averlo salvato.','Passo 3: decide se attivare il recupero via email (spento di default).'], b:['La password non viene mai salvata: il server conserva solo un\'impronta che la riconosce senza poterla ricostruire.','Prova: password di almeno 10 caratteri, poi i caratteri sottolineati del codice.'] },
+  recover: { t:'Recupero', a:['Dalla schermata di sblocco: "Password dimenticata?".','Con il codice di recupero: nuova password subito e nuovo codice da salvare, il vecchio smette di valere.','Con il link via email (se attivato): monouso, valido 30 minuti, funziona solo con l\'accesso WordPress già fatto, poi 24 ore di attesa con avvisi e possibilità di annullare.'], b:['Senza password, codice e link i dati non si possono più aprire: scelta voluta, va scritta chiaramente all\'utente.','A recupero completato gli altri dispositivi vengono scollegati.'] },
+  lock: { t:'Sblocco', a:['All\'apertura l\'app chiede la password delle note, oppure impronta o volto se attivati.','Dallo sblocco si ottiene la chiave che decifra i dati: senza sblocco non si legge nulla.','L\'app si blocca da sola dopo il tempo scelto in Impostazioni, o con il lucchetto in alto.'], b:['Sblocco biometrico tramite WebAuthn: richiede HTTPS sul sito WordPress.','Prova: scrivi qualsiasi cosa e premi Sblocca.'] },
+  notes: { t:'Taccuino', a:['Organizzazione come un quaderno a schede: gruppi di sezioni › sezioni › pagine.','Il menu in alto a sinistra apre l\'albero: gruppi apribili, sezioni colorate con il numero di pagine, e "Posta in arrivo" fuori dai gruppi.','Le pagine possono avere sottopagine (rientrate), come "Note sulla cifratura".','Icona busta = arrivata via email; miniatura = contiene un disegno.'], b:['Da definire quanti livelli servono: qui gruppo › sezione › pagina › sottopagina.','Prova: apri il menu, crea una sezione con un colore, poi una pagina.'] },
+  page: { t:'Pagina', a:['Editor visuale: titoli, grassetto, corsivo, barrato, codice, elenchi, caselle da spuntare, citazioni.','Il testo è salvato in Markdown: il pulsante "Markdown" mostra il file come viene salvato, aggiornato mentre scrivi.','La penna nella barra inserisce un disegno nella pagina; tocca un disegno per modificarlo.','Tocca il quadratino di una casella per spuntarla.'], b:['Nel Markdown i disegni sono riferimenti (znk://disegno/…) a immagini salvate a parte, anch\'esse cifrate.','"Come viene salvata nel database" è una simulazione grafica, non vera crittografia.'] },
+  tasks: { t:'Attività', a:['Liste come schede in alto, più "Speciali" che raccoglie le attività con la stella da tutte le liste.','Tocca il cerchio per completare: va in "Completate" e puoi annullare dal messaggio in basso.','Trascina la maniglia a sinistra per riordinare (solo in ordine manuale).','Le sotto-attività stanno rientrate sotto l\'attività principale.','Menu ⋯: ordina per data, rinomina, elimina completate, elimina lista.'], b:['Le attività ricorrenti, quando completate, creano la prossima occorrenza.','Data in rosso = scaduta, arancio = oggi.'] },
+  detail: { t:'Dettaglio attività', a:['Titolo e dettagli si salvano mentre scrivi.','Data, ora e ripetizione (giorno, settimana, mese, anno).','Sotto-attività su un solo livello.','Sposta in un\'altra lista dal pulsante in alto; stella e cestino a destra.','Disegni allegati all\'attività.'], b:['I dettagli delle attività sono testo semplice, salvati anch\'essi in Markdown.'] },
+  draw: { t:'Disegno', a:['Disegno a mano libera con dito o pennino: penna, evidenziatore, gomma.','Sei colori, spessore regolabile, annulla e ripristina, cancella tutto.','Salva inserisce il disegno nella pagina o nell\'attività; riaprendolo si continua da dove si era rimasti.'], b:['Da scegliere: salvare come PNG cifrato o come tratti vettoriali.'] },
+  search: { t:'Cerca', a:['Una sola ricerca su pagine e attività di tutte le sezioni e liste.','Con i dati cifrati la ricerca avviene dopo la decifratura (sul server o sul telefono, secondo la scelta sulla chiave).'], b:['Prova a cercare "lasagne" o "dominio".'] },
+  email: { t:'Email → nota', a:['Ogni utente ha un indirizzo dedicato: inoltri una email e diventa una nota.','Si importano solo oggetto (titolo) e corpo (testo in Markdown). Allegati, immagini e firme HTML sono scartati.','Destinazione a scelta: una sezione del taccuino (nuova pagina) oppure una lista attività.','Solo i mittenti ammessi sono accettati, gli altri vengono scartati.'], b:['Prova invio simula tre email di fila: due ammesse e una da mittente sconosciuto.'] },
+  settings: { t:'Impostazioni', a:['Stato della cifratura sempre visibile in alto.','Email → nota, sicurezza (blocco automatico, biometria, codice di recupero, recupero via email, dispositivi, password, backup cifrato), app sul telefono.','"Installa" spiega come aggiungere l\'app alla schermata Home su Android e iPhone.','Gli amministratori trovano qui anche "Utenti abilitati".'], b:['Cambiare password non ricifra le note: cambia solo la serratura della chiave del tuo spazio.'] },
+};
+let guideKey = 'notes';
+function updateGuide(name) {
+  guideKey = (name === 'settings' && guideKey === 'email') ? 'email' : (name === 'lock' && guideKey === 'recover') ? 'recover' : name;
+  const g = GUIDE[guideKey];
+  $('#notesBox').innerHTML = `<p class="eyebrow">Cosa guardare</p><h3>${g.t}</h3><ul>${g.a.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    <p class="eyebrow sub">Note per l'analisi</p><ul>${g.b.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`;
+  $$('#index button').forEach(b => b.setAttribute('aria-current', String(b.dataset.go === guideKey)));
+}
+
+/* ---------- notes ---------- */
+function renderNotes() {
+  const s = sec(S.curSection); const g = s.group ? grp(s.group) : null;
+  const pages = S.pages.filter(p => p.section === s.id);
+  $('#secBar').style.background = secColor(s);
+  $('#notesScroll').innerHTML = `
+    <div class="head" style="padding-top:12px"><div class="grow">
+      <div class="crumb">${g ? esc(g.name) + ' ›' : 'Senza gruppo ›'}</div>
+      <h2 class="big">${esc(s.name)}</h2>
+      <div class="meta">${pages.length} ${pages.length === 1 ? 'pagina' : 'pagine'}</div></div>
+      <button class="ib" data-act="sec-menu" aria-label="Azioni sezione">${ic('more')}</button></div>
+    ${pages.length ? pages.map(p => { const sk = firstSketch(p.html);
+      return `<div class="page-row ${p.sub ? 'sub' : ''} ${isDesk() && p.id === S.curPage && screen === 'page' ? 'sel' : ''}" data-act="open-page" data-id="${p.id}">
+        <div class="pg"><div class="pt">${esc(p.title || 'Senza titolo')}</div><div class="ps">${esc(textOf(p.html).slice(0, 140)) || '<i>Pagina vuota</i>'}</div>
+        ${p.mail ? `<div class="chips"><span class="chip mail">${ic('mail')}da email</span></div>` : ''}</div>
+        ${sk ? `<img class="thumb" src="${sketches[sk]}" alt="">` : ''}
+        <div class="pd">${shortDate(p.date)}</div></div>`; }).join('')
+      : `<div class="empty"><b>Sezione vuota</b>Tocca "Pagina" per scrivere la prima nota.</div>`}
+    <div style="height:84px"></div>`;
+}
+function renderDeskTree() { $('#deskTree').innerHTML = treeHTML(); }
+function openDrawer() { $('#overlay').innerHTML = `<div class="backdrop" data-act="close"></div><aside class="drawer" aria-label="Gruppi e sezioni">${treeHTML()}</aside>`; }
+function treeHTML() {
+  const secRow = (s, top) => `<button class="sec ${top ? 'top' : ''}" data-act="pick-sec" data-id="${s.id}" aria-current="${s.id === S.curSection}">
+      <span class="tab-color" style="background:${secColor(s)}"></span>${esc(s.name)}<span class="cnt">${S.pages.filter(p => p.section === s.id).length}</span></button>`;
+  return `<div class="dh"><div class="crumb">Il mio taccuino</div><h2 class="big" style="font-size:24px">Sezioni</h2></div>
+    <div class="tree">
+      ${S.sections.filter(s => !s.group).map(s => secRow(s, true)).join('')}
+      <hr>
+      ${S.groups.map(g => `<button class="grp" data-act="toggle-grp" data-id="${g.id}" aria-expanded="${g.open}">${ic('folder')}${esc(g.name)}${ic('chev', 'chev')}</button>
+        ${g.open ? S.sections.filter(s => s.group === g.id).map(s => secRow(s)).join('') || '<div class="crumb" style="padding:6px 34px">Nessuna sezione</div>' : ''}`).join('')}
+      <hr>
+      <button class="add" data-act="new-sec">${ic('plus')}Nuova sezione</button>
+      <button class="add" data-act="new-grp">${ic('folder')}Nuovo gruppo di sezioni</button>
+    </div>`;
+}
+
+/* ---------- page editor ---------- */
+const ed = $('#pEditor');
+function hydrateSketches(root) { $$('img.sketch', root).forEach(im => { if (sketches[im.dataset.sk]) im.src = sketches[im.dataset.sk]; }); }
+function openPage(id) {
+  const p = page(id); S.curPage = id; const s = sec(p.section); const g = s.group ? grp(s.group) : null;
+  $('#pDot').style.background = secColor(s);
+  $('#pCrumb').textContent = (g ? g.name + ' › ' : '') + s.name;
+  $('#pTitle').value = p.title;
+  $('#pDate').textContent = 'Modificata ' + shortDate(p.date).toLowerCase();
+  $('#pMail').innerHTML = p.mail ? mailCard(p.mail) : '';
+  ed.innerHTML = p.html; hydrateSketches(ed);
+  setMode('vis'); $('#pCrypto').open = false; refreshPageCrypto();
+  show('page'); autosize($('#pTitle'));
+}
+function savePage() { const p = page(S.curPage); if (!p) return; if (isDesk()) queueMicrotask(renderNotes);
+  const clone = ed.cloneNode(true); $$('img.sketch', clone).forEach(im => im.setAttribute('src', ''));
+  p.html = clone.innerHTML; p.title = $('#pTitle').value; p.date = iso(0); refreshPageCrypto(); if (S.mode === 'md') $('#pMd').textContent = htmlToMd(ed); }
+function refreshPageCrypto() { if (!$('#pCrypto').open) return; const md = htmlToMd(ed);
+  $('#pCryptoBody').innerHTML = `<div class="k">titolo</div><code>${fakeCipher($('#pTitle').value).slice(0, 90)}…</code><div class="k">testo (Markdown, ${md.length} caratteri)</div><code>${fakeCipher(md).slice(0, 220)}…</code><div class="k">sezione, data, ordine</div><code>section_id=${esc(S.curPage)} · non cifrati, servono per ordinare</code>`; }
+function setMode(m) { S.mode = m; $('#modeVis').setAttribute('aria-pressed', String(m === 'vis')); $('#modeMd').setAttribute('aria-pressed', String(m === 'md'));
+  ed.hidden = m !== 'vis'; $('#pMdWrap').hidden = m !== 'md'; $('#eTools').style.visibility = m === 'vis' ? 'visible' : 'hidden';
+  if (m === 'md') $('#pMd').textContent = htmlToMd(ed); }
+ed.addEventListener('input', savePage);
+$('#pTitle').addEventListener('input', e => { autosize(e.target); savePage(); });
+$('#pCrypto').addEventListener('toggle', refreshPageCrypto);
+ed.addEventListener('click', e => {
+  const li = e.target.closest('ul.todo > li');
+  if (li && e.offsetX < 24 && e.target === li) { li.classList.toggle('done'); savePage(); return; }
+  const im = e.target.closest('img.sketch'); if (im) openDraw({ kind:'page', sk: im.dataset.sk });
+});
+let savedRange = null;
+$('#eTools').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+$('#eTools').addEventListener('click', e => {
+  const b = e.target.closest('button[data-cmd]'); if (!b) return; const c = b.dataset.cmd;
+  ed.focus();
+  const sel = getSelection(); if (!sel.rangeCount || !ed.contains(sel.anchorNode)) { const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); sel.removeAllRanges(); sel.addRange(r); }
+  if (c === 'p') document.execCommand('formatBlock', false, '<p>');
+  else if (c === 'h1' || c === 'h2') document.execCommand('formatBlock', false, `<${c}>`);
+  else if (c === 'quote') document.execCommand('formatBlock', false, '<blockquote>');
+  else if (c === 'ul') document.execCommand('insertUnorderedList');
+  else if (c === 'ol') document.execCommand('insertOrderedList');
+  else if (c === 'todo') { const txt = sel.toString() || 'Nuova cosa da fare'; document.execCommand('insertHTML', false, `<ul class="todo"><li>${esc(txt)}</li></ul><p><br></p>`); }
+  else if (c === 'code') { const txt = sel.toString() || 'codice'; document.execCommand('insertHTML', false, `<code>${esc(txt)}</code>&nbsp;`); }
+  else if (c === 'sketch') { savedRange = sel.getRangeAt(0).cloneRange(); openDraw({ kind:'page', sk:null }); return; }
+  else document.execCommand(c);
+  savePage();
+});
+
+/* ---------- tasks ---------- */
+const curList = () => S.lists.find(l => l.id === S.curList);
+function dueChip(t) { if (!t.due) return ''; const d = new Date(t.due + 'T00:00'); const diff = Math.round((d - T0) / 864e5);
+  const cls = t.done ? '' : diff < 0 ? 'late' : diff === 0 ? 'today' : '';
+  return `<span class="chip ${cls}">${ic('cal')}${fmtDay(t.due)}${t.time ? ' · ' + t.time : ''}${t.repeat !== 'none' ? ' ' + ic('repeat') : ''}</span>`; }
+function taskRow(t, opts = {}) {
+  const chips = [dueChip(t), t.mail ? `<span class="chip mail">${ic('mail')}email</span>` : '', t.sketches.length ? `<span class="chip">${ic('pen')}${t.sketches.length}</span>` : '',
+    t.subs.length ? `<span class="chip">${ic('sub')}${t.subs.filter(s => s.done).length}/${t.subs.length}</span>` : '', opts.listName ? `<span class="chip list">${esc(opts.listName)}</span>` : ''].join('');
+  const subs = t.done ? '' : t.subs.map(s => `<div class="task sub ${s.done ? 'done' : ''}"><span></span><button class="check" data-act="toggle-sub" data-id="${t.id}" data-sid="${s.id}" aria-label="Completa sotto-attività"><span>${ic('check')}</span></button>
+      <div class="body" data-act="open-task" data-id="${t.id}"><div class="t">${esc(s.title)}</div></div><span></span></div>`).join('');
+  return `<div class="group ${isDesk() && t.id === S.curTask && screen === 'detail' ? 'sel' : ''}" data-id="${t.id}"><div class="task ${t.done ? 'done' : ''}">
+    ${opts.drag ? `<span class="handle" data-handle aria-label="Trascina per riordinare">${ic('drag')}</span>` : '<span></span>'}
+    <button class="check" data-act="toggle" data-id="${t.id}" aria-label="${t.done ? 'Segna da fare' : 'Segna come completata'}"><span>${ic('check')}</span></button>
+    <div class="body" data-act="open-task" data-id="${t.id}"><div class="t">${esc(t.title || 'Senza titolo')}</div>${t.notes ? `<div class="n">${esc(t.notes)}</div>` : ''}${chips ? `<div class="chips">${chips}</div>` : ''}</div>
+    <button class="star ${t.starred ? 'on' : ''}" data-act="star" data-id="${t.id}" aria-label="Speciale">${ic('star', t.starred ? 'fill' : '')}</button>
+  </div>${subs}</div>`;
+}
+function renderTabs() {
+  const tabs = [{ id:'starred', name:'Speciali' }, ...S.lists];
+  $('#tabs').innerHTML = tabs.map(l => { const open = l.tasks ? l.tasks.filter(t => !t.done).length : 0;
+    return `<button class="tab" role="tab" data-act="pick-list" data-id="${l.id}" aria-selected="${S.curList === l.id}">${l.id === 'starred' ? ic('star', 'sm fill') : ''}${esc(l.name)}${l.id === 'l-mail' && open ? `<span class="badge">${open}</span>` : ''}</button>`; }).join('')
+    + `<button class="tab" data-act="new-list">${ic('plus', 'sm')}Nuova lista</button>`;
+}
+function renderTasks() {
+  renderTabs();
+  let open, done, title, meta, drag = false;
+  if (S.curList === 'starred') {
+    const all = S.lists.flatMap(l => l.tasks.map(t => ({ t, l })));
+    open = all.filter(x => x.t.starred && !x.t.done); done = [];
+    title = 'Speciali'; meta = 'Attività con la stella da tutte le liste';
+  } else {
+    const l = curList(); let ts = l.tasks.filter(t => !t.done);
+    if (l.sort === 'date') ts = [...ts].sort((a, b) => (a.due || '9999').localeCompare(b.due || '9999') || (a.time || '').localeCompare(b.time || ''));
+    open = ts.map(t => ({ t, l })); done = l.tasks.filter(t => t.done).map(t => ({ t, l }));
+    title = l.name; meta = `${open.length} da fare · ${l.sort === 'date' ? 'ordinate per scadenza' : 'ordine manuale'}`; drag = l.sort === 'my';
+  }
+  $('#taskScroll').innerHTML = `
+    <div class="head"><div class="grow"><h2 class="big">${esc(title)}</h2><div class="meta">${meta}</div></div>
+      ${S.curList !== 'starred' ? `<button class="ib" data-act="list-menu" aria-label="Azioni lista">${ic('more')}</button>` : ''}</div>
+    <div id="openList">${open.length ? open.map(x => taskRow(x.t, { drag, listName: S.curList === 'starred' ? x.l.name : '' })).join('')
+      : `<div class="empty"><b>${S.curList === 'starred' ? 'Nessuna attività speciale' : 'Tutto fatto'}</b>${S.curList === 'starred' ? 'Tocca la stella su un\'attività per vederla qui.' : 'Tocca "Attività" per aggiungerne una.'}</div>`}</div>
+    ${done.length ? `<button class="donehead" data-act="toggle-done" aria-expanded="${S.showDone}">Completate (${done.length}) ${ic('chev')}</button>
+      ${S.showDone ? done.map(x => taskRow(x.t)).join('') : ''}` : ''}
+    <div style="height:84px"></div>`;
+}
+const nextDate = (d, rep) => { const x = new Date(d + 'T00:00'); if (rep === 'day') x.setDate(x.getDate() + 1); if (rep === 'week') x.setDate(x.getDate() + 7); if (rep === 'month') x.setMonth(x.getMonth() + 1); if (rep === 'year') x.setFullYear(x.getFullYear() + 1);
+  return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; };
+function toggleTask(id) {
+  const t = task(id), l = listOf(id); t.done = !t.done;
+  if (t.done) {
+    let extra = '';
+    if (t.repeat !== 'none' && t.due) { const n = { ...structuredClone(t), id: uid(), done: false, due: nextDate(t.due, t.repeat), subs: t.subs.map(s => ({ ...s, id: uid(), done: false })) };
+      l.tasks.splice(l.tasks.indexOf(t), 0, n); extra = ` · prossima ${fmtDay(n.due).toLowerCase()}`; t.repeat = 'none'; t._spawn = n.id; }
+    l.tasks.splice(l.tasks.indexOf(t), 1); l.tasks.push(t);
+    toast('Attività completata' + extra, 'Annulla', () => { t.done = false; if (t._spawn) { t.repeat = task(t._spawn).repeat; l.tasks = l.tasks.filter(x => x.id !== t._spawn); delete t._spawn; } l.tasks.splice(l.tasks.indexOf(t), 1); l.tasks.unshift(t); refresh(); });
+  } else { l.tasks.splice(l.tasks.indexOf(t), 1); l.tasks.unshift(t); }
+  refresh();
+}
+
+/* drag to reorder */
+$('#app').addEventListener('pointerdown', e => {
+  const h = e.target.closest('[data-handle]'); if (!h) return; e.preventDefault();
+  const g = h.closest('.group'), box = g.parentElement, scroller = $('#taskScroll');
+  g.classList.add('dragging'); h.setPointerCapture(e.pointerId);
+  const move = ev => {
+    const r = scroller.getBoundingClientRect();
+    if (ev.clientY < r.top + 40) scroller.scrollTop -= 8; else if (ev.clientY > r.bottom - 40) scroller.scrollTop += 8;
+    const sibs = [...box.querySelectorAll(':scope > .group')], i = sibs.indexOf(g), prev = sibs[i - 1], next = sibs[i + 1];
+    if (prev) { const b = prev.getBoundingClientRect(); if (ev.clientY < b.top + b.height / 2) { box.insertBefore(g, prev); return; } }
+    if (next) { const b = next.getBoundingClientRect(); if (ev.clientY > b.top + b.height / 2) box.insertBefore(next, g); }
+  };
+  const up = () => {
+    g.classList.remove('dragging'); h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up);
+    const order = [...box.querySelectorAll(':scope > .group')].map(x => x.dataset.id), l = curList();
+    const open = l.tasks.filter(t => !t.done).sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    l.tasks = [...open, ...l.tasks.filter(t => t.done)]; renderTasks();
+  };
+  h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+});
+
+/* ---------- task detail ---------- */
+function mailCard(m) { return `<div class="mailcard">${ic('mail')}<div><b>Arrivata via email</b> da ${esc(m.from)} · ${esc(m.when)}<br>Importati solo oggetto e corpo, in testo semplice. Allegati e immagini scartati.</div></div>`; }
+function autosize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
+function openTask(id) {
+  const t = task(id); S.curTask = id; const l = listOf(id);
+  $('#dList').innerHTML = `${esc(l.name)} ${ic('chev', 'sm')}`;
+  $('#dStar').classList.toggle('on', t.starred); $('#dStar').innerHTML = ic('star', t.starred ? 'fill' : '');
+  $('#dTitle').value = t.title; $('#dNotes').value = t.notes; $('#dDate').value = t.due; $('#dTime').value = t.time; $('#dRepeat').value = t.repeat;
+  $('#dMail').innerHTML = t.mail ? mailCard(t.mail) : '';
+  $('#dDone').textContent = t.done ? 'Segna come da fare' : 'Segna come completata';
+  renderSubs(); renderTaskSketches(); $('#dCrypto').open = false;
+  show('detail'); autosize($('#dTitle')); autosize($('#dNotes'));
+}
+function renderSubs() { const t = task(S.curTask);
+  $('#dSubs').innerHTML = t.subs.map(s => `<div class="subrow ${s.done ? 'done' : ''}"><button class="mini" data-act="d-sub-toggle" data-sid="${s.id}" aria-label="Completa">${ic('check')}</button>
+    <input type="text" id="sub-${s.id}" value="${esc(s.title)}" data-sid="${s.id}" aria-label="Sotto-attività"><button class="ib" style="width:32px;height:32px" data-act="d-sub-del" data-sid="${s.id}" aria-label="Elimina sotto-attività">${ic('close', 'sm')}</button></div>`).join(''); }
+function renderTaskSketches() { const t = task(S.curTask);
+  $('#dSketches').innerHTML = t.sketches.map((k, i) => `<img src="${sketches[k]}" alt="Disegno ${i + 1}" data-act="edit-task-sketch" data-sk="${k}">`).join(''); }
+function refreshTaskCrypto() { if (!$('#dCrypto').open) return; const t = task(S.curTask);
+  $('#dCryptoBody').innerHTML = `<div class="k">titolo</div><code>${fakeCipher(t.title).slice(0, 90)}…</code><div class="k">dettagli</div><code>${fakeCipher(t.notes || ' ').slice(0, 140)}…</code><div class="k">scadenza, stato, ordine</div><code>due=${t.due || 'null'} · done=${t.done ? 1 : 0} · non cifrati, servono per ordinare e per i promemoria</code>`; }
+$('#dCrypto').addEventListener('toggle', refreshTaskCrypto);
+$('#dTitle').addEventListener('input', e => { task(S.curTask).title = e.target.value; if (isDesk()) renderTasks(); autosize(e.target); refreshTaskCrypto(); });
+$('#dNotes').addEventListener('input', e => { task(S.curTask).notes = e.target.value; autosize(e.target); refreshTaskCrypto(); });
+$('#dDate').addEventListener('change', e => task(S.curTask).due = e.target.value);
+$('#dTime').addEventListener('change', e => task(S.curTask).time = e.target.value);
+$('#dRepeat').addEventListener('change', e => task(S.curTask).repeat = e.target.value);
+$('#dSubs').addEventListener('input', e => { const s = task(S.curTask).subs.find(x => x.id === e.target.dataset.sid); if (s) s.title = e.target.value; });
+$('#dNewSub').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.value.trim()) { task(S.curTask).subs.push({ id: uid(), title: e.target.value.trim(), done: false }); e.target.value = ''; renderSubs(); } });
+
+/* ---------- drawing ---------- */
+const cv = $('#cv'), cx = cv.getContext('2d'), paper = $('#paper');
+const COLORS = ['#1D2A26', '#136F5E', '#2F62C9', '#C2366B', '#D9640F', '#F2C200'];
+let D = { tool:'pen', color:COLORS[0], size:4, strokes:[], redo:[], base:null, target:null, cache:null, cur:null, dpr:1, w:0, h:0 };
+$('#swatches').innerHTML = COLORS.map((c, i) => `<button class="sw" style="background:${c}" data-color="${c}" aria-pressed="${i === 0}" aria-label="Colore ${i + 1}"></button>`).join('');
+function openDraw(target) {
+  D.target = target; D.strokes = []; D.redo = []; D.base = null;
+  const who = target.kind === 'page' ? 'In: ' + (page(S.curPage)?.title || 'pagina') : 'In: ' + (task(S.curTask)?.title || 'attività');
+  $('#drawFor').textContent = who;
+  show('draw');
+  requestAnimationFrame(() => {
+    const r = paper.getBoundingClientRect(); D.dpr = window.devicePixelRatio || 1; D.w = r.width; D.h = r.height;
+    cv.width = r.width * D.dpr; cv.height = r.height * D.dpr;
+    D.cache = document.createElement('canvas'); D.cache.width = cv.width; D.cache.height = cv.height;
+    if (target.sk && sketches[target.sk]) { const im = new Image(); im.onload = () => { D.base = im; rebuild(); }; im.src = sketches[target.sk]; } else rebuild();
+  });
+}
+function drawStroke(c, s) {
+  if (s.pts.length < 1) return;
+  c.save(); c.lineCap = c.lineJoin = 'round';
+  c.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
+  c.globalAlpha = s.tool === 'hl' ? .35 : 1; c.strokeStyle = s.color; c.lineWidth = s.tool === 'hl' ? s.size * 3.5 : s.tool === 'eraser' ? s.size * 3 : s.size;
+  c.beginPath(); const p = s.pts; c.moveTo(p[0][0], p[0][1]);
+  if (p.length === 1) c.lineTo(p[0][0] + .1, p[0][1]);
+  for (let i = 1; i < p.length - 1; i++) { const mx = (p[i][0] + p[i + 1][0]) / 2, my = (p[i][1] + p[i + 1][1]) / 2; c.quadraticCurveTo(p[i][0], p[i][1], mx, my); }
+  if (p.length > 1) c.lineTo(p[p.length - 1][0], p[p.length - 1][1]);
+  c.stroke(); c.restore();
+}
+function rebuild() {
+  const c = D.cache.getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0, 0, D.cache.width, D.cache.height); c.setTransform(D.dpr,0,0,D.dpr,0,0);
+  if (D.base) { const s = Math.min(D.w / D.base.width, D.h / D.base.height); c.drawImage(D.base, (D.w - D.base.width * s) / 2, (D.h - D.base.height * s) / 2, D.base.width * s, D.base.height * s); }
+  D.strokes.forEach(s => drawStroke(c, s)); paint();
+}
+function paint() { cx.setTransform(1,0,0,1,0,0); cx.clearRect(0, 0, cv.width, cv.height); cx.drawImage(D.cache, 0, 0); cx.setTransform(D.dpr,0,0,D.dpr,0,0); if (D.cur) drawStroke(cx, D.cur); }
+const pt = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); D.cur = { tool:D.tool, color:D.color, size:D.size, pts:[pt(e)] }; paint(); });
+cv.addEventListener('pointermove', e => { if (!D.cur) return; D.cur.pts.push(pt(e)); paint(); });
+const endStroke = () => { if (!D.cur) return; D.strokes.push(D.cur); D.redo = []; const c = D.cache.getContext('2d'); c.setTransform(D.dpr,0,0,D.dpr,0,0); drawStroke(c, D.cur); D.cur = null; paint(); };
+cv.addEventListener('pointerup', endStroke); cv.addEventListener('pointercancel', endStroke);
+$('#size').addEventListener('input', e => D.size = +e.target.value);
+function saveDrawing() {
+  const out = document.createElement('canvas'); out.width = cv.width; out.height = cv.height; const o = out.getContext('2d');
+  o.fillStyle = '#fff'; o.fillRect(0, 0, out.width, out.height); o.drawImage(D.cache, 0, 0);
+  const url = out.toDataURL('image/png'); const t = D.target;
+  const key = t.sk || ('sk' + uid()); sketches[key] = url;
+  if (t.kind === 'page') {
+    show('page'); setMode('vis');
+    if (t.sk) { $$(`img.sketch[data-sk="${key}"]`, ed).forEach(im => im.src = url); }
+    else { const html = `<img class="sketch" data-sk="${key}" src="${url}" alt="Disegno"><p><br></p>`;
+      ed.focus(); const sel = getSelection();
+      if (savedRange && ed.contains(savedRange.startContainer)) { sel.removeAllRanges(); sel.addRange(savedRange); document.execCommand('insertHTML', false, html); }
+      else ed.insertAdjacentHTML('beforeend', html); }
+    savePage(); savedRange = null; toast('Disegno inserito nella pagina');
+  } else {
+    const tk = task(S.curTask); if (!t.sk) tk.sketches.push(key); openTask(S.curTask); toast('Disegno salvato nell\'attività');
+  }
+}
+
+/* ---------- search ---------- */
+function renderSearch() {
+  const q = $('#q').value.trim().toLowerCase(); const box = $('#searchRes');
+  if (!q) { box.innerHTML = `<div class="empty"><b>Cerca ovunque</b>Titoli e testi di pagine e attività.</div>`; return; }
+  const hl = s => esc(s).replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), m => `<mark>${m}</mark>`);
+  const ps = S.pages.filter(p => (p.title + ' ' + textOf(p.html)).toLowerCase().includes(q));
+  const ts = S.lists.flatMap(l => l.tasks.map(t => ({ t, l }))).filter(x => (x.t.title + ' ' + x.t.notes).toLowerCase().includes(q));
+  box.innerHTML = (ps.length ? `<div class="rhead">Pagine · ${ps.length}</div>` + ps.map(p => { const s = sec(p.section); const txt = textOf(p.html); const i = Math.max(0, txt.toLowerCase().indexOf(q) - 40);
+      return `<div class="page-row" data-act="open-page" data-id="${p.id}"><span class="tab-color dot" style="background:${secColor(s)};height:34px;width:5px;border-radius:3px"></span><div class="pg"><div class="pt">${hl(p.title)}</div><div class="ps">${i ? '…' : ''}${hl(txt.slice(i, i + 120))}</div><div class="crumb">${esc(s.name)}</div></div></div>`; }).join('') : '')
+    + (ts.length ? `<div class="rhead">Attività · ${ts.length}</div>` + ts.map(x => taskRow(x.t, { listName: x.l.name })).join('') : '')
+    + (!ps.length && !ts.length ? `<div class="empty"><b>Nessun risultato</b>Prova con un'altra parola.</div>` : '');
+}
+$('#q').addEventListener('input', renderSearch);
+
+/* ---------- settings ---------- */
+function renderSettings() {
+  $('#dest').innerHTML = `<optgroup label="Nuova pagina in sezione">${S.sections.map(s => `<option value="sec:${s.id}">${esc(s.name)}</option>`).join('')}</optgroup>
+    <optgroup label="Nuova attività in lista">${S.lists.map(l => `<option value="list:${l.id}">${esc(l.name)}</option>`).join('')}</optgroup>`;
+  $('#dest').value = S.dest;
+  $('#senders').innerHTML = S.senders.map(s => `<span class="sender">${esc(s)}<button data-act="rm-sender" data-s="${esc(s)}" aria-label="Rimuovi ${esc(s)}">${ic('close', 'sm')}</button></span>`).join('')
+    + `<button class="sender" data-act="add-sender" style="padding-right:10px;color:var(--accent);font-weight:700">${ic('plus', 'sm')}Aggiungi</button>`;
+}
+$('#dest').addEventListener('change', e => S.dest = e.target.value);
+const MAILS = [
+  { from:'tu@esempio.it', subject:'Fwd: Codice cancello garage', body:'Il nuovo codice del cancello è 4471#.\nValido da lunedì 1 dicembre.' },
+  { from:'sconosciuto@offerte-esempio.com', subject:'Hai vinto un buono!', body:'Clicca qui…' },
+  { from:'lavoro@esempio.it', subject:'Appunti chiamata cliente', body:'Vuole l\'export PDF delle note.\nRichiamare giovedì mattina.' },
+];
+let mailIdx = 0;
+function simulateMail() {
+  const m = MAILS[mailIdx++ % MAILS.length];
+  if (!S.senders.includes(m.from)) { toast(`Email scartata: ${m.from} non è tra i mittenti ammessi`); return; }
+  const meta = { from: m.from, when: 'oggi ' + new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' }) };
+  const [kind, id] = S.dest.split(':');
+  if (kind === 'sec') {
+    const p = { id: 'p' + uid(), section: id, title: m.subject, date: iso(0), mail: meta, html: m.body.split('\n').map(l => `<p>${esc(l)}</p>`).join('') };
+    S.pages.unshift(p); toast(`Nuova pagina in "${sec(id).name}": ${m.subject}`, 'Apri', () => { S.curSection = id; renderNotes(); openPage(p.id); });
+  } else {
+    const l = S.lists.find(x => x.id === id); const t = { id: uid(), title: m.subject, notes: m.body, due:'', time:'', repeat:'none', starred:false, done:false, subs:[], sketches:[], mail: meta };
+    l.tasks.unshift(t); toast(`Nuova attività in "${l.name}": ${m.subject}`, 'Apri', () => openTask(t.id));
+  }
+  refresh();
+}
+
+/* ---------- overlay: sheets ---------- */
+function sheet(html) { $('#overlay').innerHTML = `<div class="backdrop" data-act="close"></div><div class="sheet" role="dialog"><div class="grab"></div>${html}</div>`; const f = $('#overlay input'); if (f) setTimeout(() => f.focus(), 60); }
+function closeOverlay() { $('#overlay').innerHTML = ''; }
+function nameSheet(title, value, label, onOk, extra = '') {
+  sheet(`<h3>${title}</h3><input class="field-in" id="nameIn" value="${esc(value)}" placeholder="${label}" aria-label="${label}">${extra}
+    <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn primary" id="nameOk">${value ? 'Salva' : 'Crea'}</button></div>`);
+  const ok = () => { const v = $('#nameIn').value.trim(); if (!v) { $('#nameIn').focus(); return; } onOk(v); closeOverlay(); refresh(); };
+  $('#nameOk').onclick = ok; $('#nameIn').onkeydown = e => { if (e.key === 'Enter') ok(); };
+}
+function quickAdd() {
+  sheet(`<input class="field-in" id="qaTitle" placeholder="Nuova attività" aria-label="Titolo">
+    <textarea class="field-in" id="qaNotes" placeholder="Dettagli" rows="2" hidden style="margin-top:8px;resize:none" aria-label="Dettagli"></textarea>
+    <input type="date" class="field-in" id="qaDate" hidden style="margin-top:8px" aria-label="Scadenza">
+    <div class="qa-tools">
+      <button class="ib" id="qaN" aria-label="Aggiungi dettagli">${ic('list')}</button>
+      <button class="ib" id="qaD" aria-label="Aggiungi scadenza">${ic('cal')}</button>
+      <button class="ib" id="qaS" aria-label="Speciale">${ic('star')}</button>
+      <button class="ib" id="qaP" aria-label="Salva e disegna">${ic('pen')}</button>
+      <span class="grow"></span><button class="btn primary" id="qaOk">Salva</button></div>`);
+  let star = false;
+  $('#qaN').onclick = () => { $('#qaNotes').hidden = false; $('#qaNotes').focus(); };
+  $('#qaD').onclick = () => { $('#qaDate').hidden = false; $('#qaDate').value = iso(1); };
+  $('#qaS').onclick = () => { star = !star; $('#qaS').classList.toggle('on', star); $('#qaS').innerHTML = ic('star', star ? 'fill' : ''); };
+  const make = () => { const v = $('#qaTitle').value.trim(); if (!v) { $('#qaTitle').focus(); return null; }
+    const l = S.curList === 'starred' ? S.lists[0] : curList();
+    const t = { id: uid(), title: v, notes: $('#qaNotes').value, due: $('#qaDate').hidden ? '' : $('#qaDate').value, time:'', repeat:'none', starred: star || S.curList === 'starred', done:false, subs:[], sketches:[] };
+    l.tasks.unshift(t); closeOverlay(); refresh(); return t; };
+  $('#qaOk').onclick = () => { if (make()) toast('Attività aggiunta'); };
+  $('#qaTitle').onkeydown = e => { if (e.key === 'Enter') { if (make()) toast('Attività aggiunta'); } };
+  $('#qaP').onclick = () => { const t = make(); if (t) { S.curTask = t.id; openTask(t.id); openDraw({ kind:'task', sk:null }); } };
+}
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg, action, fn) {
+  clearTimeout(toastTimer);
+  $('#toastRoot').innerHTML = `<div class="toast" role="status"><span>${esc(msg)}</span>${action ? `<button id="toastAct">${action}</button>` : ''}</div>`;
+  if (action) $('#toastAct').onclick = () => { $('#toastRoot').innerHTML = ''; fn(); };
+  toastTimer = setTimeout(() => $('#toastRoot').innerHTML = '', 4200);
+}
+
+function refresh() { renderNotes(); renderTasks(); renderSettings(); if (screen === 'search') renderSearch(); }
+
+/* ---------- actions ---------- */
+document.addEventListener('click', e => {
+  const tool = e.target.closest('[data-tool]'); if (tool) { D.tool = tool.dataset.tool; $$('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b === tool))); return; }
+  const sw = e.target.closest('[data-color]'); if (sw) { D.color = sw.dataset.color; $$('[data-color]').forEach(b => b.setAttribute('aria-pressed', String(b === sw))); if (D.tool === 'eraser') $('[data-tool="pen"]').click(); return; }
+  const go = e.target.closest('[data-go]'); if (go) { guide(go.dataset.go); return; }
+  const a = e.target.closest('[data-act]'); if (!a) return; const id = a.dataset.id;
+  switch (a.dataset.act) {
+    case 'nav': show(a.dataset.to); if (a.dataset.to === 'search') renderSearch(); break;
+    case 'close': closeOverlay(); break;
+    case 'lock': $('#pass').value = ''; show('lock'); break;
+    case 'unlock': unlock(); break;
+    // notes
+    case 'drawer': openDrawer(); break;
+    case 'pick-sec': S.curSection = id; closeOverlay(); if (isDesk()) { S.curPage = null; show('notes'); } else renderNotes(); break;
+    case 'toggle-grp': grp(id).open = !grp(id).open; if (isDesk()) renderDeskTree(); else openDrawer(); break;
+    case 'dev': S.desk = a.dataset.dev === 'pc'; $$('[data-act="dev"]').forEach(b => b.setAttribute('aria-pressed', String(b === a)));
+      $('#devNote').textContent = S.desk ? 'Su PC l\'app installata si apre nella sua finestra: sezioni, elenco e pagina affiancati; attività e dettaglio affiancati. Scorciatoie: Ctrl+K cerca, Ctrl+Maiusc+L blocca.' : 'Sul telefono: una schermata alla volta, barra di navigazione in basso.';
+      show(screen); if (screen === 'draw') openDraw(D.target); break;
+    case 'new-sec': {
+      const extra = `<p class="eyebrow" style="margin-top:14px">Gruppo</p><select class="field-in" id="secGrp" aria-label="Gruppo"><option value="">Nessun gruppo</option>${S.groups.map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('')}</select>
+        <p class="eyebrow" style="margin-top:14px">Colore</p><div class="colors" role="radiogroup" aria-label="Colore">${[1,2,3,4,5,6].map(n => `<button data-col="${n}" role="radio" aria-checked="${n === 5}" style="background:var(--s${n})" aria-label="Colore ${n}"></button>`).join('')}</div>`;
+      nameSheet('Nuova sezione', '', 'Nome della sezione', v => { const s = { id: 's' + uid(), name: v, color: +($('.colors [aria-checked="true"]')?.dataset.col || 5), group: $('#secGrp').value || null }; S.sections.push(s); S.curSection = s.id; toast(`Sezione "${v}" creata`); }, extra);
+      $$('.colors button').forEach(b => b.onclick = () => $$('.colors button').forEach(x => x.setAttribute('aria-checked', String(x === b))));
+      break; }
+    case 'new-grp': nameSheet('Nuovo gruppo di sezioni', '', 'Nome del gruppo', v => { S.groups.push({ id: 'g' + uid(), name: v, open: true }); toast(`Gruppo "${v}" creato`); setTimeout(openDrawer, 50); }); break;
+    case 'sec-menu': { const s = sec(S.curSection);
+      sheet(`<h3>${esc(s.name)}</h3>
+        <button class="opt" data-act="rename-sec">${ic('pen')}Rinomina sezione</button>
+        <button class="opt" data-act="move-sec">${ic('move')}Sposta in un altro gruppo</button>
+        <button class="opt danger" data-act="del-sec">${ic('trash')}Elimina sezione e pagine</button>`); break; }
+    case 'rename-sec': nameSheet('Rinomina sezione', sec(S.curSection).name, 'Nome', v => sec(S.curSection).name = v); break;
+    case 'move-sec': sheet(`<h3>Sposta in</h3><button class="opt" data-act="do-move-sec" data-id="">${ic('book')}Nessun gruppo</button>${S.groups.map(g => `<button class="opt" data-act="do-move-sec" data-id="${g.id}" aria-checked="${sec(S.curSection).group === g.id}">${ic('folder')}${esc(g.name)}</button>`).join('')}`); break;
+    case 'do-move-sec': sec(S.curSection).group = id || null; closeOverlay(); refresh(); toast('Sezione spostata'); break;
+    case 'del-sec': sheet(`<h3>Eliminare "${esc(sec(S.curSection).name)}"?</h3><p style="margin:0 0 4px;color:var(--muted)">Le ${S.pages.filter(p => p.section === S.curSection).length} pagine della sezione verranno eliminate.</p>
+        <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn danger" data-act="do-del-sec">Elimina</button></div>`); break;
+    case 'do-del-sec': { if (S.sections.length < 2) { closeOverlay(); toast('Serve almeno una sezione'); break; }
+      const name = sec(S.curSection).name; S.pages = S.pages.filter(p => p.section !== S.curSection); S.sections = S.sections.filter(s => s.id !== S.curSection); S.curSection = S.sections[0].id;
+      if (!S.sections.some(s => 'sec:' + s.id === S.dest) && S.dest.startsWith('sec')) S.dest = 'sec:' + S.sections[0].id; closeOverlay(); refresh(); toast(`Sezione "${name}" eliminata`); break; }
+    case 'new-page': { const p = { id: 'p' + uid(), section: S.curSection, title: '', date: iso(0), html: '<p><br></p>' }; S.pages.unshift(p); renderNotes(); openPage(p.id); $('#pTitle').focus(); break; }
+    case 'open-page': { const p = page(id); S.curSection = p.section; renderNotes(); openPage(id); break; }
+    case 'back-notes': renderNotes(); show('notes'); break;
+    case 'mode': setMode(a.dataset.mode); break;
+    case 'page-menu': { const p = page(S.curPage);
+      sheet(`<h3>${esc(p.title || 'Pagina')}</h3>
+        <button class="opt" data-act="page-move">${ic('move')}Sposta in un'altra sezione</button>
+        <button class="opt" data-act="page-sub">${ic('sub')}${p.sub ? 'Promuovi a pagina' : 'Rendi sottopagina'}</button>
+        <button class="opt danger" data-act="page-del">${ic('trash')}Elimina pagina</button>`); break; }
+    case 'page-move': sheet(`<h3>Sposta in</h3>${S.sections.map(s => `<button class="opt" data-act="do-page-move" data-id="${s.id}" aria-checked="${page(S.curPage).section === s.id}"><span class="dot" style="background:${secColor(s)}"></span>${esc(s.name)}</button>`).join('')}`); break;
+    case 'do-page-move': page(S.curPage).section = id; S.curSection = id; closeOverlay(); refresh(); openPage(S.curPage); toast(`Spostata in "${sec(id).name}"`); break;
+    case 'page-sub': page(S.curPage).sub = !page(S.curPage).sub; closeOverlay(); renderNotes(); toast(page(S.curPage).sub ? 'Ora è una sottopagina' : 'Ora è una pagina'); break;
+    case 'page-del': { const p = page(S.curPage), i = S.pages.indexOf(p); S.pages.splice(i, 1); S.curPage = null; closeOverlay(); renderNotes(); show('notes');
+      toast('Pagina eliminata', 'Annulla', () => { S.pages.splice(i, 0, p); renderNotes(); }); break; }
+    // tasks
+    case 'pick-list': S.curList = id; S.showDone = false; renderTasks(); break;
+    case 'new-list': nameSheet('Nuova lista', '', 'Nome della lista', v => { const l = { id: 'l' + uid(), name: v, sort: 'my', tasks: [] }; S.lists.push(l); S.curList = l.id; toast(`Lista "${v}" creata`); }); break;
+    case 'list-menu': { const l = curList();
+      sheet(`<h3>${esc(l.name)}</h3><p class="eyebrow">Ordina per</p>
+        <button class="opt" data-act="sort" data-id="my" role="menuitemradio" aria-checked="${l.sort === 'my'}">${ic('drag')}Il mio ordine</button>
+        <button class="opt" data-act="sort" data-id="date" role="menuitemradio" aria-checked="${l.sort === 'date'}">${ic('cal')}Data di scadenza</button>
+        <p class="eyebrow" style="margin-top:10px">Lista</p>
+        <button class="opt" data-act="rename-list">${ic('pen')}Rinomina lista</button>
+        <button class="opt" data-act="clear-done">${ic('check')}Elimina attività completate</button>
+        <button class="opt danger" data-act="del-list">${ic('trash')}Elimina lista</button>`); break; }
+    case 'sort': curList().sort = id; closeOverlay(); renderTasks(); break;
+    case 'rename-list': nameSheet('Rinomina lista', curList().name, 'Nome', v => curList().name = v); break;
+    case 'clear-done': { const l = curList(), n = l.tasks.filter(t => t.done).length; l.tasks = l.tasks.filter(t => !t.done); closeOverlay(); renderTasks(); toast(n ? `${n} completate eliminate` : 'Nessuna attività completata'); break; }
+    case 'del-list': sheet(`<h3>Eliminare "${esc(curList().name)}"?</h3><p style="margin:0;color:var(--muted)">Verranno eliminate anche le ${curList().tasks.length} attività della lista.</p>
+        <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn danger" data-act="do-del-list">Elimina</button></div>`); break;
+    case 'do-del-list': { if (S.lists.length < 2) { closeOverlay(); toast('Serve almeno una lista'); break; } const n = curList().name; S.lists = S.lists.filter(l => l.id !== S.curList); S.curList = S.lists[0].id; if (!S.dest.startsWith('sec') && !S.lists.some(l => 'list:' + l.id === S.dest)) S.dest = 'sec:s-inbox'; closeOverlay(); refresh(); toast(`Lista "${n}" eliminata`); break; }
+    case 'toggle': toggleTask(id); break;
+    case 'toggle-sub': { const s = task(id).subs.find(x => x.id === a.dataset.sid); s.done = !s.done; refresh(); break; }
+    case 'star': { const t = task(id); t.starred = !t.starred; refresh(); break; }
+    case 'toggle-done': S.showDone = !S.showDone; renderTasks(); break;
+    case 'open-task': openTask(id); break;
+    case 'quick-add': quickAdd(); break;
+    case 'back-tasks': renderTasks(); show(screen === 'detail' && $('#q').value && lastNav === 'search' ? 'search' : 'tasks'); if (screen === 'search') renderSearch(); break;
+    case 'star-detail': { const t = task(S.curTask); t.starred = !t.starred; $('#dStar').classList.toggle('on', t.starred); $('#dStar').innerHTML = ic('star', t.starred ? 'fill' : ''); break; }
+    case 'clear-date': $('#dDate').value = ''; $('#dTime').value = ''; Object.assign(task(S.curTask), { due:'', time:'' }); break;
+    case 'detail-done': { const tid = S.curTask; S.curTask = null; renderTasks(); show('tasks'); toggleTask(tid); break; }
+    case 'del-task': { const t = task(S.curTask), l = listOf(t.id), i = l.tasks.indexOf(t); l.tasks.splice(i, 1); S.curTask = null; renderTasks(); show('tasks');
+      toast('Attività eliminata', 'Annulla', () => { l.tasks.splice(i, 0, t); refresh(); }); break; }
+    case 'move-task': sheet(`<h3>Sposta in</h3>${S.lists.map(l => `<button class="opt" data-act="do-move-task" data-id="${l.id}" aria-checked="${listOf(S.curTask).id === l.id}">${ic('list')}${esc(l.name)}</button>`).join('')}`); break;
+    case 'do-move-task': { const t = task(S.curTask), from = listOf(t.id), to = S.lists.find(l => l.id === id); if (from !== to) { from.tasks.splice(from.tasks.indexOf(t), 1); to.tasks.unshift(t); } closeOverlay(); openTask(t.id); toast(`Spostata in "${to.name}"`); break; }
+    case 'd-sub-toggle': { const s = task(S.curTask).subs.find(x => x.id === a.dataset.sid); s.done = !s.done; renderSubs(); break; }
+    case 'd-sub-del': { const t = task(S.curTask); t.subs = t.subs.filter(x => x.id !== a.dataset.sid); renderSubs(); break; }
+    case 'draw-task': openDraw({ kind:'task', sk:null }); break;
+    case 'edit-task-sketch': openDraw({ kind:'task', sk:a.dataset.sk }); break;
+    // draw
+    case 'undo': if (D.strokes.length) { D.redo.push(D.strokes.pop()); rebuild(); } break;
+    case 'redo': if (D.redo.length) { D.strokes.push(D.redo.pop()); rebuild(); } break;
+    case 'draw-clear': D.redo = [...D.strokes.reverse()]; D.strokes = []; D.base = null; rebuild(); toast('Foglio pulito', 'Annulla', () => { D.strokes = D.redo.reverse(); D.redo = []; rebuild(); }); break;
+    case 'draw-cancel': if (D.target.kind === 'page') { show('page'); } else openTask(S.curTask); break;
+    case 'draw-save': saveDrawing(); break;
+    // settings
+    case 'copy-addr': { const txt = $('#addr').textContent;
+      const sel = () => { const r = document.createRange(); r.selectNodeContents($('#addr')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Indirizzo selezionato: copialo'); };
+      try { navigator.clipboard.writeText(txt).then(() => toast('Indirizzo copiato'), sel); } catch { sel(); } break; }
+    case 'sim-mail': simulateMail(); break;
+    case 'rm-sender': S.senders = S.senders.filter(s => s !== a.dataset.s); renderSettings(); break;
+    case 'add-sender': nameSheet('Mittente ammesso', '', 'nome@dominio.it', v => { if (!S.senders.includes(v)) S.senders.push(v); }); break;
+    case 'forgot': recoverSheet(); break;
+    case 'rec-code': recoverCode(); break;
+    case 'rec-mail': recoverMail(); break;
+    case 'setup-next': setupNext(); break;
+    case 'setup-back': if (setup.step > 1) { setup.step--; renderSetup(); } break;
+    case 'copy-code': { const sel = () => { const r = document.createRange(); r.selectNodeContents($('#codeBox')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Codice selezionato: copialo'); };
+      try { navigator.clipboard.writeText(setup.code).then(() => toast('Codice copiato'), sel); } catch { sel(); } break; }
+    case 'go-admin': renderAdmin(); show('admin'); break;
+    case 'admin-back': show('settings'); break;
+    case 'new-code': sheet(`<h3>Nuovo codice di recupero</h3><p style="margin:0 0 12px;color:var(--muted)">Il codice precedente ha smesso di valere. Salva questo.</p><div class="codebox">${esc(newCode())}</div><div class="row-end"><button class="btn primary" data-act="close">L'ho salvato</button></div>`); break;
+    case 'devices': sheet(`<h3>Dispositivi collegati</h3>
+      <div class="urow">${ic('phone')}<div class="grow"><div class="lab">Questo telefono</div><div class="hint">App installata · attivo ora</div></div></div>
+      <div class="urow">${ic('sliders')}<div class="grow"><div class="lab">Portatile di casa</div><div class="hint">Browser · 3 giorni fa</div></div><button class="btn ghost" data-act="dev-off" style="height:34px;padding:0 10px;font-size:13px">Scollega</button></div>`); break;
+    case 'dev-off': closeOverlay(); toast('Portatile scollegato: dovrà inserire di nuovo la password'); break;
+    case 'install': sheet(`<h3>Installa ZNoteKeeper</h3>
+      <p class="eyebrow">Android · Chrome</p><p style="margin:0 0 12px">Tocca <b>Installa app</b> nel banner o nel menu ⋮. L'icona ZNoteKeeper compare nella schermata Home.</p>
+      <p class="eyebrow">iPhone · Safari</p><p style="margin:0 0 12px">Tocca <b>Condividi</b>, poi <b>Aggiungi alla schermata Home</b>. Le notifiche di scadenza funzionano solo da qui.</p>
+      <p class="eyebrow">PC · Chrome o Edge</p><p style="margin:0 0 12px">Clicca l'icona <b>Installa</b> a destra nella barra degli indirizzi. ZNoteKeeper compare nel menu Start o nel Launchpad e si apre in una finestra sua.</p>
+      <p style="margin:0;color:var(--muted);font-size:13px">Una volta installata si apre a schermo intero e mostra le note già scaricate anche senza rete.</p>
+      <div class="row-end"><button class="btn primary" data-act="close">Ho capito</button></div>`); break;
+  }
+});
+let lastNav = 'tasks';
+$('#nav').addEventListener('click', e => { const b = e.target.closest('[data-to]'); if (b) lastNav = b.dataset.to; });
+$('#app').addEventListener('click', e => { if (e.target.closest('#searchRes [data-act="open-task"]')) lastNav = 'search'; }, true);
+
+function unlock() {
+  const f = $('#unlockForm'); f.classList.add('unlocking'); $('#unlockBtn').textContent = 'Decifratura…';
+  setTimeout(() => { f.classList.remove('unlocking'); $('#unlockBtn').textContent = 'Sblocca'; show('notes'); toast('Sbloccato · note e attività decifrate'); }, 650);
+}
+$('#mailrec').addEventListener('change', e => toast(e.target.checked ? 'Recupero via email attivato' : 'Recupero via email disattivato'));
+$('#unlockForm').addEventListener('submit', e => { e.preventDefault(); unlock(); });
+$('.lock .bio').innerHTML = `${ic('finger')}Usa impronta o volto`;
+
+/* ---------- setup (primo avvio) ---------- */
+const newCode = () => { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let o = []; for (let g = 0; g < 6; g++) { let w = ''; for (let i = 0; i < 4; i++) w += A[Math.floor(Math.random() * A.length)]; o.push(w); } return o.join('-'); };
+let setup = { step: 1, code: newCode(), mail: false };
+const codeHtml = c => esc(c.slice(0, 5)) + '<b>' + esc(c.slice(5, 9)) + '</b>' + esc(c.slice(9));
+function strength(v) { let s = 0; if (v.length >= 10) s++; if (v.length >= 14) s++; if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++; if (/\d/.test(v)) s++; if (/[^A-Za-z0-9]/.test(v) || v.split(' ').length > 2) s++; return Math.min(s, 4); }
+function renderSetup() {
+  const st = setup.step;
+  $('#setupStep').textContent = `Passo ${st} di 3`;
+  $('#setupBack').style.visibility = st === 1 ? 'hidden' : 'visible';
+  $('#setupNext').textContent = st === 3 ? 'Inizia a usare ZNoteKeeper' : 'Continua';
+  const bar = `<div class="steps">${[1,2,3].map(n => `<span class="${n <= st ? 'on' : ''}"></span>`).join('')}</div>`;
+  if (st === 1) $('#setupBody').innerHTML = bar + `<h2 class="big" style="font-size:24px;margin-bottom:8px">Scegli la password delle note</h2>
+    <p class="lead">Apre il tuo spazio cifrato. È diversa da quella di WordPress e nessuno, nemmeno l'amministratore, la può vedere o reimpostare.</p>
+    <label class="flab" for="sp1">Password delle note</label><input class="field-in" type="password" id="sp1" autocomplete="new-password" placeholder="Almeno 10 caratteri">
+    <div class="meter"><i id="spMeter"></i></div><div class="ok" id="spHint">Suggerimento: una frase di 4 parole è facile da ricordare e difficile da indovinare.</div>
+    <label class="flab" for="sp2">Ripeti la password</label><input class="field-in" type="password" id="sp2" autocomplete="new-password">`;
+  if (st === 2) $('#setupBody').innerHTML = bar + `<h2 class="big" style="font-size:24px;margin-bottom:8px">Salva il codice di recupero</h2>
+    <p class="lead">Se dimentichi la password, questo codice è l'unico modo sicuro per rientrare. Lo vedi solo ora.</p>
+    <div class="codebox" id="codeBox">${codeHtml(setup.code)}</div>
+    <div class="qa-tools"><button class="btn ghost" data-act="copy-code" style="flex:1">${ic('copy', 'sm')}Copia</button></div>
+    <div class="ok">Conservalo fuori dal telefono: su carta in un posto sicuro o in un gestore di password.</div>
+    <label class="flab" for="sp3">Per conferma, scrivi i 4 caratteri sottolineati</label><input class="field-in" id="sp3" maxlength="4" autocomplete="off" style="font-family:var(--f-mono);letter-spacing:.2em;text-transform:uppercase">`;
+  if (st === 3) $('#setupBody').innerHTML = bar + `<h2 class="big" style="font-size:24px;margin-bottom:8px">Recupero via email</h2>
+    <p class="lead">Facoltativo. Un link alla tua email WordPress per rientrare se perdi sia la password che il codice.</p>
+    <div class="card"><div class="srow"><div class="grow"><div class="lab">Attiva il recupero via email</div><div class="hint">Puoi cambiarlo quando vuoi da Impostazioni</div></div><label class="switch"><input type="checkbox" id="sp4" ${setup.mail ? 'checked' : ''} aria-label="Attiva recupero via email"><span></span></label></div></div>
+    <ul style="padding-left:18px;margin:14px 0 0;display:flex;flex-direction:column;gap:6px;font-size:14px">
+      <li>Funziona solo se hai già fatto l'accesso a WordPress.</li><li>Vale una volta e scade dopo 30 minuti.</li>
+      <li>Dopo il clic c'è un'attesa di 24 ore: ricevi un avviso e puoi annullare.</li></ul>
+    <div class="warnbox">Più comodo ma meno riservato del codice: chi controllasse sia la tua casella sia il server potrebbe usarlo.</div>`;
+  if (st === 1) { const m = $('#spMeter'); $('#sp1').addEventListener('input', e => { const v = strength(e.target.value); m.style.width = (v / 4 * 100) + '%'; m.style.background = ['var(--danger)', 'var(--danger)', 'var(--due)', 'var(--accent)', 'var(--accent)'].at(v); $('#spHint').textContent = ['Troppo corta: servono almeno 10 caratteri.', 'Debole: aggiungi parole o simboli.', 'Discreta: ancora un po\' più lunga.', 'Buona.', 'Ottima.'].at(v); }); }
+}
+function setupNext() {
+  if (setup.step === 1) { const a = $('#sp1').value, b = $('#sp2').value; if (a.length < 10) { toast('La password deve avere almeno 10 caratteri'); return; } if (a !== b) { toast('Le due password non coincidono'); return; } }
+  if (setup.step === 2) { if ($('#sp3').value.toUpperCase() !== setup.code.slice(5, 9)) { toast('I caratteri non coincidono: controlla il codice'); return; } }
+  if (setup.step === 3) { setup.mail = $('#sp4').checked; $('#mailrec').checked = setup.mail; S.lists.length; show('notes'); toast('Il tuo spazio cifrato è pronto'); setup.step = 1; return; }
+  setup.step++; renderSetup();
+}
+
+/* ---------- admin ---------- */
+const USERS = [
+  { id:'u1', ini:'B', name:'Benzene', role:'Amministratore', on:true, info:'Abilitato dal 3 nov · 4,2 MB · ultimo accesso oggi' },
+  { id:'u2', ini:'MR', name:'Marta Rossi', role:'Editore', on:true, info:'Abilitata dal 10 nov · 1,1 MB · ultimo accesso ieri' },
+  { id:'u3', ini:'GV', name:'Giulia Verdi', role:'Abbonato', on:true, info:'Abilitata il 22 nov · in attesa del primo avvio' },
+  { id:'u4', ini:'LB', name:'Luca Bianchi', role:'Autore', on:false, info:'Non abilitato' },
+];
+function renderAdmin() {
+  $('#userList').innerHTML = USERS.map(u => `<div class="urow"><div class="av">${esc(u.ini)}</div><div class="grow"><div class="lab">${esc(u.name)} <span class="chip" style="margin-left:4px">${esc(u.role)}</span></div><div class="hint">${esc(u.info)}</div></div>
+    <label class="switch"><input type="checkbox" data-user="${u.id}" ${u.on ? 'checked' : ''} ${u.id === 'u1' ? 'disabled' : ''} aria-label="Abilita ${esc(u.name)}"><span></span></label></div>`).join('');
+}
+$('#userList').addEventListener('change', e => { const u = USERS.find(x => x.id === e.target.dataset.user); if (!u) return; u.on = e.target.checked;
+  if (u.on) { u.info = 'Abilitato oggi · in attesa del primo avvio'; toast(`Accesso concesso a ${u.name}: riceverà un'email di invito`); }
+  else { u.info = 'Disabilitato oggi · dati cifrati conservati'; toast(`Accesso tolto a ${u.name}. I dati restano cifrati e si possono riattivare`); }
+  renderAdmin(); });
+
+/* ---------- recovery ---------- */
+function recoverSheet() { sheet(`<h3>Recupera l'accesso</h3><p style="margin:0 0 8px;color:var(--muted)">Le tue note restano intatte: scegli come dimostrare che sei tu.</p>
+  <button class="opt" data-act="rec-code">${ic('shield')}<span><b>Ho il codice di recupero</b><br><span class="ok">Nuova password subito</span></span></button>
+  <button class="opt" data-act="rec-mail">${ic('mail')}<span><b>Mandami un link via email</b><br><span class="ok">Solo se l'hai attivato · 24 ore di attesa</span></span></button>`); }
+function recoverCode() { sheet(`<h3>Usa il codice di recupero</h3>
+  <label class="flab" for="rc1">Codice di recupero</label><input class="field-in" id="rc1" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX" autocomplete="off" style="font-family:var(--f-mono)">
+  <label class="flab" for="rc2">Nuova password delle note</label><input class="field-in" id="rc2" type="password" autocomplete="new-password" placeholder="Almeno 10 caratteri">
+  <div class="row-end"><button class="btn ghost" data-act="close">Annulla</button><button class="btn primary" id="rcOk">Reimposta</button></div>`);
+  $('#rcOk').onclick = () => { if ($('#rc1').value.replace(/[^A-Za-z0-9]/g, '').length < 24) { toast('Il codice ha 24 caratteri: controllalo'); return; } if ($('#rc2').value.length < 10) { toast('La password deve avere almeno 10 caratteri'); return; }
+    const c = newCode(); sheet(`<h3>Fatto. Ecco il tuo nuovo codice</h3><p style="margin:0 0 12px;color:var(--muted)">Il codice che hai appena usato non vale più. Salva questo al suo posto.</p><div class="codebox">${esc(c)}</div>
+      <div class="ok">Gli altri dispositivi sono stati scollegati per sicurezza.</div><div class="row-end"><button class="btn primary" id="rcDone">L'ho salvato</button></div>`);
+    $('#rcDone').onclick = () => { closeOverlay(); unlock(); }; }; }
+function recoverMail() { sheet(`<h3>Link inviato</h3><p style="margin:0 0 10px">Abbiamo scritto a <b>b•••••@esempio.it</b>, l'indirizzo del tuo utente WordPress.</p>
+  <ul style="padding-left:18px;margin:0 0 6px;display:flex;flex-direction:column;gap:6px;font-size:14px"><li>Il link vale una volta e scade tra 30 minuti.</li><li>Dopo il clic, il recupero si completa tra <b>24 ore</b>. Nel frattempo ricevi avvisi e puoi annullarlo.</li><li>Se non l'hai chiesto tu, ignora l'email: senza clic non succede nulla.</li></ul>
+  <div class="row-end"><button class="btn primary" data-act="close">Ho capito</button></div>`); }
+
+
+function guide(to) {
+  if (to === 'page') { S.curSection = 's-prog'; renderNotes(); openPage('p1'); }
+  else if (to === 'detail') { const t = S.lists[1].tasks.find(t => !t.done) || S.lists[0].tasks[0]; openTask(t.id); }
+  else if (to === 'draw') { if (!S.curPage) { S.curSection = 's-prog'; renderNotes(); openPage('p1'); } openDraw({ kind:'page', sk:null }); }
+  else if (to === 'email') { guideKey = 'email'; show('settings'); updateGuide('settings'); $('#emailSect').scrollIntoView({ block:'start' }); return; }
+  else if (to === 'search') { show('search'); renderSearch(); }
+  else if (to === 'setup') { setup.step = 1; renderSetup(); show('setup'); }
+  else if (to === 'admin') { renderAdmin(); show('admin'); }
+  else if (to === 'recover') { guideKey = 'recover'; show('lock'); updateGuide('lock'); recoverSheet(); return; }
+  else { show(to); if (to === 'settings') $('#setScroll').scrollTop = 0; }
+  guideKey = to; updateGuide(screen === to ? to : screen);
+}
+
+document.addEventListener('keydown', e => {
+  if (!(e.ctrlKey || e.metaKey) || ['lock', 'setup'].includes(screen)) return;
+  if (e.key.toLowerCase() === 'k') { e.preventDefault(); show('search'); renderSearch(); $('#q').focus(); }
+  if (e.key.toLowerCase() === 'l' && e.shiftKey) { e.preventDefault(); $('#pass').value = ''; show('lock'); }
+});
+addEventListener('resize', () => { if (S.desk) show(screen); });
+refresh(); show('notes');
+})();
+</script>
+</body></html>
