@@ -45,7 +45,11 @@ ZNoteKeeper protegge le note da chi ottiene il database, un backup o l'accesso i
 | 34, 35 | Sessione lunga per l'app installata; sblocco biometrico dove il browser lo consente, PIN breve come alternativa |
 | 36–39, 41 | Schede delle sezioni su telefono, aree toccabili da almeno 44 px, barra di formattazione in alto su PC, scorciatoie da tastiera, filtri di ricerca con percorso del risultato |
 
+## Decisioni successive (24 novembre 2026, sera)
+
+- **Ricezione email: sia IMAP sia webhook.** Il plugin supporta entrambi i canali: lettura periodica di una casella via IMAP e webhook "inbound" di un servizio di posta. L'amministratore sceglie quale attivare nelle impostazioni del plugin.
+- **Sblocco con impronta o volto su Android e iOS, se possibile.** Si usa WebAuthn con l'estensione PRF per ricavare la chiave dal sensore del dispositivo. Dove browser o dispositivo non la supportano, restano la password e il PIN rapido.
+
 ## Ancora aperto
 
-- Ricezione email: lettura IMAP periodica o webhook di un servizio di posta.
-- Su quali browser funziona lo sblocco biometrico senza conservare la chiave sul dispositivo.
+- Verificare sui dispositivi reali (in particolare iPhone con l'app aggiunta alla Home) che lo sblocco biometrico funzioni senza conservare la chiave in chiaro sul dispositivo.

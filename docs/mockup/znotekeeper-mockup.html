@@ -514,11 +514,8 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
         <li><b>Senza rete: sola lettura</b><span>Si leggono le note già scaricate sul dispositivo. Per scrivere serve la rete, così non nascono conflitti tra dispositivi.</span></li>
         <li><b>Tutte le funzioni nella prima versione</b><span>Cestino, preferiti, etichette, cronologia, tabelle, link, immagini, casella → attività, promemoria, esportazione Markdown.</span></li>
         <li><b>Disegni</b><span>Tratti vettoriali su un foglio di misura fissa, uguale su telefono e PC, più un'anteprima. Tutto cifrato.</span></li>
-      </ol>
-      <p class="eyebrow" style="margin-top:18px">Ancora aperto</p>
-      <ol class="qs">
-        <li><b>Come arriva la posta</b><span>Lettura della casella via IMAP ogni pochi minuti, oppure webhook di un servizio email. Dipende dall'hosting.</span></li>
-        <li><b>Impronta e volto</b><span>Lo sblocco biometrico dipende dal dispositivo e dal browser: da verificare su iPhone.</span></li>
+        <li><b>Posta: IMAP e webhook</b><span>Il plugin supporta entrambi i modi: lettura della casella via IMAP ogni pochi minuti, oppure webhook di un servizio email. L'amministratore sceglie quale usare.</span></li>
+        <li><b>Impronta e volto su Android e iPhone</b><span>Sblocco biometrico su entrambi, dove il browser lo consente. Se il dispositivo non lo supporta restano password e PIN rapido.</span></li>
       </ol>
     </div>
     <p class="disclaimer">Lo stile è originale: le funzioni sono ispirate a un gestore di attività e a un taccuino a sezioni, senza riprodurne l'aspetto.</p>
@@ -746,7 +743,7 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
               </div></div>
               <div class="srow"><div class="grow">
                 <div class="lab">Controllo casella</div>
-                <div class="hint">Ultimo controllo: 2 minuti fa · ogni 5 minuti · al massimo 30 email l'ora. Ogni email viene cifrata all'arrivo con la tua chiave pubblica e poi cancellata dalla casella.</div>
+                <div class="hint">Ricezione via IMAP (in alternativa webhook, lo sceglie l'amministratore). Ultimo controllo: 2 minuti fa · ogni 5 minuti · al massimo 30 email l'ora. Ogni email viene cifrata all'arrivo con la tua chiave pubblica e poi cancellata dalla casella.</div>
               </div><button class="btn ghost" data-act="sim-mail" style="height:36px;padding:0 12px;font-size:13px">Prova invio</button></div>
             </div>
           </div>
@@ -756,7 +753,7 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
             <div class="card">
               <div class="srow"><svg class="i"><use href="#i-lock"/></svg><div class="grow"><div class="lab">Blocco automatico</div></div>
                 <select id="autolock" aria-label="Blocco automatico"><option>Subito</option><option>1 minuto</option><option selected>5 minuti</option><option>15 minuti</option></select></div>
-              <div class="srow"><svg class="i"><use href="#i-finger"/></svg><div class="grow"><div class="lab">Sblocco con impronta o volto</div><div class="hint">Solo su questo dispositivo, dove il browser lo consente</div></div>
+              <div class="srow"><svg class="i"><use href="#i-finger"/></svg><div class="grow"><div class="lab">Sblocco con impronta o volto</div><div class="hint">Android e iPhone, solo su questo dispositivo. Dove non è disponibile restano password e PIN</div></div>
                 <label class="switch"><input type="checkbox" id="bio" checked aria-label="Sblocco biometrico"><span></span></label></div>
               <div class="srow"><svg class="i"><use href="#i-key"/></svg><div class="grow"><div class="lab">PIN rapido</div><div class="hint">6 cifre, solo su questo dispositivo. Dopo 5 errori serve la password</div></div>
                 <label class="switch"><input type="checkbox" id="pin" aria-label="PIN rapido"><span></span></label></div>
