@@ -3,6 +3,7 @@
 | File | Contenuto |
 | --- | --- |
 | [presentazione-utente.md](presentazione-utente.md) | Funzioni e casi d'uso spiegati per l'utente finale |
+| [revisione-critica.md](revisione-critica.md) | Difetti e miglioramenti trovati su presentazione e mockup |
 | [mockup/znotekeeper-mockup.html](mockup/znotekeeper-mockup.html) | Mockup interattivo (vista telefono e PC): scaricalo e aprilo nel browser |
 
 Requisiti raccolti finora (24 novembre 2026):
