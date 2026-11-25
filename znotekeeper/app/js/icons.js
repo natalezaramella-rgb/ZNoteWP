@@ -34,6 +34,8 @@ export const ICONS = {
   'panel': '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9.5 4v16M5.6 8h1.6M5.6 11h1.6"/>',
   'menu': '<path d="M4 6h16M4 12h16M4 18h10"/>',
   'book': '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/><path d="M9 7h6"/>',
+  'section': '<rect x="4" y="3.5" width="12.5" height="17" rx="2"/><path d="M16.5 6h3v4.5h-3M16.5 12.5h3V17h-3M8 8h4.5"/>',
+  'note': '<path d="M5 4.5h14v9l-6 6H5z"/><path d="M13 19.5v-6h6"/>',
   'folder': '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
   'tasks': '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 5-5.2"/>',
   'key': '<circle cx="8" cy="15" r="4"/><path d="M11 12l8.5-8.5M16.5 6.5l2.5 2.5M14.5 8.5l2 2"/>',

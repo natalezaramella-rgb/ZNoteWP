@@ -9,302 +9,26 @@ import { mdText, mdToHtml, firstDrawing, firstImage, tagsIn } from './md.js';
 import { openDrawEditor, emptyDrawing, drawingToBlobURL } from './draw.js';
 import { api } from './api.js';
 import { uuid } from './crypto.js';
+import { sectionOf, groupOf, pathOf, levelOf, treeKids, nextSortIn, ancestors, notebooks } from './struct.js';
+import { create as createNode, moveDialog } from './ntree.js';
 
 const COLORS = [1, 2, 3, 4, 5, 6];
 export const secColor = s => `var(--s${Math.min(6, Math.max(1, parseInt(s && s.d && s.d.color, 10) || 3))})`;
 const title = it => (it && it.d && it.d.title) || 'Senza titolo';
 
-// ---------- struttura ----------
-export function sectionOf(page) {
-  let it = page, n = 0;
-  while (it && it.kind === 'page' && n++ < 20) it = store.get(it.parent_id);
-  return it && it.kind === 'section' ? it : null;
-}
-export function groupOf(section) { const g = section && store.get(section.parent_id); return g && g.kind === 'group' && store.alive(g) ? g : null; }
-export function pathOf(page) {
-  const s = sectionOf(page); const g = groupOf(s);
-  const parts = [];
-  if (notebooks().length > 1 && s) parts.push(nbTitle(nbOf(s)));
-  if (g) parts.push(title(g));
-  if (s) parts.push(title(s));
-  let p = store.get(page.parent_id); const chain = [];
-  while (p && p.kind === 'page') { chain.unshift(title(p)); p = store.get(p.parent_id); }
-  return [...parts, ...chain].join(' › ');
-}
-function pagesTree(sectionId, mode) {
-  const out = [];
-  const walk = (pid, depth) => {
-    let kids = store.children(pid, 'page');
-    if (mode === 'date') kids = kids.sort((a, b) => (b.updated_at || '').localeCompare(a.updated_at || ''));
-    if (mode === 'title') kids = kids.sort((a, b) => title(a).localeCompare(title(b), 'it'));
-    for (const k of kids) { out.push({ it: k, depth }); if (depth < 4) walk(k.id, depth + 1); }
-  };
-  walk(sectionId, 0);
-  return out;
-}
-// ---------- taccuini ----------
-// Un taccuino raccoglie sezioni e gruppi. Le sezioni senza taccuino (o di un taccuino eliminato) stanno nel primo.
-const NB_KEY = 'znk-nb';
-export const notebooks = () => store.all('notebook').sort(store.bySort);
-const defaultNb = () => { const l = notebooks(); return l.find(n => n.d.main) || l[0] || null; };
-export function nbOf(it) {
-  if (!it) return null;
-  const g = it.kind === 'section' ? groupOf(it) : null;
-  const id = (g || it).d.nb;
-  const nb = id && store.get(id);
-  if (nb && nb.kind === 'notebook' && store.alive(nb)) return nb;
-  return defaultNb();
-}
-export function currentNb() {
-  let id = null;
-  try { id = localStorage.getItem(NB_KEY); } catch (e) { /* */ }
-  const nb = id && store.get(id);
-  return nb && nb.kind === 'notebook' && store.alive(nb) ? nb : defaultNb();
-}
-function setCurrentNb(id) { try { localStorage.setItem(NB_KEY, id || ''); } catch (e) { /* */ } }
-const nbTitle = nb => (nb && nb.d.title) || 'Il mio taccuino';
-const sameNb = (it, nb) => { const x = nbOf(it); return (x ? x.id : null) === (nb ? nb.id : null); };
-const groupsIn = nb => store.all('group').filter(g => sameNb(g, nb)).sort(store.bySort);
-const countPages = sid => { let n = 0; const w = pid => { for (const k of store.children(pid, 'page')) { n++; w(k.id); } }; w(sid); return n; };
-const ungrouped = (nb = currentNb()) => store.all('section').filter(s => (!s.parent_id || !store.alive(store.get(s.parent_id))) && sameNb(s, nb)).sort(store.bySort);
-const sectionsIn = nb => store.all('section').filter(s => sameNb(s, nb));
+// ---------- struttura (vedi struct.js) ----------
+export { sectionOf, groupOf, pathOf, notebooks, nbOf } from './struct.js';
 export function allTags() {
   const m = new Map();
   for (const p of store.all('page')) for (const t of tagsIn(p.d.md)) m.set(t, (m.get(t) || 0) + 1);
   for (const t of store.all('task')) for (const x of tagsIn((t.d.title || '') + ' ' + (t.d.notes || ''))) m.set(x, (m.get(x) || 0) + 1);
   return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], 'it'));
 }
-function currentSection() {
-  const R = app.R;
-  if (R.section && String(R.section).includes(':')) return R.section;
-  let s = R.section && store.get(R.section);
-  // Una sezione aperta da fuori (ricerca, preferiti) porta con sé il suo taccuino.
-  if (s && store.alive(s) && s.kind === 'section' && !sameNb(s, currentNb())) { const nb = nbOf(s); setCurrentNb(nb && nb.id); }
-  if (!s || !store.alive(s)) { const nb = currentNb(); s = ungrouped(nb)[0] || groupsIn(nb).map(g => store.children(g.id, 'section')[0]).find(Boolean) || null; }
-  R.section = s ? s.id : null;
-  return R.section;
-}
-
-// ---------- albero ----------
-const collapsed = (() => { try { return new Set(JSON.parse(localStorage.getItem('znk-collapsed') || '[]')); } catch (e) { return new Set(); } })();
-const saveCollapsed = () => { try { localStorage.setItem('znk-collapsed', JSON.stringify([...collapsed])); } catch (e) { /* */ } };
-
-function treeHTML() {
-  const cur = currentSection();
-  const secRow = (s, top) => `<div class="row"><button class="sec ${top ? 'top' : ''}" data-a="pick-sec" data-id="${s.id}" aria-current="${s.id === cur}" data-drop="${s.id}">
-      <span class="tab-color" style="background:${secColor(s)}"></span><span class="nm">${esc(title(s))}</span>${s.d.inbox ? ic('mail', 'sm') : ''}<span class="cnt">${countPages(s.id)}</span></button>
-      <button class="ib more needs-net" data-a="sec-menu" data-id="${s.id}" aria-label="Azioni sezione ${esc(title(s))}">${ic('more')}</button></div>`;
-  const nb = currentNb();
-  const groups = groupsIn(nb);
-  const tags = allTags();
-  const trashN = trashItems().length;
-  return `<div class="dh"><button class="nbpick" data-a="nb-menu" aria-label="Cambia taccuino">${ic('book', 'sm')}<span>${esc(nbTitle(nb))}</span>${ic('chev', 'sm')}</button><div style="display:flex;align-items:center"><h2 class="big" style="font-size:24px;flex:1">Sezioni</h2><button class="ib" data-only="desk" data-fold="tree" aria-label="Nascondi sezioni" title="Nascondi sezioni">${ic('panel')}</button></div></div>
-    <div class="tree">
-      <button class="quick" data-a="pick-sec" data-id="v:fav" aria-current="${cur === 'v:fav'}">${ic('star')}Preferiti</button>
-      <button class="quick" data-a="pick-sec" data-id="v:recent" aria-current="${cur === 'v:recent'}">${ic('clock')}Recenti</button>
-      ${tags.length ? `<button class="quick" data-a="tags" aria-current="${String(cur).startsWith('tag:')}">${ic('tag')}Etichette<span class="cnt" style="margin-left:auto;color:var(--muted);font-size:12px">${tags.length}</span></button>` : ''}
-      <hr>
-      ${ungrouped(nb).map(s => secRow(s, true)).join('')}
-      ${groups.map(g => {
-        const open = !collapsed.has(g.id);
-        const secs = store.children(g.id, 'section');
-        return `<div class="row"><button class="grp" data-a="toggle-grp" data-id="${g.id}" aria-expanded="${open}">${ic('folder')}<span class="nm">${esc(title(g))}</span>${ic('chev', 'chev')}</button>
-          <button class="ib more needs-net" data-a="grp-menu" data-id="${g.id}" aria-label="Azioni gruppo">${ic('more')}</button></div>
-          ${open ? secs.map(s => secRow(s)).join('') || '<div class="crumb" style="padding:6px 34px">Nessuna sezione</div>' : ''}`;
-      }).join('')}
-      <hr>
-      <button class="add needs-net" data-a="new-sec">${ic('plus')}Nuova sezione</button>
-      <button class="add needs-net" data-a="new-grp">${ic('folder')}Nuovo gruppo di sezioni</button>
-      <button class="quick" data-a="pick-sec" data-id="v:trash" aria-current="${cur === 'v:trash'}">${ic('trash')}Cestino${trashN ? `<span class="cnt" style="margin-left:auto;color:var(--muted);font-size:12px">${trashN}</span>` : ''}</button>
-    </div>`;
-}
-
-export function renderTree(el) {
-  el.innerHTML = treeHTML();
-  bindTree(el);
-}
-function bindTree(el) {
-  if (el._bound) return;
-  el._bound = true;
-  el.addEventListener('click', onTreeClick);
-  // Trascinare una pagina su una sezione la sposta lì (PC).
-  el.addEventListener('dragover', e => { const t = e.target.closest('[data-drop]'); if (t && dragId) { e.preventDefault(); $$('.drop', el).forEach(x => x.classList.remove('drop')); t.classList.add('drop'); } });
-  el.addEventListener('dragleave', e => { const t = e.target.closest('[data-drop]'); if (t) t.classList.remove('drop'); });
-  el.addEventListener('drop', e => {
-    const t = e.target.closest('[data-drop]');
-    if (!t || !dragId) return;
-    e.preventDefault();
-    const id = dragId; dragId = null;
-    if (!store.canWrite()) return;
-    store.batch([{ id, parent_id: t.dataset.drop, sort: store.nextSort(t.dataset.drop, 'page') }]);
-    toast(`Pagina spostata in ${title(store.get(t.dataset.drop))}`);
-  });
-}
-async function onTreeClick(e) {
-  const b = e.target.closest('[data-a]');
-  if (!b) return;
-  const id = b.dataset.id;
-  switch (b.dataset.a) {
-    case 'pick-sec': closeOverlay(); app.go({ view: 'notes', section: id, page: app.desk ? app.R.page : null }); if (app.desk) app.go({ page: null }); break;
-    case 'toggle-grp': collapsed.has(id) ? collapsed.delete(id) : collapsed.add(id); saveCollapsed(); refreshTree(); break;
-    case 'new-sec': closeOverlay(); newSection(); break;
-    case 'new-grp': closeOverlay(); newGroup(); break;
-    case 'sec-menu': sectionMenu(id); break;
-    case 'grp-menu': groupMenu(id); break;
-    case 'nb-menu': notebookMenu(); break;
-    case 'tags': {
-      const t = await choose('Etichette', allTags().map(([k, n]) => ({ label: '#' + k, hint: `${n} elementi`, value: k, icon: 'tag' })), { text: 'Scrivi #parola nel testo di una pagina o di un\'attività per etichettarla.' });
-      if (t) { closeOverlay(); app.go({ view: 'notes', section: 'tag:' + t, page: null }); }
-      break;
-    }
-  }
-}
-function refreshTree() {
-  const d = $('.drawer');
-  if (d) { d.innerHTML = treeHTML(); }
-  else app.render();
-}
-export function openDrawer() {
-  const d = drawer(treeHTML());
-  d.addEventListener('click', onTreeClick);
-}
-
-function colorPicker(cur) {
+export function colorPicker(cur) {
   return `<label class="flab">Colore</label><div class="colors" role="radiogroup">${COLORS.map(c => `<button type="button" data-color="${c}" style="background:var(--s${c})" role="radio" aria-checked="${c === cur}" aria-label="Colore ${c}"></button>`).join('')}</div>`;
 }
-function bindColors(el, st) {
+export function bindColors(el, st) {
   el.addEventListener('click', e => { const b = e.target.closest('[data-color]'); if (!b) return; st.color = +b.dataset.color; $$('[data-color]', el).forEach(x => x.setAttribute('aria-checked', String(x === b))); });
-}
-export async function newSection(groupId = null) {
-  if (!store.canWrite()) return;
-  const st = { color: 1 + Math.floor(Math.random() * 6) };
-  const groups = groupsIn(currentNb());
-  const extra = colorPicker(st.color) + (groups.length ? `<label class="flab">Gruppo</label><select class="sel" name="grp" style="width:100%"><option value="">Nessun gruppo</option>${groups.map(g => `<option value="${g.id}" ${g.id === groupId ? 'selected' : ''}>${esc(title(g))}</option>`).join('')}</select>` : '');
-  const p = promptDialog('Nuova sezione', { label: 'Nome', placeholder: 'Es. Ricette', ok: 'Crea', extra });
-  setTimeout(() => { const el = $('.sheet'); if (el) bindColors(el, st); }, 0);
-  const r = await p;
-  if (!r || !r.value) return;
-  const sel = r.el.querySelector('[name=grp]');
-  const gid = sel ? sel.value || null : groupId;
-  const nb = currentNb();
-  const id = store.create('section', gid, { title: r.value, color: st.color, ...(nb && !gid ? { nb: nb.id } : {}) });
-  if (gid) collapsed.delete(gid);
-  app.go({ view: 'notes', section: id, page: null });
-}
-export async function newGroup() {
-  if (!store.canWrite()) return;
-  const r = await promptDialog('Nuovo gruppo di sezioni', { label: 'Nome', placeholder: 'Es. Casa', ok: 'Crea' });
-  if (!r || !r.value) return;
-  const nb = currentNb();
-  store.create('group', null, { title: r.value, ...(nb ? { nb: nb.id } : {}) });
-  toast('Gruppo creato: aggiungi una sezione dal suo menu ⋯');
-}
-async function sectionMenu(id) {
-  const s = store.get(id);
-  if (!s) return;
-  const a = await choose(title(s), [
-    { label: 'Rinomina e colore', value: 'rename', icon: 'pen' },
-    { label: 'Sposta in un gruppo', value: 'move', icon: 'move' },
-    ...(notebooks().length > 1 ? [{ label: 'Sposta in un altro taccuino', value: 'nb', icon: 'book' }] : []),
-    { label: 'Sposta su', value: 'up', icon: 'up' },
-    { label: 'Sposta giù', value: 'down', icon: 'down' },
-    { label: 'Elimina sezione', value: 'del', icon: 'trash', danger: true, disabled: !!s.d.inbox && store.all('section').length === 1 },
-  ]);
-  if (!a || !store.canWrite()) return;
-  if (a === 'rename') {
-    const st = { color: s.d.color || 3 };
-    const p = promptDialog('Modifica sezione', { label: 'Nome', value: title(s), extra: colorPicker(st.color) });
-    setTimeout(() => { const el = $('.sheet'); if (el) bindColors(el, st); }, 0);
-    const r = await p;
-    if (r && r.value) store.update(id, d => { d.title = r.value; d.color = st.color; });
-  } else if (a === 'move') {
-    const g = await choose('Sposta in', [{ label: 'Nessun gruppo', value: '-' }, ...groupsIn(nbOf(s)).map(x => ({ label: title(x), value: x.id, icon: 'folder' }))], { current: s.parent_id || '-' });
-    if (g) store.batch([{ id, parent_id: g === '-' ? null : g, sort: store.nextSort(g === '-' ? null : g, 'section') }]);
-  } else if (a === 'nb') {
-    const to = await pickNotebook('Sposta la sezione in', nbOf(s));
-    if (to) { const d = structuredClone(s.d); d.nb = to; store.save(id, { parent_id: null, sort: store.nextSort(null, "section"), d }); toast(`Sezione spostata in «${nbTitle(store.get(to))}»`); }
-  } else if (a === 'up' || a === 'down') {
-    moveSibling(s, a === 'up' ? -1 : 1, s.parent_id && store.alive(store.get(s.parent_id)) ? store.children(s.parent_id, 'section') : ungrouped(nbOf(s)));
-  } else if (a === 'del') {
-    const n = countPages(id);
-    if (await confirmDialog(`Eliminare «${esc(title(s))}»?`, `La sezione e le sue ${n} pagine vanno nel cestino per 30 giorni.`, { ok: 'Sposta nel cestino', danger: true })) {
-      await store.trash(id);
-      if (app.R.section === id) app.go({ section: null, page: null });
-      toast('Sezione nel cestino', 'Annulla', () => store.restore(id));
-    }
-  }
-}
-async function groupMenu(id) {
-  const g = store.get(id);
-  const a = await choose(title(g), [
-    { label: 'Nuova sezione nel gruppo', value: 'sec', icon: 'plus' },
-    { label: 'Rinomina', value: 'rename', icon: 'pen' },
-    ...(notebooks().length > 1 ? [{ label: 'Sposta in un altro taccuino', value: 'nb', icon: 'book' }] : []),
-    { label: 'Sposta su', value: 'up', icon: 'up' },
-    { label: 'Sposta giù', value: 'down', icon: 'down' },
-    { label: 'Elimina gruppo', value: 'del', icon: 'trash', danger: true },
-  ]);
-  if (!a || !store.canWrite()) return;
-  if (a === 'sec') newSection(id);
-  if (a === 'rename') { const r = await promptDialog('Rinomina gruppo', { label: 'Nome', value: title(g) }); if (r && r.value) store.update(id, d => { d.title = r.value; }); }
-  if (a === 'nb') { const to = await pickNotebook('Sposta il gruppo in', nbOf(g)); if (to) { store.update(id, d => { d.nb = to; }); toast(`Gruppo spostato in «${nbTitle(store.get(to))}»`); } }
-  if (a === 'up' || a === 'down') moveSibling(g, a === 'up' ? -1 : 1, groupsIn(nbOf(g)));
-  if (a === 'del') {
-    const secs = store.children(id, 'section');
-    const keep = secs.length ? await choose('Elimina gruppo', [{ label: 'Tieni le sezioni (fuori dai gruppi)', value: 'keep' }, { label: 'Metti anche le sezioni nel cestino', value: 'all', danger: true }]) : 'all';
-    if (!keep) return;
-    if (keep === 'keep') { const nb = nbOf(g); secs.forEach((s, i) => { const d = structuredClone(s.d); if (nb) d.nb = nb.id; store.save(s.id, { parent_id: null, sort: store.nextSort(null, 'section') + i * 1000, d }); }); }
-    await store.trash(id);
-    toast('Gruppo nel cestino', 'Annulla', () => store.restore(id));
-  }
-}
-async function pickNotebook(text, cur) {
-  const list = notebooks().filter(n => !cur || n.id !== cur.id);
-  return choose(text, list.map(n => ({ label: nbTitle(n), value: n.id, icon: 'book' })));
-}
-async function notebookMenu() {
-  const cur = currentNb();
-  const list = notebooks();
-  const a = await choose('Taccuini', [
-    ...(list.length ? list : [null]).map(n => ({ label: nbTitle(n), hint: `${(n ? sectionsIn(n) : store.all('section')).length} sezioni`, value: n ? 'go:' + n.id : 'go:', icon: 'book' })),
-    { sep: true },
-    { label: 'Nuovo taccuino', value: 'new', icon: 'plus', disabled: !store.canWrite() },
-    { label: `Rinomina «${nbTitle(cur)}»`, value: 'rename', icon: 'pen', disabled: !store.canWrite() },
-    ...(list.length > 1 ? [{ label: 'Sposta su', value: 'up', icon: 'up' }, { label: 'Sposta giù', value: 'down', icon: 'down' }, { label: `Elimina «${nbTitle(cur)}»`, value: 'del', icon: 'trash', danger: true }] : []),
-  ], { current: 'go:' + (cur ? cur.id : '') });
-  if (!a) return;
-  if (a.startsWith('go:')) { setCurrentNb(a.slice(3)); app.go({ view: 'notes', section: null, page: null }); refreshTree(); return; }
-  if (!store.canWrite()) return;
-  // Il primo taccuino nasce quando ne serve un secondo: raccoglie tutto quello che c'era.
-  const ensureFirst = () => cur || store.get(store.create('notebook', null, { title: 'Il mio taccuino', main: true }, { sort: 0 }));
-  if (a === 'new') {
-    const r = await promptDialog('Nuovo taccuino', { label: 'Nome', placeholder: 'Es. Lavoro', ok: 'Crea' });
-    if (!r || !r.value) return;
-    ensureFirst();
-    const id = store.create('notebook', null, { title: r.value });
-    setCurrentNb(id);
-    app.go({ view: 'notes', section: null, page: null });
-    toast(`Taccuino «${r.value}» creato: aggiungi una sezione.`);
-  } else if (a === 'rename') {
-    const r = await promptDialog('Rinomina taccuino', { label: 'Nome', value: nbTitle(cur) });
-    if (!r || !r.value) return;
-    const nb = ensureFirst();
-    store.update(nb.id, d => { d.title = r.value; });
-  } else if (a === 'up' || a === 'down') {
-    moveSibling(cur, a === 'up' ? -1 : 1, list);
-  } else if (a === 'del') {
-    const secs = sectionsIn(cur), groups = groupsIn(cur);
-    const inbox = secs.find(x => x.d.inbox);
-    if (inbox) { toast('Questo taccuino contiene «Posta in arrivo»: sposta prima quella sezione in un altro taccuino.'); return; }
-    const n = secs.reduce((t, x) => t + countPages(x.id), 0);
-    if (!(await confirmDialog(`Eliminare «${esc(nbTitle(cur))}»?`, secs.length ? `Il taccuino, le sue ${secs.length} sezioni e ${n} pagine vanno nel cestino per 30 giorni.` : 'Il taccuino è vuoto.', { ok: 'Sposta nel cestino', danger: true }))) return;
-    for (const x of [...secs.filter(x => !groupOf(x)), ...groups]) await store.trash(x.id);
-    await store.trash(cur.id);
-    setCurrentNb(null);
-    app.go({ view: 'notes', section: null, page: null });
-    toast('Taccuino nel cestino');
-  }
-  refreshTree();
 }
 function moveSibling(it, dir, list) {
   const i = list.findIndex(x => x.id === it.id);
@@ -349,9 +73,9 @@ async function loadThumbs(el) {
   }
 }
 
-let dragId = null;
+/** Viste speciali del Taccuino: Preferiti, Recenti, un'etichetta, Cestino. */
 export function renderList(el) {
-  const cur = currentSection();
+  const cur = app.R.section;
   const st = store.settings();
   let head = '', body = '', bar = '', color = 'var(--line)', tabs = '';
   if (cur === 'v:fav' || cur === 'v:recent' || String(cur).startsWith('tag:')) {
@@ -378,48 +102,24 @@ export function renderList(el) {
         <button class="btn ghost small needs-net" data-a="restore" data-id="${it.id}">${ic('restore', 'sm')}Ripristina</button>
         <button class="ib needs-net" data-a="purge" data-id="${it.id}" aria-label="Elimina per sempre">${ic('trash')}</button></div>`;
     }).join('') : '<div class="empty"><b>Il cestino è vuoto</b></div>';
-  } else {
-    const s = cur && store.get(cur);
-    if (!s) {
-      head = '';
-      body = `<div class="empty"><b>Nessuna sezione</b>Crea una sezione per iniziare a scrivere.<br><br><button class="btn primary needs-net" data-a="new-sec">${ic('plus')}Nuova sezione</button></div>`;
-    } else {
-      const g = groupOf(s);
-      color = secColor(s);
-      const mode = (st.sortPages || {})[s.id] || 'manual';
-      const rows = pagesTree(s.id, mode);
-      head = `<div class="head" style="padding-top:12px"><div class="grow">
-        <div class="crumb">${g ? esc(title(g)) + ' ›' : 'Senza gruppo ›'}</div>
-        <h2 class="big">${esc(title(s))}</h2>
-        <div class="meta">${rows.length} ${rows.length === 1 ? 'pagina' : 'pagine'}${s.d.inbox ? ' · qui arrivano le email' : ''}</div></div>
-        <button class="btn primary small needs-net" data-only="desk" data-a="new-page">${ic('plus', 'sm')}Pagina</button>
-        <button class="ib needs-net" data-a="sec-menu" data-id="${s.id}" aria-label="Azioni sezione">${ic('more')}</button>
-        <button class="ib" data-only="desk" data-fold="list" aria-label="Nascondi pagine" title="Nascondi elenco delle pagine">${ic('panel')}</button></div>`;
-      bar = `<div class="sortbar">Ordina: <div class="seg" role="group" aria-label="Ordine delle pagine">${[['manual', 'Manuale'], ['date', 'Data'], ['title', 'Titolo']].map(([k, l]) => `<button data-a="sort" data-mode="${k}" aria-pressed="${mode === k}">${l}</button>`).join('')}</div></div>`;
-      body = rows.length ? rows.map(r => pageRow(r.it, r.depth, { drag: mode === 'manual' && !S.offline })).join('') : `<div class="empty"><b>Sezione vuota</b>Tocca «Pagina» per scrivere la prima nota.</div>`;
-      // Su telefono: schede delle sezioni dello stesso gruppo (punto 36).
-      const sibs = g ? store.children(g.id, 'section') : ungrouped();
-      if (sibs.length > 1) tabs = `<div class="tabs" data-only="phone" role="tablist">${sibs.map(x => `<button class="tab" role="tab" data-a="pick-sec" data-id="${x.id}" aria-selected="${x.id === s.id}"><span class="tab-color" style="background:${secColor(x)}"></span>${esc(title(x))}</button>`).join('')}</div>`;
-    }
   }
   el.innerHTML = `
     <div class="topbar" data-only="phone">
-      <button class="ib" data-a="drawer" aria-label="Apri gruppi e sezioni">${ic('menu')}</button>
+      <button class="ib" data-a="totree" aria-label="Torna al taccuino">${ic('back')}</button>
       <div class="grow"><div class="apptitle">Taccuino</div></div>
       <button class="ib" data-a="search" aria-label="Cerca">${ic('search')}</button>
-      <button class="ib" data-a="lock" aria-label="Blocca">${ic('lock')}</button>
     </div>
     ${tabs}
     <div class="secbar" style="background:${color}"></div>
     ${inboxBanner()}
     <div class="scroll">${head}${bar}${body}<div style="height:90px"></div></div>
-    ${cur && !String(cur).includes(':') && store.get(cur) ? `<button class="fab needs-net" data-only="phone" data-a="new-page">${ic('plus')}Pagina</button>` : ''}`;
+`;
   loadThumbs(el);
   if (!el._bound) bindList(el);
   const sel = $('.page-row.sel', el);
   if (sel && el._lastSel !== app.R.page) { sel.scrollIntoView({ block: 'nearest' }); el._lastSel = app.R.page; }
 }
-function inboxBanner() {
+export function inboxBanner() {
   if (S.recovery === 'pending' || S.recovery === 'ready') return `<div class="banner"><div class="grow">${S.recovery === 'ready' ? 'Recupero via email pronto.' : 'È in corso un recupero dell\'accesso via email. Se non l\'hai chiesto tu, annullalo.'}</div><button class="btn small ghost" data-a="er-cancel">Annulla recupero</button></div>`;
   return '';
 }
@@ -433,65 +133,43 @@ function bindList(el) {
     switch (b.dataset.a) {
       case 'open': app.go({ view: 'notes', page: id, from: null }); break;
       case 'open-task': app.go({ view: 'tasks', task: id }); break;
-      case 'drawer': openDrawer(); break;
+      case 'totree': app.go({ section: null, page: null }); break;
       case 'search': app.go({ view: 'search' }); break;
       case 'lock': app.lock(); break;
-      case 'pick-sec': app.go({ section: id, page: null }); break;
-      case 'new-page': newPage(); break;
-      case 'new-sec': newSection(); break;
-      case 'sec-menu': sectionMenu(id); break;
       case 'sort': if (!store.canWrite()) return; store.update('settings', d => { d.sortPages = d.sortPages || {}; d.sortPages[app.R.section] = b.dataset.mode; }); break;
       case 'restore': await store.restore(id); toast('Ripristinato.'); break;
       case 'purge': if (await confirmDialog('Eliminare per sempre?', 'Non si potrà più recuperare.', { ok: 'Elimina', danger: true })) store.purge(id); break;
       case 'empty-trash':
         if (await confirmDialog('Svuotare il cestino?', 'Tutti gli elementi del cestino saranno eliminati per sempre.', { ok: 'Svuota', danger: true })) for (const it of trashItems()) await store.purge(it.id);
         break;
-      case 'er-cancel': await api('POST', 'recover/email/cancel', {}); S.recovery = 'on'; toast('Recupero annullato.'); app.render(); break;
+      case 'er-cancel': await cancelRecovery(); break;
     }
   });
   el.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('.page-row')) e.target.click(); });
-  // Riordino e sottopagine con il trascinamento (PC).
-  el.addEventListener('dragstart', e => { const r = e.target.closest('.page-row[draggable]'); if (!r) return; dragId = r.dataset.id; r.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', title(store.get(dragId))); });
-  el.addEventListener('dragend', () => { dragId = null; $$('.dragging,.drop-before,.drop-into', el).forEach(x => x.classList.remove('dragging', 'drop-before', 'drop-into')); });
-  el.addEventListener('dragover', e => {
-    const r = e.target.closest('.page-row[draggable]');
-    if (!r || !dragId || r.dataset.id === dragId) return;
-    e.preventDefault();
-    const rect = r.getBoundingClientRect();
-    const into = e.clientX - rect.left > 120 && e.clientY - rect.top > rect.height * 0.35;
-    $$('.drop-before,.drop-into', el).forEach(x => x.classList.remove('drop-before', 'drop-into'));
-    r.classList.add(into ? 'drop-into' : 'drop-before');
-  });
-  el.addEventListener('drop', e => {
-    const r = e.target.closest('.page-row[draggable]');
-    if (!r || !dragId) return;
-    e.preventDefault();
-    const target = store.get(r.dataset.id);
-    const id = dragId; dragId = null;
-    if (!store.canWrite() || id === target.id || store.descendants(id).some(x => x.id === target.id)) return;
-    if (r.classList.contains('drop-into')) {
-      store.batch([{ id, parent_id: target.id, sort: store.nextSort(target.id, 'page') }]);
-    } else {
-      const sibs = store.children(target.parent_id, 'page');
-      const i = sibs.findIndex(x => x.id === target.id);
-      const prev = sibs[i - 1];
-      const sort = prev && prev.id !== id ? (prev.sort + target.sort) / 2 : target.sort - 1000;
-      store.batch([{ id, parent_id: target.parent_id, sort }]);
-    }
-  });
 }
 
-export async function newPage(parentPage = null) {
+/**
+ * Nuova pagina (o nota, se `parentId` è una pagina). Senza destinazione: accanto alla pagina aperta,
+ * oppure nella sezione o nel gruppo selezionati, oppure nella prima sezione.
+ */
+export async function newPage(parentId = null) {
   if (!store.canWrite()) return;
-  let sid = parentPage ? null : currentSection();
-  if (!parentPage && (!sid || String(sid).includes(':'))) {
-    const s = ungrouped()[0] || store.all('section')[0];
-    if (!s) { newSection(); return; }
-    sid = s.id;
+  let parent = parentId ? store.get(parentId) : null;
+  if (!parent) {
+    const cur = store.get(app.R.page) || store.get(app.R.node);
+    const chain = cur ? [...ancestors(cur), cur] : [];
+    parent = chain.reverse().find(x => x.kind === 'group' || x.kind === 'section');
+    if (!parent) parent = store.all('section').sort(store.bySort)[0];
   }
-  const parent = parentPage || sid;
-  const id = store.create('page', parent, { title: '', md: '' });
-  app.go({ view: 'notes', section: parentPage ? app.R.section : sid, page: id, from: null });
+  if (!parent) {
+    const nb = notebooks()[0];
+    if (!nb) { createNode('notebook', null); return; }
+    createNode('section', nb.id);
+    toast('Prima serve una sezione: dalle un nome, poi crea la pagina.');
+    return;
+  }
+  const id = store.create('page', parent.id, { title: '', md: '' }, { sort: nextSortIn(parent.id) });
+  app.go({ view: 'notes', page: id, node: null, from: null, ...(String(app.R.section || '').includes(':') ? { section: null } : {}) });
   setTimeout(() => { const t = $('#pTitle'); if (t && (document.activeElement === document.body || !document.activeElement)) t.focus(); }, 60);
 }
 
@@ -672,12 +350,12 @@ export async function openRef(ref) {
 
 async function pageMenu(id) {
   const p = store.get(id);
-  const isSub = store.get(p.parent_id) && store.get(p.parent_id).kind === 'page';
+  const isSub = levelOf(p) === 'note';
   const a = await choose(title(p), [
     { label: p.d.fav ? 'Togli dai preferiti' : 'Aggiungi ai preferiti', value: 'fav', icon: 'star' },
-    { label: 'Nuova sottopagina', value: 'sub', icon: 'plus' },
-    { label: 'Sposta in un\'altra sezione', value: 'move', icon: 'move' },
-    { label: isSub ? 'Porta al primo livello' : 'Rendi sottopagina di…', value: 'nest', icon: 'sub' },
+    ...(isSub ? [] : [{ label: 'Nuova nota in questa pagina', value: 'sub', icon: 'plus' }]),
+    { label: 'Sposta in…', value: 'move', icon: 'move' },
+    ...(isSub ? [{ label: 'Trasforma in pagina', value: 'nest', icon: 'page' }] : []),
     { label: 'Sposta su', value: 'up', icon: 'up' },
     { label: 'Sposta giù', value: 'down', icon: 'down' },
     { label: 'Cronologia delle versioni', value: 'hist', icon: 'history' },
@@ -692,28 +370,17 @@ async function pageMenu(id) {
   if (!store.canWrite()) return;
   if (a === 'fav') store.update(id, d => { d.fav = !d.fav; });
   if (a === 'sub') newPage(id);
-  if (a === 'move') {
-    const opts = [];
-    for (const s of ungrouped()) opts.push({ label: title(s), value: s.id, html: `<span class="tab-color" style="width:6px;height:22px;border-radius:3px;background:${secColor(s)}"></span><span>${esc(title(s))}</span>` });
-    for (const g of store.all('group').sort(store.bySort)) for (const s of store.children(g.id, 'section')) opts.push({ label: title(s), value: s.id, html: `<span class="tab-color" style="width:6px;height:22px;border-radius:3px;background:${secColor(s)}"></span><span>${esc(title(s))}<small>${esc(title(g))}</small></span>` });
-    const to = await choose('Sposta in', opts, { current: sectionOf(p) && sectionOf(p).id });
-    if (to) { await store.batch([{ id, parent_id: to, sort: store.nextSort(to, 'page') }]); app.go({ section: to }); toast(`Spostata in «${title(store.get(to))}»`); }
-  }
+  if (a === 'move') moveDialog(id);
   if (a === 'nest') {
-    if (isSub) { const s = sectionOf(p); store.batch([{ id, parent_id: s.id, sort: store.nextSort(s.id, 'page') }]); return; }
-    const s = sectionOf(p);
-    const banned = new Set([id, ...store.descendants(id).map(x => x.id)]);
-    const cands = pagesTree(s.id, 'manual').filter(r => !banned.has(r.it.id));
-    if (!cands.length) { toast('Nessun\'altra pagina in questa sezione.'); return; }
-    const to = await choose('Sottopagina di', cands.map(r => ({ label: ' '.repeat(r.depth * 2) + title(r.it), value: r.it.id, icon: r.depth ? 'sub' : 'page' })));
-    if (to) store.batch([{ id, parent_id: to, sort: store.nextSort(to, 'page') }]);
+    const c = ancestors(p).reverse().find(x => x.kind === 'group' || x.kind === 'section');
+    if (c) { store.batch([{ id, parent_id: c.id, sort: nextSortIn(c.id) }]); toast(`«${title(p)}» ora è una pagina`); }
   }
-  if (a === 'up' || a === 'down') moveSibling(p, a === 'up' ? -1 : 1, store.children(p.parent_id, 'page'));
+  if (a === 'up' || a === 'down') moveSibling(p, a === 'up' ? -1 : 1, treeKids(p.parent_id));
   if (a === 'del') {
     const n = store.descendants(id).filter(x => x.kind === 'page').length;
     await store.trash(id);
     app.go({ page: null });
-    toast(n ? `Pagina e ${n} sottopagine nel cestino` : 'Pagina nel cestino', 'Annulla', () => store.restore(id));
+    toast(n ? `${isSub ? 'Nota' : 'Pagina'} e ${n} note nel cestino` : `${isSub ? 'Nota' : 'Pagina'} nel cestino`, 'Annulla', () => store.restore(id));
   }
 }
 
@@ -760,4 +427,11 @@ async function history_(id) {
       toast('Versione ripristinata.');
     }
   });
+}
+
+export async function cancelRecovery() {
+  await api('POST', 'recover/email/cancel', {});
+  S.recovery = 'on';
+  toast('Recupero annullato.');
+  app.render();
 }

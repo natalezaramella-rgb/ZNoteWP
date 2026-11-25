@@ -781,6 +781,10 @@ class ZNK_REST
                     }
                 }
             }
+            // Dalla 1.7.0 sezione e gruppo si scambiano di livello: la migrazione cambia il tipo, e solo fra questi due.
+            if ($kind !== $cur->kind && in_array($kind, ['group', 'section'], true) && in_array($cur->kind, ['group', 'section'], true)) {
+                $f['kind'] = $kind;
+            }
             $f['rev'] = (int) $cur->rev + 1;
             $wpdb->update($t, $f, ['user_id' => $uid, 'id' => $id]);
         } else {

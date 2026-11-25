@@ -3,6 +3,7 @@ import { ic } from './icons.js';
 import { $, esc, toast, confirmDialog, promptDialog, sheet, closeOverlay, fmtWhen } from './ui.js';
 import { api, CFG } from './api.js';
 import { kv, wipeAll } from './db.js';
+import { mailTargets, pathOf } from './struct.js';
 import * as store from './store.js';
 import { S } from './store.js';
 import { app } from './ctx.js';
@@ -42,7 +43,7 @@ function paint(el) {
   const st = store.settings();
   const me = S.me || { user: {}, recovery: {} };
   const mailCfg = st.mail || {};
-  const secs = store.all('section').sort(store.bySort);
+  const secs = mailTargets().sort((a, b) => pathOf(a).localeCompare(pathOf(b), 'it'));
   const lists = store.all('list').sort(store.bySort);
   const er = S.recovery || me.recovery.email || 'off';
   const theme = localStorage.getItem('znk-theme') || 'auto';
@@ -62,7 +63,7 @@ function paint(el) {
         <div class="srow"><div class="grow"><div class="lab">Dove finisce</div><div class="hint">Scrivi <b>#nome</b> nell'oggetto per mandarla in una sezione o lista con quel nome (es. #ricette).</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
             <select id="mMode" class="needs-net"><option value="page" ${mailCfg.mode !== 'task' ? 'selected' : ''}>Nuova pagina in</option><option value="task" ${mailCfg.mode === 'task' ? 'selected' : ''}>Nuova attività in</option></select>
-            <select id="mDest" class="needs-net">${mailCfg.mode === 'task' ? lists.map(l => `<option value="${l.id}" ${l.id === mailCfg.list ? 'selected' : ''}>${esc(l.d.title)}</option>`).join('') : secs.map(s => `<option value="${s.id}" ${s.id === mailCfg.section ? 'selected' : ''}>${esc(s.d.title)}</option>`).join('')}</select>
+            <select id="mDest" class="needs-net">${mailCfg.mode === 'task' ? lists.map(l => `<option value="${l.id}" ${l.id === mailCfg.list ? 'selected' : ''}>${esc(l.d.title)}</option>`).join('') : secs.map(s => `<option value="${s.id}" ${s.id === mailCfg.section ? 'selected' : ''}>${esc([pathOf(s), s.d.title].filter(Boolean).join(' › '))}</option>`).join('')}</select>
           </div></div></div>
         <div class="srow"><div class="grow"><div class="lab">Mittenti ammessi</div><div class="hint">Solo le email da questi indirizzi diventano note, e solo se il loro dominio supera i controlli SPF/DKIM. Il sito conserva un'impronta dell'indirizzo, non l'indirizzo.</div>
           <div class="senders">${mailInfo ? (mailInfo.senders.length ? mailInfo.senders.map(s => `<span class="sender">${esc(s.hint)}<button data-a="rm-sender" data-h="${s.hash}" aria-label="Rimuovi" class="needs-net">${ic('close', 'sm')}</button></span>`).join('') : '<span class="hint">Nessun mittente: aggiungi i tuoi indirizzi.</span>') : ''}</div>

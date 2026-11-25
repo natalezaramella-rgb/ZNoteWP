@@ -235,7 +235,9 @@ export async function restore(id) {
   const parent = root.parent_id && S.items.get(root.parent_id);
   const ops = list.map(x => ({ id: x.id, deleted: false }));
   if (root.parent_id && (!parent || parent.deleted_at)) {
-    const fallback = root.kind === 'page' ? (all('section')[0] || {}).id : root.kind === 'task' ? (all('list')[0] || {}).id : null;
+    // Contenitore sparito: la pagina o il gruppo tornano nella prima sezione, la sezione nel primo taccuino.
+    const want = { page: 'section', group: 'section', section: 'notebook', task: 'list' }[root.kind];
+    const fallback = want ? (all(want).sort(bySort)[0] || {}).id : null;
     ops[0].parent_id = fallback || null;
   }
   await batch(ops);

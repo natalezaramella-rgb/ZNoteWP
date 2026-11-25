@@ -8,6 +8,8 @@ import * as store from './store.js';
 import { S } from './store.js';
 import { renderSetup, renderLock, forgetRemember } from './lock.js';
 import * as notes from './notes.js';
+import * as ntree from './ntree.js';
+import { migrate as migrateTree } from './struct.js';
 import * as tasks from './tasks.js';
 import * as search from './search.js';
 import * as settings from './settings.js';
@@ -136,6 +138,8 @@ async function enter({ readonly, fresh }) {
   if (!readonly) {
     try { await store.sync(); } catch (e) { toast(e.message); }
     if (fresh || !store.all('section').length && !store.all('list').length && !store.get('settings')) await createDefaults();
+    // 1.7.0: un solo albero taccuino › sezione › gruppo › pagina › nota (prima: gruppo di sezioni › sezione).
+    try { await migrateTree(); } catch (e) { console.warn('migrazione del taccuino', e); }
     importInbox().catch(e => console.warn(e));
     vault.ensureKeys().catch(e => console.warn('chiavi secrets', e));
   }
@@ -156,7 +160,8 @@ async function enter({ readonly, fresh }) {
 }
 
 async function createDefaults() {
-  const inbox = store.create('section', null, { title: 'Posta in arrivo', color: 6, inbox: true }, { sort: 0 });
+  const nb = (store.all('notebook')[0] || {}).id || store.create('notebook', null, { title: 'Il mio taccuino', main: true }, { sort: 0 });
+  const inbox = store.create('section', nb, { title: 'Posta in arrivo', color: 6, inbox: true }, { sort: 1000 });
   const list = store.create('list', null, { title: 'Personale' }, { sort: 1000 });
   await store.save('settings', { kind: 'settings', parent_id: null, sort: 0, d: { autolock: 5, mail: { mode: 'page', section: inbox, list }, lastSection: inbox, lastList: list } });
 }
@@ -228,6 +233,7 @@ function buildScreens() {
     <section class="screen" id="nTree" data-pane="tree"></section>
     <section class="screen" id="nList" data-pane="nlist"></section>
     <section class="screen" id="nPage" data-pane="npage"></section>
+    <section class="screen" id="nOver" data-pane="nover"></section>
     <section class="screen" id="tList" data-pane="tlist"></section>
     <section class="screen" id="tDetail" data-pane="tdetail"></section>
     <section class="screen" id="aList" data-pane="alist"></section>
@@ -264,7 +270,7 @@ function getFold() {
 function saveFold(f) { try { localStorage.setItem(FOLD_KEY, JSON.stringify(f)); } catch (e) { /* */ } render(); }
 function setFold(k, v) { const f = getFold(); f[k] = v; saveFold(f); }
 const RAIL = {
-  notes: { tree: ['folder', 'Mostra sezioni'], list: ['page', 'Mostra pagine'] },
+  notes: { tree: ['book', 'Mostra il taccuino'], list: ['page', 'Mostra l\'elenco'] },
   tasks: { list: ['list', 'Mostra elenco delle attività'] },
   vault: { tree: ['folder', 'Mostra cartelle'], list: ['key', 'Mostra elenco dei secrets'] },
   access: { list: ['mail', 'Mostra elenco dei clienti'] },
@@ -330,17 +336,22 @@ export function render() {
   if (!desk || !RAIL[R.view]) foldRail(null, []);
   const unfoldBtn = fold.list ? '<br><br><button class="btn ghost small" data-unfold="list">Mostra l\'elenco</button>' : '';
   if (R.view === 'notes') {
+    // Un solo pannello ad albero; l'elenco compare solo per Preferiti, Recenti, etichette e Cestino.
+    const special = String(R.section || '').includes(':');
+    if (R.node && !store.alive(store.get(R.node))) R.node = null;
     if (desk) {
-      const x = columns('notes', fold, [
-        { k: 'tree', el: panes.tree, cls: 'pane-tree', w: 260, render: notes.renderTree },
-        { k: 'list', el: panes.nlist, cls: 'pane-list', w: 340, render: notes.renderList },
-      ]);
+      const cols = [{ k: 'tree', el: panes.tree, cls: 'pane-tree pane-ntree', w: 320, render: ntree.renderTree }];
+      if (special) cols.push({ k: 'list', el: panes.nlist, cls: 'pane-list', w: 340, render: notes.renderList });
+      const x = columns('notes', fold, cols);
       if (R.page && store.get(R.page)) { mainPane(panes.npage, x); notes.renderPage(panes.npage, R.page); }
-      else { mainPane(panes.empty, x); emptyMsg('Nessuna pagina aperta', 'Scegli una pagina dall\'elenco o creane una nuova (Alt+N).', unfoldBtn); notes.renderPage(null); }
+      else if (R.node && !special) { notes.renderPage(null); mainPane(panes.nover, x); ntree.renderOverview(panes.nover, R.node); }
+      else { mainPane(panes.empty, x); emptyMsg('Nessuna pagina aperta', 'Scegli una pagina o una nota nell\'albero, oppure creane una nuova (Alt+N).', fold.tree ? '<br><br><button class="btn ghost small" data-unfold="tree">Mostra il taccuino</button>' : ''); notes.renderPage(null); }
     } else if (R.page && store.get(R.page)) {
       setPane(panes.npage, 'full'); notes.renderPage(panes.npage, R.page); showNav = false;
-    } else {
+    } else if (special) {
       setPane(panes.nlist, 'has-nav'); notes.renderList(panes.nlist); notes.renderPage(null);
+    } else {
+      setPane(panes.tree, 'has-nav pane-ntree'); ntree.renderTree(panes.tree); notes.renderPage(null);
     }
   } else if (R.view === 'tasks') {
     notes.renderPage(null);

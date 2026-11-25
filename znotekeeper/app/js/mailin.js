@@ -1,6 +1,7 @@
 // Email → nota: apre nel browser le email sigillate con la chiave pubblica e le trasforma in pagine o attività.
 import { api } from './api.js';
 import { unseal, unb64 } from './crypto.js';
+import { mailTargets, notebooks } from './struct.js';
 import * as store from './store.js';
 import { S } from './store.js';
 import { emailHtmlToMd } from './md.js';
@@ -24,7 +25,7 @@ function route(subject, cfg) {
   let used = null;
   for (const t of tags) {
     const n = norm(t);
-    const s = store.all('section').find(x => norm(x.d.title) === n);
+    const s = mailTargets().find(x => norm(x.d.title) === n);
     if (s) { mode = 'page'; section = s.id; used = t; break; }
     const l = store.all('list').find(x => norm(x.d.title) === n);
     if (l) { mode = 'task'; list = l.id; used = t; break; }
@@ -48,10 +49,11 @@ export async function importInbox() {
         const r = route(m.subject || '(senza oggetto)', cfg);
         let section = r.section && store.get(r.section) && store.alive(store.get(r.section)) ? r.section : null;
         let list = r.list && store.get(r.list) && store.alive(store.get(r.list)) ? r.list : null;
-        if (r.mode === 'page' && !section) section = (store.all('section').find(s => s.d.inbox) || store.all('section')[0] || {}).id;
+        if (r.mode === 'page' && !section) section = (mailTargets().find(s => s.d.inbox) || store.all('section')[0] || {}).id;
         if (r.mode === 'task' && !list) list = (store.all('list')[0] || {}).id;
         if (!section && !list) {
-          section = store.create('section', null, { title: 'Posta in arrivo', color: 6, inbox: true }, { sort: 0 });
+          const nb = (notebooks()[0] || {}).id || store.create('notebook', null, { title: 'Il mio taccuino', main: true }, { sort: 0 });
+          section = store.create('section', nb, { title: 'Posta in arrivo', color: 6, inbox: true }, { sort: 0 });
         }
         const asTask = r.mode === 'task' && list;
         const id = crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2);

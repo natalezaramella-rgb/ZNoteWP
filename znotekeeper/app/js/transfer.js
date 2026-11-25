@@ -7,7 +7,8 @@ import { $, sheet, closeOverlay, toast, download, pickFile, choose, esc, isoDay 
 import { askPassword } from './lock.js';
 import { Zip } from './zip.js';
 import { drawingToPNG } from './draw.js';
-import { fileName, sectionOf, notebooks, nbOf } from './notes.js';
+import { fileName, sectionOf, notebooks } from './notes.js';
+import { treeKids } from './struct.js';
 
 function progress(title) {
   const el = sheet(`<h3>${esc(title)}</h3><p class="muted" id="prog">Preparo…</p>`);
@@ -123,14 +124,15 @@ export async function exportMarkdown() {
       const kids = store.children(pg.id, 'page');
       for (const k of kids) await writePage(k, `${dir}${fileName(t)}/`, depth + 1);
     };
-    const secs = store.all('section').sort(store.bySort);
-    for (const s of secs) {
-      const g = store.get(s.parent_id);
-      const nb = notebooks().length > 1 ? nbOf(s) : null;
-      const dir = `Taccuino/${nb ? fileName(nb.d.title) + '/' : ''}${g && g.kind === 'group' && store.alive(g) ? fileName(g.d.title) + '/' : ''}${fileName(s.d.title)}/`;
-      const depth = dir.split('/').length - 1;
-      for (const pg of store.children(s.id, 'page')) await writePage(pg, dir, depth);
-    }
+    // Cartelle: Taccuino/[taccuino/]sezione/[gruppo/]pagina.md, le note dentro la cartella della pagina.
+    const multi = notebooks().length > 1;
+    const walk = async (id, dir) => {
+      for (const k of treeKids(id)) {
+        if (k.kind === 'page') await writePage(k, dir, dir.split('/').length - 1);
+        else await walk(k.id, k.kind === 'notebook' && !multi ? dir : `${dir}${fileName(k.d.title)}/`);
+      }
+    };
+    await walk(null, 'Taccuino/');
     for (const l of store.all('list').sort(store.bySort)) {
       let md = `# ${l.d.title}\n\n`;
       const line = async (t, ind) => {
