@@ -473,7 +473,7 @@ class ZNK_REST
             'fails' => 0, 'next_try_at' => null,
         ]);
         $wpdb->query($wpdb->prepare('DELETE FROM ' . ZNK_DB::t('devices') . ' WHERE user_id = %d AND id <> %d', $u->user_id, $ctx['device']->id));
-        $wpdb->update(ZNK_DB::t('devices'), ['pin_hash' => null, 'pin_pepper' => null], ['id' => $ctx['device']->id]);
+        $wpdb->update(ZNK_DB::t('devices'), ['pin_hash' => null, 'pin_pepper' => null, 'rem_hash' => null, 'rem_pepper' => null], ['id' => $ctx['device']->id]);
         ZNK_Users::notify($u->user_id, 'accesso recuperato', "La password delle note è stata reimpostata e gli altri dispositivi sono stati scollegati.\nSe non sei stato tu, contatta subito l'amministratore del sito.");
         return ['session' => ZNK_Auth::issue_session($ctx['device'])];
     }
