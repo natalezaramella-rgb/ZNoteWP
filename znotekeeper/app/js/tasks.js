@@ -78,6 +78,7 @@ function taskRow(t, opts = {}) {
 }
 
 let showDone = false;
+let tabsPos = { x: 0, y: 0 };
 export function renderList(el) {
   const cur = currentList();
   const st = store.settings();
@@ -117,6 +118,16 @@ export function renderList(el) {
       <div style="height:90px"></div>
     </div>
     <button class="fab needs-net" data-a="add">${ic('plus')}Attività</button>`;
+  const tabs = el.querySelector('.tabs');
+  if (tabs) {
+    tabs.scrollLeft = tabsPos.x; tabs.scrollTop = tabsPos.y;
+    const on = tabs.querySelector('.tab[aria-selected="true"]');
+    if (on) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    tabs.addEventListener('scroll', () => { tabsPos = { x: tabs.scrollLeft, y: tabs.scrollTop }; }, { passive: true });
+    tabs.addEventListener('wheel', e => {
+      if (tabs.scrollWidth > tabs.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) { tabs.scrollLeft += e.deltaY; e.preventDefault(); }
+    }, { passive: false });
+  }
   if (!el._bound) bindList(el);
 }
 
