@@ -70,7 +70,7 @@ L'email parte da WordPress (wp_mail) con il nome e l'indirizzo mittente scelti n
 
 L'app prende da sola colori e caratteri dal tema del sito: stili globali dei temi a blocchi (theme.json e modifiche fatte nell'Editor del sito), tavolozza del tema, Astra, GeneratePress, Kadence, OceanWP e lo sfondo del Personalizza. Da sfondo, testo e colore principale ricava la versione chiara e quella scura con contrasto leggibile. Anche la pagina dei dati di accesso per i clienti usa questi colori.
 
-In Utenti › ZNoteKeeper › Aspetto l'amministratore vede cosa è stato trovato, può correggere ogni valore, scegliere l'icona del sito come logo, tornare ai colori originali di ZNoteKeeper e usare «Rileva dalla home page» per i temi costruiti con page builder. I caratteri si usano solo se i loro file stanno sul sito stesso: l'app non carica risorse esterne (per esempio Google Fonts).
+In Utenti › ZNoteKeeper › Aspetto l'amministratore vede cosa è stato trovato, può correggere ogni valore, scegliere l'icona del sito come logo, tornare ai colori originali di ZNoteKeeper e usare «Rileva dalla home page» per i temi costruiti con page builder. I caratteri si usano solo se i loro file stanno sul sito stesso: l'app non carica risorse esterne. Se il tema usa Google Fonts, il pulsante «Ospita i caratteri sul sito» li scarica una volta in wp-content/uploads/znotekeeper-fonts/ e l'app li usa da lì, senza contattare Google.
 
 == Notifiche ==
 

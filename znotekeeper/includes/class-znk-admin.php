@@ -19,6 +19,7 @@ class ZNK_Admin
         add_action('admin_post_znk_mail', [__CLASS__, 'handle_mail']);
         add_action('admin_post_znk_mail_check', [__CLASS__, 'handle_mail_check']);
         add_action('admin_post_znk_style', [__CLASS__, 'handle_style']);
+        add_action('admin_post_znk_fonts', [__CLASS__, 'handle_fonts']);
         add_filter('plugin_action_links_' . plugin_basename(ZNK_FILE), function ($links) {
             array_unshift($links, '<a href="' . esc_url(admin_url('users.php?page=znotekeeper')) . '">Utenti</a>');
             $links[] = '<a href="' . esc_url(ZNK_App::url('')) . '">Apri app</a>';
@@ -103,6 +104,16 @@ class ZNK_Admin
         self::back(['znk_msg' => 'stylesaved', 'tab' => 'style']);
     }
 
+    public static function handle_fonts()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die('Non autorizzato.');
+        }
+        check_admin_referer('znk_fonts');
+        set_transient('znk_fonts_result', ZNK_Style::host_fonts(), 300);
+        self::back(['znk_msg' => 'fonts', 'tab' => 'style']);
+    }
+
     public static function handle_mail_check()
     {
         if (!current_user_can('manage_options')) {
@@ -138,6 +149,7 @@ class ZNK_Admin
             'deleted' => 'Spazio cancellato definitivamente.',
             'confirm' => 'Per cancellare lo spazio scrivi esattamente il nome utente.',
             'mailsaved' => 'Impostazioni email salvate.',
+            'fonts' => (string) get_transient('znk_fonts_result'),
             'stylesaved' => 'Aspetto salvato. Gli utenti lo vedono alla prossima apertura dell\'app (a volte serve ricaricare due volte).',
             'checked' => 'Controllo della casella eseguito.',
             'nouser' => 'Utente non trovato.',
@@ -257,6 +269,10 @@ class ZNK_Admin
         echo '</div><p class="description">L\'anteprima mostra i valori salvati. Ognuno può comunque scegliere chiaro, scuro o automatico nelle impostazioni dell\'app.</p>';
         submit_button('Salva aspetto');
         echo '</form>';
+        echo '<h2>Caratteri</h2><form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="margin-bottom:16px">';
+        wp_nonce_field('znk_fonts');
+        echo '<input type="hidden" name="action" value="znk_fonts"><p class="description" style="max-width:760px">Se i caratteri del sito arrivano da Google Fonts, l\'app non può caricarli. Questo pulsante li scarica una volta in <code>wp-content/uploads/znotekeeper-fonts/</code> (solo alfabeti latini, pochi KB) e l\'app li usa da lì, senza contattare Google. Salva prima l\'aspetto, poi premi il pulsante.</p>';
+        echo '<button class="button">Ospita i caratteri sul sito</button></form>';
         echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
         wp_nonce_field('znk_style');
         echo '<input type="hidden" name="action" value="znk_style"><input type="hidden" name="reset" value="1"><button class="button-link" onclick="return confirm(\'Tornare ai valori trovati nel sito?\')">Ripristina i valori del sito</button></form>';
