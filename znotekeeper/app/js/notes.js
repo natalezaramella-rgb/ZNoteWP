@@ -24,6 +24,7 @@ export function groupOf(section) { const g = section && store.get(section.parent
 export function pathOf(page) {
   const s = sectionOf(page); const g = groupOf(s);
   const parts = [];
+  if (notebooks().length > 1 && s) parts.push(nbTitle(nbOf(s)));
   if (g) parts.push(title(g));
   if (s) parts.push(title(s));
   let p = store.get(page.parent_id); const chain = [];
@@ -41,8 +42,32 @@ function pagesTree(sectionId, mode) {
   walk(sectionId, 0);
   return out;
 }
+// ---------- taccuini ----------
+// Un taccuino raccoglie sezioni e gruppi. Le sezioni senza taccuino (o di un taccuino eliminato) stanno nel primo.
+const NB_KEY = 'znk-nb';
+export const notebooks = () => store.all('notebook').sort(store.bySort);
+const defaultNb = () => { const l = notebooks(); return l.find(n => n.d.main) || l[0] || null; };
+export function nbOf(it) {
+  if (!it) return null;
+  const g = it.kind === 'section' ? groupOf(it) : null;
+  const id = (g || it).d.nb;
+  const nb = id && store.get(id);
+  if (nb && nb.kind === 'notebook' && store.alive(nb)) return nb;
+  return defaultNb();
+}
+export function currentNb() {
+  let id = null;
+  try { id = localStorage.getItem(NB_KEY); } catch (e) { /* */ }
+  const nb = id && store.get(id);
+  return nb && nb.kind === 'notebook' && store.alive(nb) ? nb : defaultNb();
+}
+function setCurrentNb(id) { try { localStorage.setItem(NB_KEY, id || ''); } catch (e) { /* */ } }
+const nbTitle = nb => (nb && nb.d.title) || 'Il mio taccuino';
+const sameNb = (it, nb) => { const x = nbOf(it); return (x ? x.id : null) === (nb ? nb.id : null); };
+const groupsIn = nb => store.all('group').filter(g => sameNb(g, nb)).sort(store.bySort);
 const countPages = sid => { let n = 0; const w = pid => { for (const k of store.children(pid, 'page')) { n++; w(k.id); } }; w(sid); return n; };
-const ungrouped = () => store.all('section').filter(s => !s.parent_id || !store.alive(store.get(s.parent_id))).sort(store.bySort);
+const ungrouped = (nb = currentNb()) => store.all('section').filter(s => (!s.parent_id || !store.alive(store.get(s.parent_id))) && sameNb(s, nb)).sort(store.bySort);
+const sectionsIn = nb => store.all('section').filter(s => sameNb(s, nb));
 export function allTags() {
   const m = new Map();
   for (const p of store.all('page')) for (const t of tagsIn(p.d.md)) m.set(t, (m.get(t) || 0) + 1);
@@ -53,7 +78,9 @@ function currentSection() {
   const R = app.R;
   if (R.section && String(R.section).includes(':')) return R.section;
   let s = R.section && store.get(R.section);
-  if (!s || !store.alive(s)) s = ungrouped()[0] || store.all('section').sort(store.bySort)[0];
+  // Una sezione aperta da fuori (ricerca, preferiti) porta con sé il suo taccuino.
+  if (s && store.alive(s) && s.kind === 'section' && !sameNb(s, currentNb())) { const nb = nbOf(s); setCurrentNb(nb && nb.id); }
+  if (!s || !store.alive(s)) { const nb = currentNb(); s = ungrouped(nb)[0] || groupsIn(nb).map(g => store.children(g.id, 'section')[0]).find(Boolean) || null; }
   R.section = s ? s.id : null;
   return R.section;
 }
@@ -67,16 +94,17 @@ function treeHTML() {
   const secRow = (s, top) => `<div class="row"><button class="sec ${top ? 'top' : ''}" data-a="pick-sec" data-id="${s.id}" aria-current="${s.id === cur}" data-drop="${s.id}">
       <span class="tab-color" style="background:${secColor(s)}"></span><span class="nm">${esc(title(s))}</span>${s.d.inbox ? ic('mail', 'sm') : ''}<span class="cnt">${countPages(s.id)}</span></button>
       <button class="ib more needs-net" data-a="sec-menu" data-id="${s.id}" aria-label="Azioni sezione ${esc(title(s))}">${ic('more')}</button></div>`;
-  const groups = store.all('group').sort(store.bySort);
+  const nb = currentNb();
+  const groups = groupsIn(nb);
   const tags = allTags();
   const trashN = trashItems().length;
-  return `<div class="dh"><div class="crumb">Il mio taccuino</div><h2 class="big" style="font-size:24px">Sezioni</h2></div>
+  return `<div class="dh"><button class="nbpick" data-a="nb-menu" aria-label="Cambia taccuino">${ic('book', 'sm')}<span>${esc(nbTitle(nb))}</span>${ic('chev', 'sm')}</button><div style="display:flex;align-items:center"><h2 class="big" style="font-size:24px;flex:1">Sezioni</h2><button class="ib" data-only="desk" data-fold="tree" aria-label="Nascondi sezioni" title="Nascondi sezioni">${ic('panel')}</button></div></div>
     <div class="tree">
       <button class="quick" data-a="pick-sec" data-id="v:fav" aria-current="${cur === 'v:fav'}">${ic('star')}Preferiti</button>
       <button class="quick" data-a="pick-sec" data-id="v:recent" aria-current="${cur === 'v:recent'}">${ic('clock')}Recenti</button>
       ${tags.length ? `<button class="quick" data-a="tags" aria-current="${String(cur).startsWith('tag:')}">${ic('tag')}Etichette<span class="cnt" style="margin-left:auto;color:var(--muted);font-size:12px">${tags.length}</span></button>` : ''}
       <hr>
-      ${ungrouped().map(s => secRow(s, true)).join('')}
+      ${ungrouped(nb).map(s => secRow(s, true)).join('')}
       ${groups.map(g => {
         const open = !collapsed.has(g.id);
         const secs = store.children(g.id, 'section');
@@ -123,6 +151,7 @@ async function onTreeClick(e) {
     case 'new-grp': closeOverlay(); newGroup(); break;
     case 'sec-menu': sectionMenu(id); break;
     case 'grp-menu': groupMenu(id); break;
+    case 'nb-menu': notebookMenu(); break;
     case 'tags': {
       const t = await choose('Etichette', allTags().map(([k, n]) => ({ label: '#' + k, hint: `${n} elementi`, value: k, icon: 'tag' })), { text: 'Scrivi #parola nel testo di una pagina o di un\'attività per etichettarla.' });
       if (t) { closeOverlay(); app.go({ view: 'notes', section: 'tag:' + t, page: null }); }
@@ -149,7 +178,7 @@ function bindColors(el, st) {
 export async function newSection(groupId = null) {
   if (!store.canWrite()) return;
   const st = { color: 1 + Math.floor(Math.random() * 6) };
-  const groups = store.all('group').sort(store.bySort);
+  const groups = groupsIn(currentNb());
   const extra = colorPicker(st.color) + (groups.length ? `<label class="flab">Gruppo</label><select class="sel" name="grp" style="width:100%"><option value="">Nessun gruppo</option>${groups.map(g => `<option value="${g.id}" ${g.id === groupId ? 'selected' : ''}>${esc(title(g))}</option>`).join('')}</select>` : '');
   const p = promptDialog('Nuova sezione', { label: 'Nome', placeholder: 'Es. Ricette', ok: 'Crea', extra });
   setTimeout(() => { const el = $('.sheet'); if (el) bindColors(el, st); }, 0);
@@ -157,7 +186,8 @@ export async function newSection(groupId = null) {
   if (!r || !r.value) return;
   const sel = r.el.querySelector('[name=grp]');
   const gid = sel ? sel.value || null : groupId;
-  const id = store.create('section', gid, { title: r.value, color: st.color });
+  const nb = currentNb();
+  const id = store.create('section', gid, { title: r.value, color: st.color, ...(nb && !gid ? { nb: nb.id } : {}) });
   if (gid) collapsed.delete(gid);
   app.go({ view: 'notes', section: id, page: null });
 }
@@ -165,7 +195,8 @@ export async function newGroup() {
   if (!store.canWrite()) return;
   const r = await promptDialog('Nuovo gruppo di sezioni', { label: 'Nome', placeholder: 'Es. Casa', ok: 'Crea' });
   if (!r || !r.value) return;
-  store.create('group', null, { title: r.value });
+  const nb = currentNb();
+  store.create('group', null, { title: r.value, ...(nb ? { nb: nb.id } : {}) });
   toast('Gruppo creato: aggiungi una sezione dal suo menu ⋯');
 }
 async function sectionMenu(id) {
@@ -174,6 +205,7 @@ async function sectionMenu(id) {
   const a = await choose(title(s), [
     { label: 'Rinomina e colore', value: 'rename', icon: 'pen' },
     { label: 'Sposta in un gruppo', value: 'move', icon: 'move' },
+    ...(notebooks().length > 1 ? [{ label: 'Sposta in un altro taccuino', value: 'nb', icon: 'book' }] : []),
     { label: 'Sposta su', value: 'up', icon: 'up' },
     { label: 'Sposta giù', value: 'down', icon: 'down' },
     { label: 'Elimina sezione', value: 'del', icon: 'trash', danger: true, disabled: !!s.d.inbox && store.all('section').length === 1 },
@@ -186,10 +218,13 @@ async function sectionMenu(id) {
     const r = await p;
     if (r && r.value) store.update(id, d => { d.title = r.value; d.color = st.color; });
   } else if (a === 'move') {
-    const g = await choose('Sposta in', [{ label: 'Nessun gruppo', value: '-' }, ...store.all('group').sort(store.bySort).map(x => ({ label: title(x), value: x.id, icon: 'folder' }))], { current: s.parent_id || '-' });
+    const g = await choose('Sposta in', [{ label: 'Nessun gruppo', value: '-' }, ...groupsIn(nbOf(s)).map(x => ({ label: title(x), value: x.id, icon: 'folder' }))], { current: s.parent_id || '-' });
     if (g) store.batch([{ id, parent_id: g === '-' ? null : g, sort: store.nextSort(g === '-' ? null : g, 'section') }]);
+  } else if (a === 'nb') {
+    const to = await pickNotebook('Sposta la sezione in', nbOf(s));
+    if (to) { const d = structuredClone(s.d); d.nb = to; store.save(id, { parent_id: null, sort: store.nextSort(null, "section"), d }); toast(`Sezione spostata in «${nbTitle(store.get(to))}»`); }
   } else if (a === 'up' || a === 'down') {
-    moveSibling(s, a === 'up' ? -1 : 1, s.parent_id && store.alive(store.get(s.parent_id)) ? store.children(s.parent_id, 'section') : ungrouped());
+    moveSibling(s, a === 'up' ? -1 : 1, s.parent_id && store.alive(store.get(s.parent_id)) ? store.children(s.parent_id, 'section') : ungrouped(nbOf(s)));
   } else if (a === 'del') {
     const n = countPages(id);
     if (await confirmDialog(`Eliminare «${esc(title(s))}»?`, `La sezione e le sue ${n} pagine vanno nel cestino per 30 giorni.`, { ok: 'Sposta nel cestino', danger: true })) {
@@ -204,6 +239,7 @@ async function groupMenu(id) {
   const a = await choose(title(g), [
     { label: 'Nuova sezione nel gruppo', value: 'sec', icon: 'plus' },
     { label: 'Rinomina', value: 'rename', icon: 'pen' },
+    ...(notebooks().length > 1 ? [{ label: 'Sposta in un altro taccuino', value: 'nb', icon: 'book' }] : []),
     { label: 'Sposta su', value: 'up', icon: 'up' },
     { label: 'Sposta giù', value: 'down', icon: 'down' },
     { label: 'Elimina gruppo', value: 'del', icon: 'trash', danger: true },
@@ -211,15 +247,64 @@ async function groupMenu(id) {
   if (!a || !store.canWrite()) return;
   if (a === 'sec') newSection(id);
   if (a === 'rename') { const r = await promptDialog('Rinomina gruppo', { label: 'Nome', value: title(g) }); if (r && r.value) store.update(id, d => { d.title = r.value; }); }
-  if (a === 'up' || a === 'down') moveSibling(g, a === 'up' ? -1 : 1, store.all('group').sort(store.bySort));
+  if (a === 'nb') { const to = await pickNotebook('Sposta il gruppo in', nbOf(g)); if (to) { store.update(id, d => { d.nb = to; }); toast(`Gruppo spostato in «${nbTitle(store.get(to))}»`); } }
+  if (a === 'up' || a === 'down') moveSibling(g, a === 'up' ? -1 : 1, groupsIn(nbOf(g)));
   if (a === 'del') {
     const secs = store.children(id, 'section');
     const keep = secs.length ? await choose('Elimina gruppo', [{ label: 'Tieni le sezioni (fuori dai gruppi)', value: 'keep' }, { label: 'Metti anche le sezioni nel cestino', value: 'all', danger: true }]) : 'all';
     if (!keep) return;
-    if (keep === 'keep') await store.batch(secs.map((s, i) => ({ id: s.id, parent_id: null, sort: store.nextSort(null, 'section') + i * 1000 })));
+    if (keep === 'keep') { const nb = nbOf(g); secs.forEach((s, i) => { const d = structuredClone(s.d); if (nb) d.nb = nb.id; store.save(s.id, { parent_id: null, sort: store.nextSort(null, 'section') + i * 1000, d }); }); }
     await store.trash(id);
     toast('Gruppo nel cestino', 'Annulla', () => store.restore(id));
   }
+}
+async function pickNotebook(text, cur) {
+  const list = notebooks().filter(n => !cur || n.id !== cur.id);
+  return choose(text, list.map(n => ({ label: nbTitle(n), value: n.id, icon: 'book' })));
+}
+async function notebookMenu() {
+  const cur = currentNb();
+  const list = notebooks();
+  const a = await choose('Taccuini', [
+    ...(list.length ? list : [null]).map(n => ({ label: nbTitle(n), hint: `${(n ? sectionsIn(n) : store.all('section')).length} sezioni`, value: n ? 'go:' + n.id : 'go:', icon: 'book' })),
+    { sep: true },
+    { label: 'Nuovo taccuino', value: 'new', icon: 'plus', disabled: !store.canWrite() },
+    { label: `Rinomina «${nbTitle(cur)}»`, value: 'rename', icon: 'pen', disabled: !store.canWrite() },
+    ...(list.length > 1 ? [{ label: 'Sposta su', value: 'up', icon: 'up' }, { label: 'Sposta giù', value: 'down', icon: 'down' }, { label: `Elimina «${nbTitle(cur)}»`, value: 'del', icon: 'trash', danger: true }] : []),
+  ], { current: 'go:' + (cur ? cur.id : '') });
+  if (!a) return;
+  if (a.startsWith('go:')) { setCurrentNb(a.slice(3)); app.go({ view: 'notes', section: null, page: null }); refreshTree(); return; }
+  if (!store.canWrite()) return;
+  // Il primo taccuino nasce quando ne serve un secondo: raccoglie tutto quello che c'era.
+  const ensureFirst = () => cur || store.get(store.create('notebook', null, { title: 'Il mio taccuino', main: true }, { sort: 0 }));
+  if (a === 'new') {
+    const r = await promptDialog('Nuovo taccuino', { label: 'Nome', placeholder: 'Es. Lavoro', ok: 'Crea' });
+    if (!r || !r.value) return;
+    ensureFirst();
+    const id = store.create('notebook', null, { title: r.value });
+    setCurrentNb(id);
+    app.go({ view: 'notes', section: null, page: null });
+    toast(`Taccuino «${r.value}» creato: aggiungi una sezione.`);
+  } else if (a === 'rename') {
+    const r = await promptDialog('Rinomina taccuino', { label: 'Nome', value: nbTitle(cur) });
+    if (!r || !r.value) return;
+    const nb = ensureFirst();
+    store.update(nb.id, d => { d.title = r.value; });
+  } else if (a === 'up' || a === 'down') {
+    moveSibling(cur, a === 'up' ? -1 : 1, list);
+  } else if (a === 'del') {
+    const secs = sectionsIn(cur), groups = groupsIn(cur);
+    const inbox = secs.find(x => x.d.inbox);
+    if (inbox) { toast('Questo taccuino contiene «Posta in arrivo»: sposta prima quella sezione in un altro taccuino.'); return; }
+    const n = secs.reduce((t, x) => t + countPages(x.id), 0);
+    if (!(await confirmDialog(`Eliminare «${esc(nbTitle(cur))}»?`, secs.length ? `Il taccuino, le sue ${secs.length} sezioni e ${n} pagine vanno nel cestino per 30 giorni.` : 'Il taccuino è vuoto.', { ok: 'Sposta nel cestino', danger: true }))) return;
+    for (const x of [...secs.filter(x => !groupOf(x)), ...groups]) await store.trash(x.id);
+    await store.trash(cur.id);
+    setCurrentNb(null);
+    app.go({ view: 'notes', section: null, page: null });
+    toast('Taccuino nel cestino');
+  }
+  refreshTree();
 }
 function moveSibling(it, dir, list) {
   const i = list.findIndex(x => x.id === it.id);
@@ -233,7 +318,7 @@ function moveSibling(it, dir, list) {
 export function trashItems() {
   const out = [];
   for (const it of S.items.values()) {
-    if (!it.deleted_at || it.purged || !it.d || !['page', 'section', 'group', 'task', 'list'].includes(it.kind)) continue;
+    if (!it.deleted_at || it.purged || !it.d || !['page', 'section', 'group', 'notebook', 'task', 'list'].includes(it.kind)) continue;
     const p = it.parent_id && store.get(it.parent_id);
     if (p && p.deleted_at) continue;
     out.push(it);
@@ -275,7 +360,7 @@ export function renderList(el) {
     if (cur === 'v:fav') { name = 'Preferiti'; pages = store.all('page').filter(p => p.d.fav).sort((a, b) => title(a).localeCompare(title(b), 'it')); }
     else if (cur === 'v:recent') { name = 'Recenti'; pages = (st.recents || []).map(id => store.get(id)).filter(p => p && store.alive(p) && p.kind === 'page'); }
     else { const t = cur.slice(4); name = '#' + t; pages = store.all('page').filter(p => tagsIn(p.d.md).includes(t)); }
-    head = `<div class="head" style="padding-top:12px"><div class="grow"><div class="crumb">Taccuino ›</div><h2 class="big">${esc(name)}</h2><div class="meta">${pages.length} ${pages.length === 1 ? 'pagina' : 'pagine'}</div></div></div>`;
+    head = `<div class="head" style="padding-top:12px"><div class="grow"><div class="crumb">Taccuino ›</div><h2 class="big">${esc(name)}</h2><div class="meta">${pages.length} ${pages.length === 1 ? 'pagina' : 'pagine'}</div></div><button class="ib" data-only="desk" data-fold="list" aria-label="Nascondi pagine" title="Nascondi elenco delle pagine">${ic('panel')}</button></div>`;
     body = pages.length ? pages.map(p => pageRow(p, 0, { path: true })).join('') : `<div class="empty"><b>Niente qui</b>${cur === 'v:fav' ? 'Tocca la stella in una pagina per aggiungerla ai preferiti.' : cur === 'v:recent' ? 'Le pagine che apri compaiono qui.' : ''}</div>`;
     if (String(cur).startsWith('tag:')) {
       const t = cur.slice(4);
@@ -285,8 +370,8 @@ export function renderList(el) {
   } else if (cur === 'v:trash') {
     const items = trashItems();
     head = `<div class="head" style="padding-top:12px"><div class="grow"><div class="crumb">Taccuino e attività ›</div><h2 class="big">Cestino</h2><div class="meta">Gli elementi vengono eliminati per sempre dopo 30 giorni.</div></div>
-      ${items.length ? '<button class="btn ghost small needs-net" data-a="empty-trash">Svuota</button>' : ''}</div>`;
-    const kindName = { page: 'Pagina', section: 'Sezione', group: 'Gruppo', task: 'Attività', list: 'Lista' };
+      ${items.length ? '<button class="btn ghost small needs-net" data-a="empty-trash">Svuota</button>' : ''}<button class="ib" data-only="desk" data-fold="list" aria-label="Nascondi pagine" title="Nascondi elenco delle pagine">${ic('panel')}</button></div>`;
+    const kindName = { page: 'Pagina', section: 'Sezione', group: 'Gruppo', notebook: 'Taccuino', task: 'Attività', list: 'Lista' };
     body = items.length ? items.map(it => {
       const left = Math.max(0, 30 - Math.floor((Date.now() - new Date(it.deleted_at)) / 864e5));
       return `<div class="page-row" style="cursor:default"><div class="pg"><div class="pt">${esc(title(it))}</div><div class="path">${kindName[it.kind]} · eliminata ${esc(fmtWhen(it.deleted_at))} · ancora ${left} giorni</div></div>
@@ -308,7 +393,8 @@ export function renderList(el) {
         <h2 class="big">${esc(title(s))}</h2>
         <div class="meta">${rows.length} ${rows.length === 1 ? 'pagina' : 'pagine'}${s.d.inbox ? ' · qui arrivano le email' : ''}</div></div>
         <button class="btn primary small needs-net" data-only="desk" data-a="new-page">${ic('plus', 'sm')}Pagina</button>
-        <button class="ib needs-net" data-a="sec-menu" data-id="${s.id}" aria-label="Azioni sezione">${ic('more')}</button></div>`;
+        <button class="ib needs-net" data-a="sec-menu" data-id="${s.id}" aria-label="Azioni sezione">${ic('more')}</button>
+        <button class="ib" data-only="desk" data-fold="list" aria-label="Nascondi pagine" title="Nascondi elenco delle pagine">${ic('panel')}</button></div>`;
       bar = `<div class="sortbar">Ordina: <div class="seg" role="group" aria-label="Ordine delle pagine">${[['manual', 'Manuale'], ['date', 'Data'], ['title', 'Titolo']].map(([k, l]) => `<button data-a="sort" data-mode="${k}" aria-pressed="${mode === k}">${l}</button>`).join('')}</div></div>`;
       body = rows.length ? rows.map(r => pageRow(r.it, r.depth, { drag: mode === 'manual' && !S.offline })).join('') : `<div class="empty"><b>Sezione vuota</b>Tocca «Pagina» per scrivere la prima nota.</div>`;
       // Su telefono: schede delle sezioni dello stesso gruppo (punto 36).

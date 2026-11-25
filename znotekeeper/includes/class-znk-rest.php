@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 class ZNK_REST
 {
     const NS = 'znk/v1';
-    const KINDS = ['group', 'section', 'page', 'list', 'task', 'drawing', 'blob', 'settings'];
+    const KINDS = ['notebook', 'group', 'section', 'page', 'list', 'task', 'drawing', 'blob', 'settings'];
     const MAX_DATA = 16 * 1024 * 1024;
 
     public static function init()
@@ -61,6 +61,8 @@ class ZNK_REST
         self::r('/unlock', 'POST', [$c, 'unlock'], 'device');
         self::r('/unlock/key', 'POST', [$c, 'unlock_key'], 'device');
         self::r('/pin/unlock', 'POST', [$c, 'pin_unlock'], 'device');
+        self::r('/remember/unlock', 'POST', [$c, 'remember_unlock'], 'device');
+        self::r('/remember', 'DELETE', [$c, 'remember_off'], 'device');
         self::r('/lock', 'POST', [$c, 'lock'], 'device');
         self::r('/device', 'DELETE', [$c, 'unpair'], 'device');
         self::r('/recover/params', 'GET', [$c, 'recover_params'], 'device');
@@ -77,6 +79,7 @@ class ZNK_REST
         self::r('/devices', 'GET', [$c, 'devices']);
         self::r('/devices/(?P<id>\d+)', 'DELETE', [$c, 'device_delete']);
         self::r('/pin', 'POST', [$c, 'pin_enable']);
+        self::r('/remember', 'POST', [$c, 'remember_on']);
         self::r('/pin', 'DELETE', [$c, 'pin_disable'], 'device');
 
         self::r('/sync', 'GET', [$c, 'sync']);
@@ -149,7 +152,7 @@ class ZNK_REST
                 'admin' => user_can($wp, 'manage_options'),
                 'admin_url' => admin_url('users.php?page=znotekeeper'),
             ],
-            'device' => ['id' => (int) $ctx['device']->id, 'name' => $ctx['device']->name, 'pin' => !empty($ctx['device']->pin_hash)],
+            'device' => ['id' => (int) $ctx['device']->id, 'name' => $ctx['device']->name, 'pin' => !empty($ctx['device']->pin_hash), 'remember' => !empty($ctx['device']->rem_hash)],
             'has_vault' => (bool) $vault,
             'kdf' => $vault ? $vault['kdf'] : null,
             'recovery' => [
@@ -262,6 +265,47 @@ class ZNK_REST
             'vault' => json_decode($ctx['user']->vault, true),
             'session' => ZNK_Auth::issue_session($dev),
         ];
+    }
+
+    /** «Ricordami su questo dispositivo»: il sito tiene metà della chiave locale e la consegna solo a questo dispositivo. */
+    public static function remember_on($req, $ctx)
+    {
+        global $wpdb;
+        $p = self::json($req);
+        $ra = self::str($p, 'rem_auth', 200);
+        if (strlen($ra) < 40) {
+            return self::err('znk_bad', 'Dati non validi.');
+        }
+        $pepper = base64_encode(random_bytes(32));
+        $wpdb->update(ZNK_DB::t('devices'), ['rem_hash' => ZNK_Auth::hash_secret($ra), 'rem_pepper' => $pepper], ['id' => $ctx['device']->id]);
+        return ['pepper' => $pepper];
+    }
+
+    public static function remember_unlock($req, $ctx)
+    {
+        global $wpdb;
+        $dev = $ctx['device'];
+        if (empty($dev->rem_hash)) {
+            return self::err('znk_no_remember', 'Questo dispositivo non è più ricordato: inserisci la password.', 409);
+        }
+        $p = self::json($req);
+        if (!ZNK_Auth::check_secret(self::str($p, 'rem_auth', 200), $dev->rem_hash)) {
+            // Il segreto è casuale (256 bit): un errore vuol dire dati alterati, quindi si spegne subito.
+            $wpdb->update(ZNK_DB::t('devices'), ['rem_hash' => null, 'rem_pepper' => null], ['id' => $dev->id]);
+            return self::err('znk_no_remember', 'Questo dispositivo non è più ricordato: inserisci la password.', 403);
+        }
+        return [
+            'pepper' => $dev->rem_pepper,
+            'vault' => json_decode($ctx['user']->vault, true),
+            'session' => ZNK_Auth::issue_session($dev),
+        ];
+    }
+
+    public static function remember_off($req, $ctx)
+    {
+        global $wpdb;
+        $wpdb->update(ZNK_DB::t('devices'), ['rem_hash' => null, 'rem_pepper' => null], ['id' => $ctx['device']->id]);
+        return ['ok' => true];
     }
 
     public static function lock($req, $ctx)
@@ -518,7 +562,7 @@ class ZNK_REST
     public static function devices($req, $ctx)
     {
         global $wpdb;
-        $rows = $wpdb->get_results($wpdb->prepare('SELECT id, name, created_at, last_seen, pin_hash, push_endpoint FROM ' . ZNK_DB::t('devices') . ' WHERE user_id = %d ORDER BY last_seen DESC', $ctx['user']->user_id));
+        $rows = $wpdb->get_results($wpdb->prepare('SELECT id, name, created_at, last_seen, pin_hash, rem_hash, push_endpoint FROM ' . ZNK_DB::t('devices') . ' WHERE user_id = %d ORDER BY last_seen DESC', $ctx['user']->user_id));
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
@@ -527,6 +571,7 @@ class ZNK_REST
                 'created' => $r->created_at . 'Z',
                 'last_seen' => $r->last_seen . 'Z',
                 'pin' => !empty($r->pin_hash),
+                'remember' => !empty($r->rem_hash),
                 'push' => !empty($r->push_endpoint),
                 'current' => (int) $r->id === (int) $ctx['device']->id,
             ];

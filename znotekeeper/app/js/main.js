@@ -6,7 +6,7 @@ import { $, $$, esc, closeOverlay, isOverlayOpen, toast } from './ui.js';
 import { app } from './ctx.js';
 import * as store from './store.js';
 import { S } from './store.js';
-import { renderSetup, renderLock } from './lock.js';
+import { renderSetup, renderLock, forgetRemember } from './lock.js';
 import * as notes from './notes.js';
 import * as tasks from './tasks.js';
 import * as search from './search.js';
@@ -160,7 +160,7 @@ function startAutolock() {
   ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(ev => document.addEventListener(ev, bump, { passive: true, capture: true }));
   clearInterval(lockT);
   lockT = setInterval(() => {
-    if (!S.space) return;
+    if (!S.space || S.remembered) return;
     const m = store.settings().autolock ?? 5;
     if (m > 0 && Date.now() - lastAct > m * 60000) app.lock();
   }, 15000);
@@ -172,12 +172,14 @@ document.addEventListener('visibilitychange', () => {
     hiddenAt = Date.now();
     notes.flush();
     tasks.flush();
-    if (m === 0) setTimeout(() => { if (document.hidden) app.lock(); }, 1500);
-  } else if (hiddenAt && m > 0 && Date.now() - hiddenAt > m * 60000) app.lock();
+    if (m === 0 && !S.remembered) setTimeout(() => { if (document.hidden) app.lock(); }, 1500);
+  } else if (hiddenAt && m > 0 && !S.remembered && Date.now() - hiddenAt > m * 60000) app.lock();
 });
 
 app.lock = async (expired = false) => {
   if (!S.space) return;
+  // «Blocca» scelto a mano su un dispositivo ricordato: lo dimentica, altrimenti si riaprirebbe da solo.
+  if (!expired && S.remembered) { await forgetRemember(); toast('Questo dispositivo non è più ricordato: al prossimo accesso servirà la password.'); }
   notes.flush(); tasks.flush();
   closeOverlay();
   if (!expired) api('POST', 'lock', {}, { quiet: true }).catch(() => {});
@@ -211,6 +213,28 @@ function setPane(el, cls) {
   el.className = 'screen' + (cls ? ' ' + cls : '');
 }
 
+// ---------- pannelli richiudibili (PC) ----------
+const FOLD_KEY = 'znk-fold';
+function getFold() { try { return JSON.parse(localStorage.getItem(FOLD_KEY) || '{}') || {}; } catch (e) { return {}; } }
+function setFold(k, v) { const f = getFold(); f[k] = v; try { localStorage.setItem(FOLD_KEY, JSON.stringify(f)); } catch (e) { /* */ } render(); }
+function foldRail(view, fold) {
+  let rail = $('#foldRail');
+  const btns = [];
+  if (view === 'notes' && fold.tree) btns.push(['tree', 'folder', 'Mostra sezioni']);
+  if (view === 'notes' && fold.list) btns.push(['list', 'page', 'Mostra pagine']);
+  if (view === 'tasks' && fold.tlist) btns.push(['tlist', 'list', 'Mostra elenco']);
+  if (!btns.length) { if (rail) rail.remove(); return; }
+  if (!rail) { rail = document.createElement('div'); rail.id = 'foldRail'; rail.className = 'foldrail'; root.appendChild(rail); }
+  rail.style.left = view === 'notes' && fold.list && !fold.tree ? '344px' : '84px';
+  rail.innerHTML = btns.map(([k, i, l]) => `<button class="ib" data-unfold="${k}" aria-label="${l}" title="${l}">${ic(i)}</button>`).join('');
+}
+document.addEventListener('click', e => {
+  const f = e.target.closest('[data-fold],[data-unfold]');
+  if (!f) return;
+  e.preventDefault(); e.stopPropagation();
+  if (f.dataset.fold) setFold(f.dataset.fold, true); else setFold(f.dataset.unfold, false);
+}, true);
+
 let lastRendered = {};
 export function render() {
   if (!started) return;
@@ -225,12 +249,14 @@ export function render() {
   if (!S.offline && offlineBar) offlineBar.remove();
 
   let showNav = true;
+  const fold = desk ? getFold() : {};
+  root.classList.toggle('fold-tree', !!(desk && R.view === 'notes' && fold.tree));
+  root.classList.toggle('fold-list', !!(desk && ((R.view === 'notes' && fold.list) || (R.view === 'tasks' && fold.tlist))));
+  foldRail(desk ? R.view : null, fold);
   if (R.view === 'notes') {
     if (desk) {
-      setPane(panes.tree, 'pane-tree');
-      setPane(panes.nlist, 'pane-list after-tree');
-      notes.renderTree(panes.tree);
-      notes.renderList(panes.nlist);
+      if (!fold.tree) { setPane(panes.tree, 'pane-tree'); notes.renderTree(panes.tree); }
+      if (!fold.list) { setPane(panes.nlist, 'pane-list after-tree'); notes.renderList(panes.nlist); }
       if (R.page && store.get(R.page)) { setPane(panes.npage, 'pane-main after-tree'); notes.renderPage(panes.npage, R.page); }
       else { setPane(panes.empty, 'pane-main after-tree'); emptyMsg('Nessuna pagina aperta', 'Scegli una pagina dall\'elenco o creane una nuova (Alt+N).'); notes.renderPage(null); }
     } else if (R.page && store.get(R.page)) {
@@ -241,8 +267,7 @@ export function render() {
   } else if (R.view === 'tasks') {
     notes.renderPage(null);
     if (desk) {
-      setPane(panes.tlist, 'pane-list');
-      tasks.renderList(panes.tlist);
+      if (!fold.tlist) { setPane(panes.tlist, 'pane-list'); tasks.renderList(panes.tlist); }
       if (R.task && store.get(R.task)) { setPane(panes.tdetail, 'pane-main'); tasks.renderDetail(panes.tdetail, R.task); }
       else { setPane(panes.empty, 'pane-main'); emptyMsg('Nessuna attività aperta', 'Scegli un\'attività per vederne i dettagli qui accanto, o aggiungine una (Alt+T).'); tasks.renderDetail(null); }
     } else if (R.task && store.get(R.task)) {
@@ -316,6 +341,13 @@ document.addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   const typing = e.target.closest && e.target.closest('input,textarea,[contenteditable=true]');
   if (mod && e.shiftKey && k === 'l') { e.preventDefault(); app.lock(); return; }
+  if (mod && e.key === '\\' && app.desk) {
+    e.preventDefault();
+    const f = getFold();
+    if (app.R.view === 'tasks') setFold('tlist', !f.tlist);
+    else if (app.R.view === 'notes') { const all = f.tree && f.list; f.tree = !all; f.list = !all; try { localStorage.setItem(FOLD_KEY, JSON.stringify(f)); } catch (x) { /* */ } render(); }
+    return;
+  }
   if (mod && k === 'k' && !typing) { e.preventDefault(); go({ view: 'search' }); setTimeout(() => { const q = $('#q'); if (q) q.focus(); }, 30); return; }
   if (mod && e.shiftKey && k === 'f') { e.preventDefault(); go({ view: 'search' }); setTimeout(() => { const q = $('#q'); if (q) q.focus(); }, 30); return; }
   if (e.altKey && !mod) {

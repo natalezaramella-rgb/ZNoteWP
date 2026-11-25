@@ -204,6 +204,7 @@ export function renderLock(root, { me, onUnlocked, offline }) {
     <form id="unlockForm" autocomplete="on">
       <input type="text" name="username" autocomplete="username" value="${esc(me ? me.user.login + ' (ZNoteKeeper)' : '')}" hidden>
       <input class="field-in" id="pass" type="password" placeholder="Password delle note" autocomplete="current-password" aria-label="Password delle note">
+      <label class="check-line remember" ${offline ? 'hidden' : ''}><input type="checkbox" id="remember" ${localStorage.getItem('znk-remember') === '1' ? 'checked' : ''}> <span>Ricordami su questo dispositivo</span></label>
       <button class="btn primary" type="submit">Sblocca</button>
       <div class="err" id="lerr" role="alert"></div>
     </form>
@@ -221,12 +222,25 @@ export function renderLock(root, { me, onUnlocked, offline }) {
     $('#lockBanner', sec).innerHTML = `<div class="banner"><div class="grow">${me.recovery.email === 'ready' ? 'Il recupero via email è pronto: puoi completarlo.' : `Recupero via email in corso: sarà possibile completarlo dal ${esc(fmtWhen(me.recovery.ready_at))}. Se non l'hai chiesto tu, annullalo.`}</div>
       ${me.recovery.email === 'ready' ? '<button class="btn small primary" data-a="er-complete">Completa</button>' : ''}<button class="btn small ghost" data-a="er-cancel">Annulla</button></div>`;
   }
-  kv.get('bio').then(b => { if (b && b.cred && window.PublicKeyCredential) { $('[data-a=bio]', sec).hidden = false; if (!sessionStorage.getItem('znk-bio-tried')) { sessionStorage.setItem('znk-bio-tried', '1'); bioUnlock().catch(() => {}); } } });
+  Promise.all([kv.get('bio'), kv.get('rem')]).then(([b, rem]) => { if (rem && !offline) return; if (b && b.cred && window.PublicKeyCredential) { $('[data-a=bio]', sec).hidden = false; if (!sessionStorage.getItem('znk-bio-tried')) { sessionStorage.setItem('znk-bio-tried', '1'); bioUnlock().catch(() => {}); } } });
   if (!('ontouchstart' in window)) setTimeout(() => $('#pass', sec).focus(), 50);
   if (me && me.wait > 0) errEl.textContent = `Troppi tentativi errati: riprova tra ${Math.ceil(me.wait / 60)} minuti.`;
 
   const busy = on => sec.classList.toggle('busy', on);
-  const done = async (space, vault, ro) => { await afterUnlock(space, vault); onUnlocked({ readonly: ro }); };
+  const done = async (space, vault, ro, viaRemember = false) => {
+    await afterUnlock(space, vault);
+    const want = !ro && !viaRemember && $('#remember', sec) && $('#remember', sec).checked;
+    try { localStorage.setItem('znk-remember', want || viaRemember ? '1' : '0'); } catch (e) { /* */ }
+    if (want) { try { await enableRemember(); } catch (e) { toast('Non sono riuscito a ricordare il dispositivo: ' + e.message); } }
+    onUnlocked({ readonly: ro });
+  };
+  // Dispositivo ricordato: si apre senza password (non dopo un «Blocca» esplicito, che lo dimentica).
+  if (!offline) kv.get('rem').then(async rem => {
+    if (!rem) return;
+    busy(true);
+    try { const r = await rememberUnlock(); if (r) await done(r.space, r.vault, false, true); }
+    catch (e) { busy(false); if (!isOffline(e)) errEl.textContent = e.message; }
+  });
 
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -319,6 +333,46 @@ function pinSheet(onOk) {
       f.classList.remove('busy');
     }
   });
+}
+
+// ---------- «Ricordami su questo dispositivo» ----------
+// Sul dispositivo resta la chiave dello spazio chiusa da due metà: un segreto casuale (a sua volta cifrato con una
+// chiave del browser non esportabile) e un «pepe» che il sito consegna solo a questo dispositivo collegato.
+// Così una copia dei dati del browser da sola non basta, e scollegare il dispositivo spegne tutto.
+const hkdfBits = async (bytes, info) => new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info: new TextEncoder().encode(info) }, await crypto.subtle.importKey('raw', bytes, 'HKDF', false, ['deriveBits']), 256));
+export async function enableRemember() {
+  const R = C.rand(32);
+  const r = await api('POST', 'remember', { rem_auth: C.b64(await hkdfBits(R, 'znk-rem-auth')) });
+  const kek = await C.kekFrom(new Uint8Array([...R, ...C.unb64(r.pepper)]), 'znk-rem');
+  const box = await S.space.wrapWith(kek);
+  const w = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  const iv = C.rand(12);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, w, R));
+  await kv.set('rem', { w, iv, ct, box });
+  S.remembered = true;
+  if (S.me && S.me.device) S.me.device.remember = true;
+}
+export async function rememberUnlock() {
+  const local = await kv.get('rem');
+  if (!local) return null;
+  try {
+    const R = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: local.iv }, local.w, local.ct));
+    const r = await api('POST', 'remember/unlock', { rem_auth: C.b64(await hkdfBits(R, 'znk-rem-auth')) }, { quiet: true });
+    const kek = await C.kekFrom(new Uint8Array([...R, ...C.unb64(r.pepper)]), 'znk-rem');
+    const space = await C.Space.unwrap(kek, local.box);
+    setSession(r.session);
+    S.remembered = true;
+    return { space, vault: r.vault };
+  } catch (e) {
+    if (!isOffline(e)) { await kv.del('rem'); S.remembered = false; }
+    throw e;
+  }
+}
+export async function forgetRemember() {
+  await kv.del('rem');
+  S.remembered = false;
+  if (S.me && S.me.device) S.me.device.remember = false;
+  try { await api('DELETE', 'remember', undefined, { quiet: true }); } catch (e) { /* */ }
 }
 
 export async function enablePin(auth) {

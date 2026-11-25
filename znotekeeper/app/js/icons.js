@@ -31,6 +31,7 @@ export const ICONS = {
   'todo': '<rect x="3.5" y="4" width="7" height="7" rx="2"/><path d="M5.2 7.6l1.4 1.4 2.4-2.6M14 7.5h7M3.5 14.5h7v6h-7zM14 17.5h7"/>',
   'quote': '<path d="M5 5v14M10 8h10M10 12h10M10 16h6"/>',
   'code': '<path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/>',
+  'panel': '<rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M9.5 4v16M5.6 8h1.6M5.6 11h1.6"/>',
   'menu': '<path d="M4 6h16M4 12h16M4 18h10"/>',
   'book': '<path d="M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5zM5 19.5A1.5 1.5 0 0 0 6.5 21H19"/><path d="M9 7h6"/>',
   'folder': '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
