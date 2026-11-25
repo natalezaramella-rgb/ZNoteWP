@@ -72,6 +72,8 @@ class ZNK_DB
   pin_hash VARCHAR(255) NULL,
   pin_pepper VARCHAR(64) NULL,
   pin_fails INT NOT NULL DEFAULT 0,
+  rem_hash VARCHAR(255) NULL,
+  rem_pepper VARCHAR(64) NULL,
   push_endpoint TEXT NULL,
   PRIMARY KEY  (id),
   UNIQUE KEY token_hash (token_hash),

@@ -17,6 +17,7 @@ let local = { pin: false, bio: false, bioOk: false };
 async function loadLocal() {
   local.pin = !!(await kv.get('pin')) && !!(S.me && S.me.device && S.me.device.pin);
   local.bio = !!(await kv.get('bio'));
+  local.rem = !!(await kv.get('rem'));
   local.bioOk = await L.bioSupported();
 }
 
@@ -73,6 +74,7 @@ function paint(el) {
       <div class="sect"><h3>Sicurezza</h3><div class="card">
         ${row('lock', 'Blocco automatico', 'Dopo questo tempo senza attività l\'app si richiude.', `<select id="autolock"><option value="0">Subito</option><option value="1">1 minuto</option><option value="5">5 minuti</option><option value="15">15 minuti</option><option value="60">1 ora</option></select>`)}
         ${row('finger', 'Sblocco con impronta o volto', local.bioOk ? 'Su questo dispositivo. Richiede un browser che supporti le passkey con estensione PRF (Chrome/Edge recenti, Android, iPhone con iOS 18 o successivo).' : 'Non disponibile su questo dispositivo o browser: usa il PIN.', local.bioOk ? sw('bio', local.bio, 'Sblocco biometrico', 'class="needs-net"') : '')}
+        ${row('phone', 'Ricorda questo dispositivo', 'Si apre senza password finché non premi «Blocca» o lo scolleghi. Il blocco automatico resta spento. Solo su un dispositivo che usi solo tu.', sw('remember', local.rem, 'Ricorda questo dispositivo', 'class="needs-net"'))}
         ${row('key', 'PIN di sblocco', 'Solo su questo dispositivo e solo online. Dopo 5 errori si disattiva.', sw('pin', local.pin, 'PIN', 'class="needs-net"'))}
         ${row('shield', 'Codice di recupero', me.recovery.code_created ? `Creato ${esc(fmtWhen(me.recovery.code_created))}. Quello vecchio smette di valere.` : '', btn('new-code', 'Nuovo'))}
         ${row('mail', 'Recupero via email', er === 'off' ? 'Spento. Con il recupero attivo il sito conserva una copia protetta della chiave, legata alla tua email e alla password WordPress attuali.' : er === 'pending' ? 'Recupero in corso: completabile dopo 24 ore.' : er === 'ready' ? 'Recupero pronto per essere completato.' : `Attivo per ${esc(me.user.email || '')}. Link monouso di 30 minuti, poi 24 ore di attesa.`, sw('mailrec', er !== 'off', 'Recupero via email', 'class="needs-net"'))}
@@ -93,7 +95,7 @@ function paint(el) {
           row('phone', 'Installa ZNoteKeeper', app.canInstall ? 'Finestra propria, icona nel menu Start o nella Home, apertura anche offline.' : isIOS ? 'In Safari: tocca Condividi, poi «Aggiungi alla schermata Home». Serve anche per ricevere i promemoria.' : 'Dal menu del browser: «Installa app» (Chrome, Edge) oppure l\'icona di installazione nella barra degli indirizzi.', app.canInstall ? btn('install', 'Installa', 'primary') : '')}
         ${row('bell', 'Promemoria delle scadenze', 'Con l\'app aperta il promemoria mostra il titolo; quando è chiusa arriva un avviso generico «Hai un\'attività in scadenza», perché il sito non può leggere i titoli.', sw('notif', notifOn, 'Promemoria', 'class="needs-net"'))}
         ${row('sliders', 'Aspetto', '', `<select id="theme"><option value="auto" ${theme === 'auto' ? 'selected' : ''}>Come il sistema</option><option value="light" ${theme === 'light' ? 'selected' : ''}>Chiaro</option><option value="dark" ${theme === 'dark' ? 'selected' : ''}>Scuro</option></select>`)}
-        ${app.desk ? row('', 'Scorciatoie da tastiera', 'Ctrl+K cerca · Alt+N nuova pagina · Alt+T nuova attività · Alt+1…4 cambia sezione · Ctrl+Maiusc+L blocca · nel testo: Ctrl+B, Ctrl+I, Ctrl+K link, Tab rientro') : ''}
+        ${app.desk ? row('', 'Scorciatoie da tastiera', 'Ctrl+K cerca · Alt+N nuova pagina · Alt+T nuova attività · Alt+1…4 cambia sezione · Ctrl+Maiusc+L blocca · Ctrl+\\ nasconde i pannelli · nel testo: Ctrl+B, Ctrl+I, Ctrl+K link, Tab rientro') : ''}
       </div></div>
 
       <div class="sect" style="padding-bottom:28px"><h3>Account</h3><div class="card">
@@ -119,6 +121,13 @@ async function onChange(e) {
     return;
   }
   if (t.id === 'mDest') { if (store.canWrite()) store.update('settings', d => { d.mail = { ...(d.mail || {}) }; d.mail[d.mail.mode === 'task' ? 'list' : 'section'] = t.value; }); return; }
+  if (t.id === 'remember') {
+    try {
+      if (t.checked) { await L.enableRemember(); local.rem = true; try { localStorage.setItem('znk-remember', '1'); } catch (x) { /* */ } toast('Questo dispositivo ora si apre senza password.'); }
+      else { await L.forgetRemember(); local.rem = false; try { localStorage.setItem('znk-remember', '0'); } catch (x) { /* */ } toast('Dispositivo dimenticato: al prossimo accesso servirà la password.'); }
+    } catch (err) { toast(err.message); }
+    paint(el); return;
+  }
   if (t.id === 'pin') {
     t.checked = !t.checked;
     if (!local.pin) { const p = await L.askPassword('Attiva il PIN'); if (p && await L.enablePin(p.auth)) { local.pin = true; S.me.device.pin = true; toast('PIN attivo su questo dispositivo.'); } }
@@ -217,7 +226,7 @@ async function devices() {
   if (!p) return;
   const list = await api('GET', 'devices');
   const el = sheet(`<h3>Dispositivi collegati</h3><p class="muted">Ogni dispositivo resta collegato per 180 giorni dall'ultimo uso.</p>
-    ${list.map(d => `<div class="ver"><div class="grow"><b>${esc(d.name)}</b>${d.current ? ' <span class="chip tag">questo</span>' : ''}<div class="path">Ultimo uso ${esc(fmtWhen(d.last_seen))} · collegato ${esc(fmtWhen(d.created))}${d.pin ? ' · PIN' : ''}${d.push ? ' · promemoria' : ''}</div></div>
+    ${list.map(d => `<div class="ver"><div class="grow"><b>${esc(d.name)}</b>${d.current ? ' <span class="chip tag">questo</span>' : ''}<div class="path">Ultimo uso ${esc(fmtWhen(d.last_seen))} · collegato ${esc(fmtWhen(d.created))}${d.pin ? ' · PIN' : ''}${d.remember ? ' · ricordato' : ''}${d.push ? ' · promemoria' : ''}</div></div>
       ${d.current ? '' : `<button class="btn ghost small" data-dev="${d.id}">Scollega</button>`}</div>`).join('')}
     <div class="row-end"><button class="btn primary" data-close>Fatto</button></div>`);
   el.addEventListener('click', async e => {

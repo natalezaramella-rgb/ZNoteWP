@@ -103,6 +103,7 @@ export function renderList(el) {
       <button class="ib" data-a="search" data-only="phone" aria-label="Cerca">${ic('search')}</button>
       <button class="ib needs-net" data-a="list-menu" aria-label="Azioni lista" ${l ? '' : 'disabled'}>${ic('more')}</button>
       <button class="ib" data-a="lock" data-only="phone" aria-label="Blocca">${ic('lock')}</button>
+      <button class="ib" data-only="desk" data-fold="tlist" aria-label="Nascondi elenco" title="Nascondi elenco (Ctrl+\\)">${ic('panel')}</button>
     </div>
     <div class="tabs" role="tablist" aria-label="Liste">
       <button class="tab" role="tab" data-a="pick" data-id="starred" aria-selected="${starred}">${ic('star', 'sm')}Speciali</button>

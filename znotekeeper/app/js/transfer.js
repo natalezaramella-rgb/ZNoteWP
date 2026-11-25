@@ -7,7 +7,7 @@ import { $, sheet, closeOverlay, toast, download, pickFile, choose, esc, isoDay 
 import { askPassword } from './lock.js';
 import { Zip } from './zip.js';
 import { drawingToPNG } from './draw.js';
-import { fileName, sectionOf } from './notes.js';
+import { fileName, sectionOf, notebooks, nbOf } from './notes.js';
 
 function progress(title) {
   const el = sheet(`<h3>${esc(title)}</h3><p class="muted" id="prog">Preparo…</p>`);
@@ -126,7 +126,8 @@ export async function exportMarkdown() {
     const secs = store.all('section').sort(store.bySort);
     for (const s of secs) {
       const g = store.get(s.parent_id);
-      const dir = `Taccuino/${g && g.kind === 'group' && store.alive(g) ? fileName(g.d.title) + '/' : ''}${fileName(s.d.title)}/`;
+      const nb = notebooks().length > 1 ? nbOf(s) : null;
+      const dir = `Taccuino/${nb ? fileName(nb.d.title) + '/' : ''}${g && g.kind === 'group' && store.alive(g) ? fileName(g.d.title) + '/' : ''}${fileName(s.d.title)}/`;
       const depth = dir.split('/').length - 1;
       for (const pg of store.children(s.id, 'page')) await writePage(pg, dir, depth);
     }
