@@ -1,7 +1,7 @@
 === ZNoteKeeper ===
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.6.0
+Stable tag: 1.6.1
 License: GPLv2 or later
 
 Taccuino (gruppi › sezioni › pagine) e attività in stile Google Tasks, cifrati nel browser, usabili come app (PWA) su telefono e PC.

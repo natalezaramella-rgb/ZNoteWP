@@ -426,7 +426,7 @@ class ZNK_Style
         // sito scuro: chi sceglie «Chiaro» nell'app riceve una versione chiara con il colore principale del sito
         $css .= ':root[data-theme="light"]{' . self::vars(self::lum($l['surface']) < .18 ? self::generated_light($r) : $l) . '}';
         if ($r['logo']) {
-            $css .= '.boot .logo,.lock>.logo,.lock .logo:first-child{background:var(--surface) url("' . self::css_url($r['logo']) . '") center/cover no-repeat;color:transparent;font-size:0;box-shadow:0 0 0 1px var(--line)}';
+            $css .= '.boot .logo,.lock>.logo,.lock .logo:first-child{background:var(--surface) url("' . self::css_url(self::rel($r['logo'])) . '") center/cover no-repeat;color:transparent;font-size:0;box-shadow:0 0 0 1px var(--line)}';
         }
         return $css;
     }
@@ -458,7 +458,9 @@ class ZNK_Style
                 if (preg_match('/\.(woff2|woff|ttf|otf)(\?|$)/i', $u, $m)) {
                     $fmt = ' format("' . ['woff2' => 'woff2', 'woff' => 'woff', 'ttf' => 'truetype', 'otf' => 'opentype'][strtolower($m[1])] . '")';
                 }
-                $src[] = 'url("' . self::css_url($u) . '")' . $fmt;
+                // percorso relativo alla radice: evita i blocchi «mixed content» quando
+                // WordPress ha l'indirizzo dei caricamenti in http e la pagina è in https
+                $src[] = 'url("' . self::css_url(self::rel($u)) . '")' . $fmt;
             }
             $css .= '@font-face{font-family:"' . $f['family'] . '";font-style:' . $f['style'] . ';font-weight:' . $f['weight'] . ';' . ($f['stretch'] ? 'font-stretch:' . $f['stretch'] . ';' : '') . 'font-display:swap;src:' . implode(',', $src) . (!empty($f['range']) ? ';unicode-range:' . $f['range'] : '') . '}';
         }
@@ -609,6 +611,13 @@ class ZNK_Style
         $h = wp_parse_url(home_url('/'), PHP_URL_HOST);
         $p = wp_parse_url($u);
         return is_array($p) && in_array($p['scheme'] ?? '', ['http', 'https'], true) && isset($p['host']) && strcasecmp($p['host'], $h) === 0;
+    }
+
+    /** URL dello stesso sito → percorso dalla radice (niente http/https misti). */
+    private static function rel($u)
+    {
+        $pp = wp_parse_url($u);
+        return self::same_site($u) && !empty($pp['path']) ? $pp['path'] . (isset($pp['query']) ? '?' . $pp['query'] : '') : $u;
     }
 
     private static function css_url($u)
