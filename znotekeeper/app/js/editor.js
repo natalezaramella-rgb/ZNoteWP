@@ -179,10 +179,30 @@ export class Editor {
     if (a && a[0] && this.el.contains(a[0])) { try { s.collapse(a[0], a[1]); } catch (e) { /* */ } }
   }
   untodo(ul) { ul.classList.remove('todo'); $$(':scope > li', ul).forEach(li => li.classList.remove('task-item', 'done')); this.changed(); }
+  /** Trasforma il paragrafo corrente in una lista nuova (senza fonderla con quella vicina, come farebbe il browser). */
+  newList(tag, todo = false) {
+    const b = this.blockAt();
+    if (!b || !/^(P|DIV|H[1-6])$/.test(b.tagName)) return false;
+    const l = document.createElement(tag);
+    if (todo) l.className = 'todo';
+    const li = document.createElement('li');
+    if (todo) li.className = 'task-item';
+    while (b.firstChild) li.appendChild(b.firstChild);
+    if (!li.textContent && !li.querySelector('img,br')) li.appendChild(document.createElement('br'));
+    l.appendChild(li);
+    b.replaceWith(l);
+    const s = getSelection();
+    const r = document.createRange();
+    if (li.lastChild && li.lastChild.nodeName === 'BR' && li.childNodes.length === 1) r.setStart(li, 0); else { r.selectNodeContents(li); r.collapse(false); }
+    s.removeAllRanges(); s.addRange(r);
+    this.changed();
+    return true;
+  }
   todo() {
     this.ensureFocus();
     let ul = this.closest('ul');
     if (!ul) {
+      if (this.newList('ul', true)) return;
       document.execCommand('insertUnorderedList');
       ul = this.closest('ul');
     } else if (ul.classList.contains('todo')) return this.untodo(ul);
@@ -298,6 +318,23 @@ export class Editor {
     if (mod && e.key.toLowerCase() === 'k' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); this.link(); return; }
     if (mod && e.key.toLowerCase() === 's') { e.preventDefault(); this.flush(); toast('Salvato'); return; }
     if (e.key === 'Enter' && !e.shiftKey) {
+      // Invio alla fine di una citazione: si esce dalla citazione (Maiusc+Invio va a capo dentro).
+      const bq = this.closest('blockquote');
+      const s = getSelection();
+      if (bq && s.rangeCount && s.isCollapsed) {
+        const after = document.createRange(); after.selectNodeContents(bq); after.setStart(s.anchorNode, s.anchorOffset);
+        if (!after.toString().trim() && !after.cloneContents().querySelector('img,table')) {
+          e.preventDefault();
+          // Toglie le righe vuote rimaste in fondo alla citazione.
+          while (bq.lastChild && ((bq.lastChild.nodeName === 'BR') || (bq.lastChild.nodeType === 1 && /^(P|DIV)$/.test(bq.lastChild.nodeName) && !bq.lastChild.textContent.trim() && !bq.lastChild.querySelector('img')) || (bq.lastChild.nodeType === 3 && !bq.lastChild.textContent.trim()))) bq.lastChild.replaceWith();
+          const p = document.createElement('p'); p.appendChild(document.createElement('br'));
+          bq.after(p);
+          if (!bq.textContent.trim() && !bq.querySelector('img')) bq.replaceWith();
+          const r = document.createRange(); r.setStart(p, 0); r.collapse(true); s.removeAllRanges(); s.addRange(r);
+          this.changed();
+          return;
+        }
+      }
       const li = this.closest('li.task-item');
       if (li) {
         // Una nuova casella nasce sempre vuota (punto 18).
@@ -327,9 +364,7 @@ export class Editor {
           b.appendChild(document.createElement('br'));
           const rr = document.createRange(); rr.setStart(b, 0); rr.collapse(true); s.removeAllRanges(); s.addRange(rr);
           if (map[before]) document.execCommand('formatBlock', false, map[before]);
-          else if (before === '1.') document.execCommand('insertOrderedList');
-          else if (before === '[]') this.todo();
-          else document.execCommand('insertUnorderedList');
+          else if (!this.newList(before === '1.' ? 'ol' : 'ul', before === '[]')) document.execCommand(before === '1.' ? 'insertOrderedList' : 'insertUnorderedList');
           this.fixLists();
           this.changed();
         }

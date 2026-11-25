@@ -42,7 +42,7 @@ self.addEventListener('fetch', e => {
   }
   if (ZNK.assets.includes(url.href) || url.pathname.includes('/znotekeeper/app/')) {
     e.respondWith((async () => {
-      const hit = await caches.match(req, { ignoreVary: true });
+      const hit = (await caches.match(req, { ignoreVary: true })) || (await caches.match(req, { ignoreVary: true, ignoreSearch: true }));
       if (hit) return hit;
       const r = await fetch(req);
       if (r.ok && url.searchParams.get('v') === ZNK.version) { const c = await caches.open(CACHE); c.put(req, r.clone()); }

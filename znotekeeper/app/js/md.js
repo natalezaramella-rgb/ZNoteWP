@@ -91,6 +91,15 @@ td.addRule('znkLink', {
 td.addRule('strikeS', { filter: ['s', 'strike'], replacement: c => `~~${c}~~` });
 td.addRule('underline', { filter: ['u'], replacement: c => c });
 td.addRule('divs', { filter: node => node.nodeName === 'DIV' && !node.classList.length, replacement: c => `\n\n${c}\n\n` });
+// Due elenchi uno dopo l'altro in Markdown diventerebbero uno solo: un commento vuoto li tiene separati.
+td.addRule('listSep', {
+  filter: node => (node.nodeName === 'UL' || node.nodeName === 'OL') && node.previousElementSibling && /^(UL|OL)$/.test(node.previousElementSibling.nodeName) && node.parentNode && !/^(LI)$/.test(node.parentNode.nodeName),
+  replacement: content => '\n\n<!-- -->\n\n' + content.replace(/^\n+/, '') + '\n\n',
+});
+// Un paragrafo vuoto (solo <br>) non produce righe di spazi.
+td.addRule('emptyP', { filter: node => node.nodeName === 'P' && !node.textContent.trim() && !node.querySelector('img'), replacement: () => '\n\n' });
+// Un a capo dentro una cella spezzerebbe la riga della tabella Markdown.
+td.addRule('cellBr', { filter: node => node.nodeName === 'BR' && !!node.parentNode && !!node.parentNode.closest && !!node.parentNode.closest('td,th'), replacement: () => ' ' });
 td.remove(['style', 'script', 'meta', 'title']);
 
 export function htmlToMd(el) {
@@ -109,6 +118,7 @@ export function emailHtmlToMd(html, cidMap = {}) {
 /** Testo semplice per anteprime e ricerca. */
 export function mdText(md) {
   return String(md || '')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/^\s{0,3}(#{1,6}|>|[-*+]\s+\[[ xX]\]|[-*+]|\d+\.)\s+/gm, '')

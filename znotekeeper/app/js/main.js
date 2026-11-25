@@ -310,6 +310,7 @@ store.onChange(() => { if (started) render(); });
 
 // ---------- scorciatoie da tastiera (PC) ----------
 document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && isOverlayOpen() && !document.querySelector('.drawscreen')) { e.preventDefault(); closeOverlay(); return; }
   if (!S.space || !started) return;
   const mod = e.ctrlKey || e.metaKey;
   const k = e.key.toLowerCase();
@@ -322,7 +323,6 @@ document.addEventListener('keydown', e => {
     if (k === 't') { e.preventDefault(); tasks.quickAdd(); return; }
     if (['1', '2', '3', '4'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'search', 'settings'][+k - 1] }); return; }
   }
-  if (k === 'escape' && isOverlayOpen() && !document.querySelector('.drawscreen')) { e.preventDefault(); closeOverlay(); return; }
   if (k === 'escape' && !isOverlayOpen() && !typing) {
     if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null });
   }

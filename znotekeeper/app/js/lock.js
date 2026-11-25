@@ -236,7 +236,10 @@ export function renderLock(root, { me, onUnlocked, offline }) {
     busy(true);
     try {
       const cached = await kv.get('vault');
-      const kdf = (me && me.kdf) || (cached && cached.kdf);
+      // Parametri sempre aggiornati: la password può essere cambiata (anche da un altro dispositivo) dopo l'apertura della pagina.
+      let kdf = null;
+      try { const fresh = await api('GET', 'me', undefined, { quiet: true }); kdf = fresh.kdf; await kv.set('me', fresh); } catch (x) { if (!isOffline(x)) throw x; }
+      kdf = kdf || (cached && cached.kdf) || (me && me.kdf);
       if (!kdf) throw new Error('Questo dispositivo non ha ancora dati: collegati a internet per il primo sblocco.');
       const d = await C.deriveSecret(pw, kdf.salt, kdf.iter);
       let vault, ro = false;
