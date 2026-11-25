@@ -1,7 +1,7 @@
 === ZNoteKeeper ===
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.2.1
 License: GPLv2 or later
 
 Taccuino (gruppi › sezioni › pagine) e attività in stile Google Tasks, cifrati nel browser, usabili come app (PWA) su telefono e PC.
@@ -64,7 +64,7 @@ Nella sezione «Accessi» dell'app si registrano gli accessi da dare ai clienti 
 «Invia accessi» manda al cliente un'email (modello modificabile, con segnaposto {cliente} {software} {indirizzo} {utente} {link} {scadenza} {ore} {mittente}) con indirizzo, nome utente e un link monouso valido per le ore scelte.
 Il link apre /znotekeeper/access/: la password si vede una sola volta, premendo «Mostra». Con «Invia nuovo link» si manda un nuovo link e il precedente smette di funzionare.
 Sicurezza: il browser cifra i dati da mostrare con una chiave casuale (AES-256-GCM) che sta solo nella parte del link dopo «#», che i browser non mandano al sito. Il sito non salva la chiave: conserva l'impronta del token, il testo cifrato e la scadenza, e cancella il cifrato appena il cliente lo legge o il link scade. Aprire il link senza premere «Mostra» (come fanno i filtri antispam) non lo consuma.
-L'email parte da WordPress (wp_mail) con il nome mittente scelto; le risposte vanno all'email del tuo utente del sito. Massimo 30 invii all'ora per utente.
+L'email parte da WordPress (wp_mail) con il nome e l'indirizzo mittente scelti nel modello (l'indirizzo deve essere del dominio del sito); le risposte vanno all'email del tuo utente del sito. Massimo 30 invii all'ora per utente.
 
 == Notifiche ==
 

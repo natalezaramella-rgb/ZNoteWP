@@ -1,6 +1,6 @@
 // Accessi per i clienti: anagrafica cifrata (cliente, email, indirizzo, utente, password iniziale)
 // e invio via email di un link monouso a scadenza per leggere la password.
-import { api, isOffline } from './api.js';
+import { api, isOffline, CFG } from './api.js';
 import { S } from './store.js';
 import * as store from './store.js';
 import { app } from './ctx.js';
@@ -29,6 +29,7 @@ Se il link è scaduto o è già stato usato, rispondi a questa email e te ne man
 Cordiali saluti,
 {mittente}`,
   fromName: '',
+  fromEmail: '',
   hours: 48,
 };
 const PLACEHOLDERS = [
@@ -319,6 +320,7 @@ async function sendNow(id, hours) {
     subject: fill(T.subject, v),
     body: withLink(T.body, v),
     from_name: T.fromName || myName(),
+    from_email: T.fromEmail || '',
     hours,
     key: keyStr,
     key_check: await sha256hex('znk-kc:' + keyStr),
@@ -336,6 +338,9 @@ export function editTemplate(after) {
     <form id="tplF">
       <label class="flab" for="tFrom">Nome del mittente</label>
       <input class="field-in" id="tFrom" value="${esc(T.fromName)}" placeholder="${esc((S.me && S.me.user && S.me.user.name) || 'Il tuo nome')}">
+      <label class="flab" for="tFromEmail">Indirizzo mittente</label>
+      <input class="field-in" id="tFromEmail" type="email" value="${esc(T.fromEmail)}" placeholder="es. info@${esc(siteDomain())}" autocomplete="off">
+      <div class="hint muted" style="font-size:12.5px;margin-top:4px">Deve essere un indirizzo di ${esc(siteDomain())}. Vuoto = quello predefinito di WordPress.</div>
       <label class="flab" for="tSubj">Oggetto</label>
       <input class="field-in" id="tSubj" value="${esc(T.subject)}">
       <label class="flab" for="tBody">Testo</label>
@@ -364,14 +369,23 @@ export function editTemplate(after) {
     const subject = $('#tSubj', el).value.trim();
     const text = body.value.replace(/\s+$/, '');
     const hours = parseInt($('#tHours', el).value, 10);
+    const fromEmail = $('#tFromEmail', el).value.trim().toLowerCase();
+    if (fromEmail && !fromOk(fromEmail)) { $('.err', el).textContent = `L'indirizzo mittente deve essere di ${siteDomain()} (es. info@${siteDomain()}).`; return; }
     if (!subject) { $('.err', el).textContent = 'Scrivi un oggetto.'; return; }
     if (!text.includes('{link}')) { $('.err', el).textContent = 'Il testo deve contenere {link}: è da lì che il cliente legge la password.'; return; }
     if (!(hours >= 1 && hours <= 720)) { $('.err', el).textContent = 'La validità va da 1 a 720 ore.'; return; }
-    store.update('settings', d => { d.accessTpl = { subject, body: text, fromName: $('#tFrom', el).value.trim(), hours }; });
+    store.update('settings', d => { d.accessTpl = { subject, body: text, fromName: $('#tFrom', el).value.trim(), fromEmail, hours }; });
     closeOverlay();
     toast('Modello salvato.');
     if (after) after();
   });
+}
+
+const siteDomain = () => new URL(CFG.home).hostname.toLowerCase().replace(/^www\./, '');
+function fromOk(e) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return false;
+  const dom = e.split('@')[1]; const s = siteDomain();
+  return dom === s || dom.endsWith('.' + s);
 }
 
 // ---------- password ----------
