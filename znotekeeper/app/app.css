@@ -83,6 +83,9 @@ h2.big{font-family:var(--f-display);font-size:28px;line-height:1.1;letter-spacin
 /* schede (liste e sezioni) */
 .tabs{display:flex;gap:6px;overflow-x:auto;padding:2px 16px 10px;scrollbar-width:none;flex:none}
 .tabs::-webkit-scrollbar{display:none}
+.app.desk .tabs{flex-wrap:wrap;overflow-x:hidden;overflow-y:auto;max-height:min(34vh,220px);scrollbar-width:thin}
+.app.desk .tabs::-webkit-scrollbar{display:block;width:6px}
+.app.desk .tab{max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .tab{white-space:nowrap;min-height:36px;padding:6px 13px;border-radius:999px;border:1px solid var(--line);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;color:var(--muted)}
 .tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
 .tab .tab-color{width:8px;height:8px;border-radius:2px}

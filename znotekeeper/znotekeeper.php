@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       ZNoteKeeper
  * Description:       Taccuino e attività riservati per gli utenti abilitati: dati cifrati nel browser, app installabile (PWA) su telefono e PC, email → nota.
- * Version:           1.1.0
+ * Version:           1.1.2
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Zaramella
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ZNK_VERSION', '1.1.0');
+define('ZNK_VERSION', '1.1.2');
 define('ZNK_DB_VERSION', '2');
 define('ZNK_FILE', __FILE__);
 define('ZNK_DIR', plugin_dir_path(__FILE__));
