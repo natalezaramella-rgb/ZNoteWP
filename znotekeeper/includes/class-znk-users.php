@@ -94,6 +94,7 @@ class ZNK_Users
         foreach (['items', 'versions', 'inbox', 'devices', 'users'] as $t) {
             $wpdb->delete(ZNK_DB::t($t), ['user_id' => $uid]);
         }
+        ZNK_Access::delete_user($uid);
     }
 
     public static function usage($user_id)

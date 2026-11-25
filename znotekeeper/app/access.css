@@ -1,0 +1,22 @@
+/* ZNoteKeeper – pagina pubblica del link monouso per il cliente */
+:root{--bg:#E8ECEA;--card:#FBFCFB;--ink:#17211E;--muted:#5A6762;--line:#D6DEDA;--accent:#136F5E;--soft:#EFF3F1;--bad:#B3261E;--warn:#9A4E06;--warn-soft:#FBE9D3;color-scheme:light dark}
+@media (prefers-color-scheme:dark){:root{--bg:#0F1513;--card:#17201D;--ink:#E6ECE9;--muted:#9AA8A2;--line:#2A3632;--accent:#5BC4AC;--soft:#1F2A26;--bad:#F2857C;--warn:#F0A458;--warn-soft:#3A2710}}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",sans-serif;display:flex;align-items:flex-start;justify-content:center;padding:48px 16px}
+.card{width:100%;max-width:520px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px 24px;box-shadow:0 20px 50px -30px rgba(0,0,0,.35)}
+.site{font-size:13px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.06em}
+h1{font-size:24px;line-height:1.2;margin:6px 0 10px}
+p{margin:0 0 12px}
+.muted{color:var(--muted);font-size:14px}
+.bad{color:var(--bad)}
+.warn{background:var(--warn-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:16px}
+button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:8px 14px;min-height:40px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;width:100%;min-height:50px;margin-top:8px}
+@media (prefers-color-scheme:dark){button.primary{color:#0F1513}}
+button:disabled{opacity:.6;cursor:default}
+.field{margin-top:16px}
+.lab{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.val{display:flex;gap:8px;align-items:center;background:var(--soft);border-radius:12px;padding:8px 8px 8px 12px}
+.val code,.val a{flex:1;min-width:0;overflow-wrap:anywhere;font:15px/1.4 ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;color:var(--ink)}
+.val a{color:var(--accent)}
+.val code.secret{font-size:18px;font-weight:700;letter-spacing:.03em}
