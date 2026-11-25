@@ -227,6 +227,7 @@ class ZNK_Access
         $subject = self::clean_line(self::p($req, 'subject', 400), 250);
         $body = str_replace("\r\n", "\n", self::p($req, 'body', 20000));
         $from_name = self::clean_line(self::p($req, 'from_name', 200), 120);
+        $from_email = trim(self::p($req, 'from_email', 190));
         $key = self::p($req, 'key', 100);
         $key_check = self::p($req, 'key_check', 64);
         $payload = self::p($req, 'payload', 20000);
@@ -247,6 +248,9 @@ class ZNK_Access
         $box = json_decode($payload, true);
         if (!is_array($box) || empty($box['iv']) || empty($box['ct']) || !is_string($box['iv']) || !is_string($box['ct'])) {
             return self::err('znk_bad', 'Dati cifrati non validi.');
+        }
+        if ($from_email !== '' && !self::allowed_from($from_email)) {
+            return self::err('znk_bad_from', 'L\'indirizzo mittente deve essere del dominio ' . self::site_domain() . ', altrimenti l\'email finisce nello spam.');
         }
         if ($hours < 1 || $hours > self::MAX_HOURS) {
             return self::err('znk_bad', 'La validità del link va da 1 a ' . self::MAX_HOURS . ' ore.');
@@ -283,9 +287,14 @@ class ZNK_Access
         $name_filter = function ($n) use ($from_name) {
             return $from_name !== '' ? $from_name : $n;
         };
+        $from_filter = function ($e) use ($from_email) {
+            return $from_email !== '' ? $from_email : $e;
+        };
         add_filter('wp_mail_from_name', $name_filter, 999);
+        add_filter('wp_mail_from', $from_filter, 999);
         $sent = wp_mail($to, $subject, str_replace(self::LINK_MARK, $link, $body), $headers);
         remove_filter('wp_mail_from_name', $name_filter, 999);
+        remove_filter('wp_mail_from', $from_filter, 999);
         unset($link, $key);
 
         if (!$sent) {
@@ -297,6 +306,24 @@ class ZNK_Access
         $wpdb->query($wpdb->prepare('UPDATE ' . self::t() . ' SET revoked_at = %s, payload = NULL WHERE user_id = %d AND item_id = %s AND id <> %d AND revoked_at IS NULL AND viewed_at IS NULL', ZNK_DB::now(), $uid, $item, $id));
         $row = $wpdb->get_row($wpdb->prepare('SELECT id, item_id, created_at, expires_at, viewed_at, revoked_at FROM ' . self::t() . ' WHERE id = %d', $id));
         return ['link' => self::out($row)];
+    }
+
+    /** Dominio del sito senza "www." (es. zaramella.com). */
+    public static function site_domain()
+    {
+        $h = strtolower((string) wp_parse_url(home_url('/'), PHP_URL_HOST));
+        return preg_replace('/^www\./', '', $h);
+    }
+
+    /** Il mittente può essere solo un indirizzo del dominio del sito (o di un suo sottodominio). */
+    private static function allowed_from($email)
+    {
+        if (!is_email($email)) {
+            return false;
+        }
+        $dom = strtolower(substr(strrchr($email, '@'), 1));
+        $site = self::site_domain();
+        return $site !== '' && ($dom === $site || substr($dom, -strlen('.' . $site)) === '.' . $site);
     }
 
     // ----- pagina pubblica -----
