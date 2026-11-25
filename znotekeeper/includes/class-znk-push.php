@@ -85,7 +85,8 @@ class ZNK_Push
             return false;
         }
         $jwt = "$head.$claims." . self::b64u(self::der_to_jose($sig));
-        $r = wp_remote_post($endpoint, [
+        // wp_safe_remote_post rifiuta indirizzi interni (127.0.0.1, reti private): niente SSRF tramite endpoint finti.
+        $r = wp_safe_remote_post($endpoint, [
             'timeout' => 10,
             'headers' => ['TTL' => '3600', 'Urgency' => 'high', 'Authorization' => 'vapid t=' . $jwt . ', k=' . $k['pub'], 'Content-Length' => '0'],
             'body' => '',

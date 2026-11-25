@@ -131,11 +131,10 @@ class ZNK_App
         echo '</head>';
     }
 
-    public static function route_app()
+    /** HTML del guscio: sempre uguale per una versione, così il service worker ne conosce l'impronta. */
+    private static function shell_html()
     {
-        nocache_headers();
-        self::security_headers();
-        header('Content-Type: text/html; charset=utf-8');
+        ob_start();
         self::head('ZNoteKeeper');
         echo '<body><div id="app" class="app"><div class="boot"><div class="logo">ZN</div><p>Caricamento…</p></div></div>';
         foreach (['vendor/marked.umd.js', 'vendor/purify.min.js', 'vendor/turndown.browser.umd.js', 'vendor/turndown-plugin-gfm.js'] as $v) {
@@ -143,6 +142,40 @@ class ZNK_App
         }
         echo '<script type="module" src="' . esc_url(self::asset('js/main.js')) . '"></script>';
         echo '</body></html>';
+        return ob_get_clean();
+    }
+
+    public static function route_app()
+    {
+        nocache_headers();
+        self::security_headers();
+        header('Content-Type: text/html; charset=utf-8');
+        echo self::shell_html();
+    }
+
+    /**
+     * Impronte SHA-256 dei file dell'app, per percorso. Il service worker usa una
+     * copia in cache solo se l'impronta coincide: uno script di un'altra pagina del
+     * sito (stessa origine) potrebbe altrimenti sostituire i file in cache e
+     * restare nascosto nell'app anche dopo.
+     */
+    private static function hashes()
+    {
+        $out = [];
+        $base = wp_parse_url(ZNK_URL . 'app/', PHP_URL_PATH);
+        $dir = ZNK_DIR . 'app/';
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $f) {
+            if (!$f->isFile() || !preg_match('/\.(js|css|png|svg|webmanifest)$/', $f->getFilename())) {
+                continue;
+            }
+            $rel = str_replace('\\', '/', substr($f->getPathname(), strlen($dir)));
+            if ($rel === 'sw-body.js') {
+                continue;
+            }
+            $out[$base . $rel] = base64_encode(hash_file('sha256', $f->getPathname(), true));
+        }
+        return $out;
     }
 
     public static function route_manifest()
@@ -187,6 +220,8 @@ class ZNK_App
             'shell' => self::url(''),
             'assets' => $assets,
             'icon' => self::asset('icons/icon-192.png'),
+            'hashes' => self::hashes(),
+            'shell_hash' => base64_encode(hash('sha256', self::shell_html(), true)),
         ];
         echo 'const ZNK = ' . wp_json_encode($cfg, JSON_UNESCAPED_SLASHES) . ";\n";
         readfile(ZNK_DIR . 'app/sw-body.js');

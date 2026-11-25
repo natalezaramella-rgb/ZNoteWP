@@ -128,19 +128,55 @@ class ZNK_Auth
         return ceil($s / 3600) . ' ore';
     }
 
-    public static function register_fail($user, $msg = 'Password non corretta.')
+    /** Attesa (secondi) dopo il tentativo errato numero $fails. */
+    public static function wait_for($fails)
     {
-        $fails = (int) $user->fails + 1;
-        $wait = 0;
         if ($fails >= 10) {
-            $wait = HOUR_IN_SECONDS;
-        } elseif ($fails >= 5) {
-            $wait = min(30 * (2 ** ($fails - 5)), 30 * MINUTE_IN_SECONDS);
+            return HOUR_IN_SECONDS;
         }
-        ZNK_Users::update($user->user_id, [
-            'fails' => $fails,
-            'next_try_at' => $wait ? gmdate('Y-m-d H:i:s', time() + $wait) : null,
-        ]);
+        if ($fails >= 5) {
+            return min(30 * (2 ** ($fails - 5)), 30 * MINUTE_IN_SECONDS);
+        }
+        return 0;
+    }
+
+    /**
+     * Prenota un tentativo in modo atomico, PRIMA di controllare il segreto:
+     * il contatore sale e l'eventuale attesa parte subito, così molte richieste
+     * in parallelo non possono provare più segreti di quanti ne consenta il limite.
+     * Un tentativo riuscito azzera tutto con reset_fails().
+     *
+     * @return int|WP_Error numero del tentativo prenotato
+     */
+    public static function reserve_attempt($user)
+    {
+        global $wpdb;
+        $t = ZNK_DB::t('users');
+        $n = $wpdb->query($wpdb->prepare(
+            // next_try_at prima di fails: MySQL valuta le assegnazioni da sinistra a destra.
+            "UPDATE $t SET next_try_at = CASE
+                 WHEN fails + 1 >= 10 THEN DATE_ADD(UTC_TIMESTAMP(), INTERVAL %d SECOND)
+                 WHEN fails + 1 >= 5 THEN DATE_ADD(UTC_TIMESTAMP(), INTERVAL LEAST(30 * POW(2, fails + 1 - 5), %d) SECOND)
+                 ELSE NULL END,
+               fails = LAST_INSERT_ID(fails + 1)
+             WHERE user_id = %d AND (next_try_at IS NULL OR next_try_at <= UTC_TIMESTAMP())",
+            HOUR_IN_SECONDS,
+            30 * MINUTE_IN_SECONDS,
+            $user->user_id
+        ));
+        if (!$n) {
+            $fresh = ZNK_Users::get($user->user_id);
+            $e = $fresh ? self::throttle($fresh) : null;
+            return $e ?: new WP_Error('znk_wait', 'Troppi tentativi in corso: riprova tra poco.', ['status' => 429, 'retry_after' => 5]);
+        }
+        return (int) $wpdb->get_var('SELECT LAST_INSERT_ID()');
+    }
+
+    /** Messaggio e avvisi dopo un tentativo errato già contato da reserve_attempt(). */
+    public static function register_fail($user, $msg = 'Password non corretta.', $fails = null)
+    {
+        $fails = $fails === null ? (int) $user->fails + 1 : (int) $fails;
+        $wait = self::wait_for($fails);
         if ($fails === 10 || ($fails > 10 && $fails % 5 === 0)) {
             ZNK_Users::notify(
                 $user->user_id,
@@ -158,9 +194,26 @@ class ZNK_Auth
         return new WP_Error('znk_bad_secret', $msg, ['status' => 403, 'retry_after' => $wait]);
     }
 
-    public static function reset_fails($user)
+    /** Verifica un segreto dell'utente con il limite ai tentativi. @return null|WP_Error */
+    public static function verify_user_secret($user, $given, $hash, $msg = 'Password non corretta.')
     {
-        if ((int) $user->fails || !empty($user->next_try_at)) {
+        if ($e = self::throttle($user)) {
+            return $e;
+        }
+        $n = self::reserve_attempt($user);
+        if (is_wp_error($n)) {
+            return $n;
+        }
+        if (!self::check_secret($given, $hash)) {
+            return self::register_fail($user, $msg, $n);
+        }
+        self::reset_fails($user, true);
+        return null;
+    }
+
+    public static function reset_fails($user, $force = false)
+    {
+        if ($force || (int) $user->fails || !empty($user->next_try_at)) {
             ZNK_Users::update($user->user_id, ['fails' => 0, 'next_try_at' => null]);
         }
     }
