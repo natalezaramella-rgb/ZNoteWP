@@ -93,7 +93,7 @@ class ZNK_App
             'vendor/turndown-plugin-gfm.js',
             'js/main.js', 'js/db.js', 'js/crypto.js', 'js/api.js', 'js/store.js', 'js/ui.js', 'js/md.js',
             'js/editor.js', 'js/draw.js', 'js/notes.js', 'js/tasks.js', 'js/search.js', 'js/settings.js',
-            'js/lock.js', 'js/zip.js', 'js/datepicker.js', 'js/icons.js', 'js/mailin.js', 'js/transfer.js', 'js/ctx.js', 'js/access.js', 'js/secrets.js',
+            'js/lock.js', 'js/zip.js', 'js/datepicker.js', 'js/icons.js', 'js/mailin.js', 'js/transfer.js', 'js/ctx.js', 'js/access.js', 'js/secrets.js', 'js/vault.js', 'js/share.js', 'vault.css',
             'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png',
         ];
     }
@@ -127,6 +127,7 @@ class ZNK_App
         echo '<link rel="icon" href="' . esc_url(self::asset('icons/icon-192.png')) . '">';
         echo '<link rel="apple-touch-icon" href="' . esc_url(self::asset('icons/icon-192.png')) . '">';
         echo '<link rel="stylesheet" href="' . esc_url(self::asset('app.css')) . '">';
+        echo '<link rel="stylesheet" href="' . esc_url(self::asset('vault.css')) . '">';
         if ($style !== '') {
             // aspetto del sito (colori e caratteri del tema): valori già validati da ZNK_Style
             echo '<style id="znk-style">' . str_replace('</', '<\\/', $style) . '</style>';

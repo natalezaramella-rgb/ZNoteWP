@@ -78,11 +78,11 @@ export function renderList(el) {
     el._bound = true;
     el.innerHTML = `
       <div class="topbar">
-        <div class="grow" style="padding-left:10px"><div class="apptitle">Accessi clienti</div></div>
+        <div class="grow" style="padding-left:10px"><div class="apptitle">Secrets clienti</div></div>
         <button class="ib needs-net" data-a="tpl" aria-label="Modello dell'email" title="Modello dell'email">${ic('mail')}</button>
         <button class="ib" data-a="lock" data-only="phone" aria-label="Blocca">${ic('lock')}</button>
       </div>
-      <label class="searchbox">${ic('search')}<input id="accQ" type="search" placeholder="Cerca cliente, software, email" aria-label="Cerca negli accessi" autocomplete="off"></label>
+      <label class="searchbox">${ic('search')}<input id="accQ" type="search" placeholder="Cerca cliente, software, email" aria-label="Cerca nei secrets clienti" autocomplete="off"></label>
       <div class="scroll" id="accRows"></div>
       <button class="fab needs-net" data-a="add">${ic('plus')}Accesso</button>`;
     el.addEventListener('click', e => {

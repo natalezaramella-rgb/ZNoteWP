@@ -1,0 +1,57 @@
+/* «I miei secrets» e menu con etichette lunghe/corte. Usa solo le variabili di app.css. */
+.nav .ns{display:none}
+.nav .nl{text-align:center;line-height:1.15}
+.app:not(.desk) .nav .nl{display:none}
+.app:not(.desk) .nav .ns{display:inline}
+.app.desk .nav button{height:auto;min-height:62px;padding:4px 2px}
+.app.desk .nav .nl{font-size:10.5px;max-width:78px}
+@media (max-width:420px){.app:not(.desk) .nav .pill{padding:3px 8px}.app:not(.desk) .nav button{font-size:9.5px}}
+
+.vcnt{margin-left:auto;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+.vhead{font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:4px 10px 2px}
+.vtags{display:flex;flex-wrap:wrap;gap:6px;padding:4px 8px 6px}
+.vtags .chip[aria-current="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.vtags small{opacity:.7;font-weight:500}
+.tree .sec .i.sm{width:16px;height:16px;color:var(--muted);flex:none}
+
+.vico{width:34px;height:34px;border-radius:10px;background:var(--surface-2);display:grid;place-items:center;flex:none;color:var(--muted)}
+.vico .i{width:18px;height:18px}
+.page-row .pt .vstar{color:var(--due)}
+.vchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.vchips:empty{display:none}
+
+.vform{gap:0;max-width:760px}
+.vfield{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.vlab{grid-column:1 / -1;font-size:12.5px;font-weight:700;color:var(--muted)}
+.vval{min-width:0;overflow-wrap:anywhere;font-size:15.5px}
+.vval a{color:var(--accent)}
+.vval.mono,.field-in.mono,.vgen-out,.vfp{font-family:var(--f-mono);letter-spacing:.02em}
+.vnotes{white-space:pre-wrap;grid-column:1 / -1}
+.vact{display:flex;align-items:center;gap:4px}
+.vact .ib{width:38px;height:38px}
+.vshared{display:flex;gap:10px;align-items:center;background:var(--mail-soft);color:var(--ink);border-radius:12px;padding:10px 12px;margin:4px 0 6px;font-size:14px}
+.vshared .i{color:var(--mail);flex:none}
+.vwarn{background:var(--danger-soft)}
+.vwarn b{display:block;color:var(--danger)}
+.vcard{border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-top:16px}
+.vcard summary{cursor:pointer;padding:2px 0}
+.vcard-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.vmem{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid var(--line)}
+.vmeta{font-size:12.5px;margin-top:16px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+
+.vfe{display:grid;grid-template-columns:1fr 1.4fr auto auto;gap:6px;align-items:center;margin-bottom:8px}
+.vhid{font-size:12.5px;color:var(--muted);white-space:nowrap;display:flex;gap:4px;align-items:center}
+@media (max-width:560px){.vfe{grid-template-columns:1fr auto}.vfe [data-f=v]{grid-column:1 / -1;grid-row:2}}
+
+.vgen-out{font-size:18px;background:var(--surface-2);border-radius:12px;padding:14px;overflow-wrap:anywhere;user-select:all;min-height:54px}
+.vgen-sets{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:14px}
+.vgen-sets label{display:flex;gap:6px;align-items:center}
+.vfp{font-size:20px;text-align:center;background:var(--surface-2);border-radius:12px;padding:16px;word-spacing:6px;line-height:1.6}
+
+.vsh-list{max-height:52vh;overflow:auto;border-top:1px solid var(--line)}
+.vsh{display:flex;align-items:center;gap:10px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.vsh-n{flex:1;min-width:0}
+.vsh-fp{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);overflow-wrap:anywhere}
+.vsh.bad .vsh-fp{color:var(--danger);font-weight:700}
+.vsh .sel{flex:none;width:150px}

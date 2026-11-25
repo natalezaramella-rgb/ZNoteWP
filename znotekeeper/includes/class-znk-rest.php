@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 class ZNK_REST
 {
     const NS = 'znk/v1';
-    const KINDS = ['notebook', 'group', 'section', 'page', 'list', 'task', 'drawing', 'blob', 'settings', 'access', 'secret'];
+    const KINDS = ['notebook', 'group', 'section', 'page', 'list', 'task', 'drawing', 'blob', 'settings', 'access', 'secret', 'vfolder'];
     const MAX_DATA = 16 * 1024 * 1024;
 
     public static function init()

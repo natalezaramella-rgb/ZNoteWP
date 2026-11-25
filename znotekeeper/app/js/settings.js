@@ -95,7 +95,7 @@ function paint(el) {
           row('phone', 'Installa ZNoteKeeper', app.canInstall ? 'Finestra propria, icona nel menu Start o nella Home, apertura anche offline.' : isIOS ? 'In Safari: tocca Condividi, poi «Aggiungi alla schermata Home». Serve anche per ricevere i promemoria.' : 'Dal menu del browser: «Installa app» (Chrome, Edge) oppure l\'icona di installazione nella barra degli indirizzi.', app.canInstall ? btn('install', 'Installa', 'primary') : '')}
         ${row('bell', 'Promemoria delle scadenze', 'Con l\'app aperta il promemoria mostra il titolo; quando è chiusa arriva un avviso generico «Hai un\'attività in scadenza», perché il sito non può leggere i titoli.', sw('notif', notifOn, 'Promemoria', 'class="needs-net"'))}
         ${row('sliders', 'Aspetto', '', `<select id="theme"><option value="auto" ${theme === 'auto' ? 'selected' : ''}>Come il sistema</option><option value="light" ${theme === 'light' ? 'selected' : ''}>Chiaro</option><option value="dark" ${theme === 'dark' ? 'selected' : ''}>Scuro</option></select>`)}
-        ${app.desk ? row('', 'Scorciatoie da tastiera', 'Ctrl+K cerca · Alt+N nuova pagina · Alt+T nuova attività · Alt+1…6 cambia sezione · Ctrl+S salva i segreti · Ctrl+Maiusc+L blocca · Ctrl+\\ nasconde i pannelli · nel testo: Ctrl+B, Ctrl+I, Ctrl+K link, Tab rientro') : ''}
+        ${app.desk ? row('', 'Scorciatoie da tastiera', 'Ctrl+K cerca · Alt+N nuova pagina · Alt+T nuova attività · Alt+1…7 cambia sezione · Ctrl+S salva i segreti · Ctrl+Maiusc+L blocca · Ctrl+\\ nasconde i pannelli · nel testo: Ctrl+B, Ctrl+I, Ctrl+K link, Tab rientro') : ''}
       </div></div>
 
       <div class="sect" style="padding-bottom:28px"><h3>Account</h3><div class="card">

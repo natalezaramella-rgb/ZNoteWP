@@ -13,6 +13,7 @@ import * as search from './search.js';
 import * as settings from './settings.js';
 import * as access from './access.js';
 import * as secrets from './secrets.js';
+import * as vault from './vault.js';
 import { importInbox } from './mailin.js';
 
 const root = document.getElementById('app');
@@ -51,8 +52,9 @@ function shell() {
     <nav class="nav" id="nav" aria-label="Sezioni dell'app" hidden>
       <button data-nav="notes"><span class="pill">${ic('book')}</span>Taccuino</button>
       <button data-nav="tasks"><span class="pill">${ic('tasks')}</span>Attività</button>
-      <button data-nav="access"><span class="pill">${ic('key')}</span>Accessi</button>
-      <button data-nav="secrets"><span class="pill">${ic('shield')}</span>Segreti</button>
+      <button data-nav="vault"><span class="pill">${ic('key')}</span><span class="nl">I miei secrets</span><span class="ns">Secrets</span></button>
+      <button data-nav="access"><span class="pill">${ic('mail')}</span><span class="nl">Secrets clienti</span><span class="ns">Clienti</span></button>
+      <button data-nav="secrets"><span class="pill">${ic('shield')}</span><span class="nl">Foglio segreti</span><span class="ns">Foglio</span></button>
       <button data-nav="search"><span class="pill">${ic('search')}</span>Cerca</button>
       <button data-nav="settings"><span class="pill">${ic('sliders')}</span>Impostazioni</button>
       <button class="navlock" data-nav="lock" title="Blocca (Ctrl+Maiusc+L)"><span class="pill">${ic('lock')}</span>Blocca</button>
@@ -62,7 +64,7 @@ function shell() {
     const b = e.target.closest('[data-nav]');
     if (!b) return;
     if (b.dataset.nav === 'lock') return app.lock();
-    go({ view: b.dataset.nav, page: app.R.view === b.dataset.nav ? null : app.R.page, task: app.R.view === b.dataset.nav ? null : app.R.task, acc: app.R.view === b.dataset.nav ? null : app.R.acc, sver: null }, { replace: true });
+    go({ view: b.dataset.nav, page: app.R.view === b.dataset.nav ? null : app.R.page, task: app.R.view === b.dataset.nav ? null : app.R.task, acc: app.R.view === b.dataset.nav ? null : app.R.acc, vent: app.R.view === b.dataset.nav ? null : app.R.vent, sver: null }, { replace: true });
   });
 }
 
@@ -118,6 +120,7 @@ async function enter({ readonly, fresh }) {
     try { await store.sync(); } catch (e) { toast(e.message); }
     if (fresh || !store.all('section').length && !store.all('list').length && !store.get('settings')) await createDefaults();
     importInbox().catch(e => console.warn(e));
+    vault.ensureKeys().catch(e => console.warn('chiavi secrets', e));
   }
   started = true;
   buildScreens();
@@ -148,6 +151,7 @@ function startPolling() {
     try {
       const ok = await store.sync();
       if (ok && S.inbox) importInbox();
+      if (ok && app.R && app.R.view === 'vault') vault.refresh();
       if (ok && app.readonly) { app.readonly = false; toast('Di nuovo online: puoi modificare le note.'); }
     } catch (e) { /* */ }
   }, 25000);
@@ -182,11 +186,13 @@ document.addEventListener('visibilitychange', () => {
 
 app.lock = async (expired = false, { auto = false } = {}) => {
   if (!S.space) return;
+  if (!expired && !auto && vault.dirty() && !await confirmDialog('Secret non salvato', 'Stai modificando una voce di «I miei secrets»: bloccando perdi le modifiche.', { ok: 'Blocca comunque', danger: true })) return;
   if (!expired && !auto && secrets.dirty() && !await confirmDialog('Segreti non salvati', 'Nel foglio «I miei segreti» ci sono modifiche non salvate: bloccando le perdi.', { ok: 'Blocca comunque', danger: true })) return;
   // «Blocca» scelto a mano su un dispositivo ricordato: lo dimentica, altrimenti si riaprirebbe da solo.
   if (!expired && S.remembered) { await forgetRemember(); toast('Questo dispositivo non è più ricordato: al prossimo accesso servirà la password.'); }
   notes.flush(); tasks.flush();
   secrets.forget();
+  vault.forget();
   closeOverlay();
   if (!expired) api('POST', 'lock', {}, { quiet: true }).catch(() => {});
   setSession(null);
@@ -209,6 +215,9 @@ function buildScreens() {
     <section class="screen" id="tDetail" data-pane="tdetail"></section>
     <section class="screen" id="aList" data-pane="alist"></section>
     <section class="screen" id="aDetail" data-pane="adetail"></section>
+    <section class="screen" id="vTree" data-pane="vtree"></section>
+    <section class="screen" id="vList" data-pane="vlist"></section>
+    <section class="screen" id="vMain" data-pane="vmain"></section>
     <section class="screen" id="sVers" data-pane="slist"></section>
     <section class="screen" id="sMain" data-pane="smain"></section>
     <section class="screen" id="sVer" data-pane="sver"></section>
@@ -261,6 +270,7 @@ export function render() {
 
   let showNav = true;
   if (R.view !== 'access') access.renderDetail(null);
+  if (R.view !== 'vault') vault.renderDetail(null);
   if (R.view !== 'secrets') { secrets.renderMain(null); secrets.renderVersion(null); }
   const fold = desk ? getFold() : {};
   root.classList.toggle('fold-tree', !!(desk && R.view === 'notes' && fold.tree));
@@ -288,12 +298,25 @@ export function render() {
     } else {
       setPane(panes.tlist, 'has-nav'); tasks.renderList(panes.tlist); tasks.renderDetail(null);
     }
+  } else if (R.view === 'vault') {
+    notes.renderPage(null); tasks.renderDetail(null);
+    const ve = R.vent;
+    if (desk) {
+      setPane(panes.vtree, 'pane-tree'); vault.renderTree(panes.vtree);
+      setPane(panes.vlist, 'pane-list after-tree'); vault.renderList(panes.vlist);
+      if (ve) { setPane(panes.vmain, 'pane-main after-tree'); vault.renderDetail(panes.vmain, ve); }
+      else { setPane(panes.empty, 'pane-main after-tree'); emptyMsg('Nessun secret aperto', 'Scegli una voce dall\'elenco o aggiungine una nuova.'); vault.renderDetail(null); }
+    } else if (ve) {
+      setPane(panes.vmain, 'full'); vault.renderDetail(panes.vmain, ve); showNav = false;
+    } else {
+      setPane(panes.vlist, 'has-nav'); vault.renderList(panes.vlist); vault.renderDetail(null);
+    }
   } else if (R.view === 'access') {
     notes.renderPage(null); tasks.renderDetail(null);
     if (desk) {
       setPane(panes.alist, 'pane-list'); access.renderList(panes.alist);
       if (R.acc && store.get(R.acc)) { setPane(panes.adetail, 'pane-main'); access.renderDetail(panes.adetail, R.acc); }
-      else { setPane(panes.empty, 'pane-main'); emptyMsg('Nessun accesso aperto', 'Scegli un accesso dall\'elenco o aggiungine uno nuovo.'); access.renderDetail(null); }
+      else { setPane(panes.empty, 'pane-main'); emptyMsg('Nessun secret cliente aperto', 'Scegli un cliente dall\'elenco o aggiungine uno nuovo.'); access.renderDetail(null); }
     } else if (R.acc && store.get(R.acc)) {
       setPane(panes.adetail, 'full'); access.renderDetail(panes.adetail, R.acc); showNav = false;
     } else {
@@ -331,7 +354,7 @@ function go(patch, { replace = false } = {}) {
   const prev = { ...app.R };
   Object.assign(app.R, patch);
   const R = app.R;
-  const deeper = (R.page && R.page !== prev.page) || (R.task && R.task !== prev.task) || (R.acc && R.acc !== prev.acc) || (R.sver && R.sver !== prev.sver);
+  const deeper = (R.page && R.page !== prev.page) || (R.task && R.task !== prev.task) || (R.acc && R.acc !== prev.acc) || (R.vent && R.vent !== prev.vent) || (R.sver && R.sver !== prev.sver);
   if (!mq.matches && deeper && !replace) history.pushState({ znk: { ...R } }, '');
   else history.replaceState({ znk: { ...R } }, '');
   const st = store.settings();
@@ -365,7 +388,7 @@ window.addEventListener('popstate', e => {
   const st = e.state && e.state.znk;
   notes.flush(); tasks.flush(); access.flush();
   if (st) Object.assign(app.R, st);
-  else Object.assign(app.R, { page: null, task: null, acc: null, sver: null });
+  else Object.assign(app.R, { page: null, task: null, acc: null, vent: null, sver: null });
   render();
 });
 mq.addEventListener('change', () => render());
@@ -391,10 +414,10 @@ document.addEventListener('keydown', e => {
   if (e.altKey && !mod) {
     if (k === 'n') { e.preventDefault(); notes.newPage(); return; }
     if (k === 't') { e.preventDefault(); tasks.quickAdd(); return; }
-    if (['1', '2', '3', '4', '5', '6'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'access', 'secrets', 'search', 'settings'][+k - 1] }); return; }
+    if (['1', '2', '3', '4', '5', '6', '7'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'vault', 'access', 'secrets', 'search', 'settings'][+k - 1] }); return; }
   }
   if (k === 'escape' && !isOverlayOpen() && !typing) {
-    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null }); else if (app.R.acc) go({ acc: null }); else if (app.R.sver) go({ sver: app.desk || app.R.sver === 'list' ? null : 'list' });
+    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null }); else if (app.R.acc) go({ acc: null }); else if (app.R.vent && app.R.vent !== 'new') go({ vent: null }); else if (app.R.sver) go({ sver: app.desk || app.R.sver === 'list' ? null : 'list' });
   }
 });
 

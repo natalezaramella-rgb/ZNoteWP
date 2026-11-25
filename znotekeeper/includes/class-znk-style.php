@@ -460,103 +460,9 @@ class ZNK_Style
                 }
                 $src[] = 'url("' . self::css_url($u) . '")' . $fmt;
             }
-            $css .= '@font-face{font-family:"' . $f['family'] . '";font-style:' . $f['style'] . ';font-weight:' . $f['weight'] . ';' . ($f['stretch'] ? 'font-stretch:' . $f['stretch'] . ';' : '') . 'font-display:swap;src:' . implode(',', $src) . (!empty($f['range']) ? ';unicode-range:' . $f['range'] : '') . '}';
+            $css .= '@font-face{font-family:"' . $f['family'] . '";font-style:' . $f['style'] . ';font-weight:' . $f['weight'] . ';' . ($f['stretch'] ? 'font-stretch:' . $f['stretch'] . ';' : '') . 'font-display:swap;src:' . implode(',', $src) . '}';
         }
         return $css;
-    }
-
-    // ===================== caratteri ospitati sul sito =====================
-
-    /**
-     * Scarica dal servizio Google Fonts i caratteri usati dall'app (testo e titoli) e
-     * li salva in wp-content/uploads/znotekeeper-fonts/: da lì l'app li può usare
-     * (la CSP ammette solo file dello stesso sito) e i browser dei clienti non
-     * contattano Google. Solo alfabeti latini. Restituisce un messaggio per l'admin.
-     */
-    public static function host_fonts()
-    {
-        $r = self::resolved();
-        $fams = [];
-        foreach ([$r['font_body'], $r['font_head']] as $stack) {
-            $first = trim(str_replace(['"', "'"], '', explode(',', (string) $stack)[0]));
-            if ($first !== '' && !preg_match('/^(system-ui|ui-[a-z-]+|-apple-system|sans-serif|serif|monospace|Segoe UI.*|Roboto|Helvetica.*|Arial)$/i', $first)) {
-                $fams[$first] = true;
-            }
-        }
-        if (!$fams) {
-            return 'Nessun carattere da scaricare: imposta prima il carattere del testo o dei titoli.';
-        }
-        $up = wp_upload_dir();
-        if (!empty($up['error'])) {
-            return 'Cartella dei caricamenti non disponibile: ' . $up['error'];
-        }
-        $dir = trailingslashit($up['basedir']) . 'znotekeeper-fonts/';
-        $url = trailingslashit($up['baseurl']) . 'znotekeeper-fonts/';
-        wp_mkdir_p($dir);
-        $ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
-        $faces = [];
-        $done = [];
-        $fail = [];
-        foreach (array_keys($fams) as $fam) {
-            $q = str_replace(' ', '+', $fam);
-            $css = '';
-            // prima la versione variabile completa (corsivo compreso), poi pesi fissi, poi il solo regolare
-            foreach (['ital,wght@0,100..900;1,100..900', 'wght@100..900', 'ital,wght@0,400;0,500;0,600;0,700;1,400', 'wght@400;500;600;700', ''] as $axis) {
-                $res = wp_remote_get('https://fonts.googleapis.com/css2?family=' . $q . ($axis ? ':' . $axis : '') . '&display=swap', ['timeout' => 15, 'user-agent' => $ua]);
-                if (!is_wp_error($res) && wp_remote_retrieve_response_code($res) === 200) {
-                    $css = wp_remote_retrieve_body($res);
-                    break;
-                }
-            }
-            if ($css === '') {
-                $fail[] = $fam;
-                continue;
-            }
-            preg_match_all('#/\*\s*([a-z-]+)\s*\*/\s*@font-face\s*\{([^}]*)\}#i', $css, $blocks, PREG_SET_ORDER);
-            $slug = sanitize_title($fam);
-            wp_mkdir_p($dir . $slug);
-            $n = 0;
-            foreach ($blocks as $b) {
-                if (!in_array($b[1], ['latin', 'latin-ext'], true)) {
-                    continue;
-                }
-                $body = $b[2];
-                if (!preg_match('#url\((https://fonts\.gstatic\.com/[^)\s]+\.woff2)\)#', $body, $m)) {
-                    continue;
-                }
-                $file = $slug . '/' . md5($m[1]) . '.woff2';
-                if (!file_exists($dir . $file)) {
-                    $fr = wp_remote_get($m[1], ['timeout' => 20, 'user-agent' => $ua]);
-                    $bin = is_wp_error($fr) ? '' : wp_remote_retrieve_body($fr);
-                    if (wp_remote_retrieve_response_code($fr) !== 200 || strlen($bin) < 100 || substr($bin, 0, 4) !== 'wOF2') {
-                        continue;
-                    }
-                    file_put_contents($dir . $file, $bin);
-                }
-                $g = function ($prop, $def) use ($body) {
-                    return preg_match('/' . $prop . ':\s*([^;]+);/', $body, $mm) ? trim($mm[1]) : $def;
-                };
-                $faces[] = ['family' => $fam, 'weight' => $g('font-weight', '400'), 'style' => $g('font-style', 'normal'), 'stretch' => '', 'src' => [$url . $file], 'range' => $g('unicode-range', '')];
-                $n++;
-            }
-            if ($n) {
-                $done[] = $fam;
-            } else {
-                $fail[] = $fam;
-            }
-        }
-        $s = self::settings();
-        $keep = array_filter((array) $s['faces'], function ($f) use ($done) {
-            return !in_array($f['family'], $done, true);
-        });
-        $s['faces'] = self::clean_faces(array_merge($faces, array_values($keep)));
-        update_option(self::OPT, $s, true);
-        self::$cache = null;
-        $msg = $done ? 'Caratteri ospitati sul sito: ' . implode(', ', $done) . '.' : '';
-        if ($fail) {
-            $msg .= ($msg ? ' ' : '') . 'Non trovati su Google Fonts (o server senza accesso a Internet): ' . implode(', ', $fail) . '.';
-        }
-        return $msg;
     }
 
     // ===================== pulizia dei valori =====================
@@ -577,7 +483,7 @@ class ZNK_Style
     private static function clean_faces($faces)
     {
         $out = [];
-        foreach (array_slice($faces, 0, 40) as $f) {
+        foreach (array_slice($faces, 0, 24) as $f) {
             if (!is_array($f)) {
                 continue;
             }
@@ -596,9 +502,10 @@ class ZNK_Style
                 continue;
             }
             $key = strtolower($fam . '|' . $w . '|' . $st . '|' . implode(' ', $src));
-            $range = strtoupper(preg_replace('/[^0-9a-fA-FuU+?,\- ]/', '', (string) ($f['range'] ?? '')));
-            $key .= '|' . $range;
-            $out[$key] = ['family' => $fam, 'weight' => $w !== '' ? substr($w, 0, 20) : '400', 'style' => $st, 'stretch' => substr($sx, 0, 20), 'src' => array_slice($src, 0, 3), 'range' => substr($range, 0, 600)];
+            if (isset($out[$key])) {
+                continue;
+            }
+            $out[$key] = ['family' => $fam, 'weight' => $w !== '' ? substr($w, 0, 20) : '400', 'style' => $st, 'stretch' => substr($sx, 0, 20), 'src' => array_slice($src, 0, 3)];
         }
         return array_values($out);
     }
