@@ -11,6 +11,7 @@ import * as notes from './notes.js';
 import * as tasks from './tasks.js';
 import * as search from './search.js';
 import * as settings from './settings.js';
+import * as access from './access.js';
 import { importInbox } from './mailin.js';
 
 const root = document.getElementById('app');
@@ -49,6 +50,7 @@ function shell() {
     <nav class="nav" id="nav" aria-label="Sezioni dell'app" hidden>
       <button data-nav="notes"><span class="pill">${ic('book')}</span>Taccuino</button>
       <button data-nav="tasks"><span class="pill">${ic('tasks')}</span>Attività</button>
+      <button data-nav="access"><span class="pill">${ic('key')}</span>Accessi</button>
       <button data-nav="search"><span class="pill">${ic('search')}</span>Cerca</button>
       <button data-nav="settings"><span class="pill">${ic('sliders')}</span>Impostazioni</button>
       <button class="navlock" data-nav="lock" title="Blocca (Ctrl+Maiusc+L)"><span class="pill">${ic('lock')}</span>Blocca</button>
@@ -58,7 +60,7 @@ function shell() {
     const b = e.target.closest('[data-nav]');
     if (!b) return;
     if (b.dataset.nav === 'lock') return app.lock();
-    go({ view: b.dataset.nav, page: app.R.view === b.dataset.nav ? null : app.R.page, task: app.R.view === b.dataset.nav ? null : app.R.task }, { replace: true });
+    go({ view: b.dataset.nav, page: app.R.view === b.dataset.nav ? null : app.R.page, task: app.R.view === b.dataset.nav ? null : app.R.task, acc: app.R.view === b.dataset.nav ? null : app.R.acc }, { replace: true });
   });
 }
 
@@ -201,6 +203,8 @@ function buildScreens() {
     <section class="screen" id="nPage" data-pane="npage"></section>
     <section class="screen" id="tList" data-pane="tlist"></section>
     <section class="screen" id="tDetail" data-pane="tdetail"></section>
+    <section class="screen" id="aList" data-pane="alist"></section>
+    <section class="screen" id="aDetail" data-pane="adetail"></section>
     <section class="screen" id="sSearch" data-pane="search"></section>
     <section class="screen" id="sSettings" data-pane="settings"></section>
     <section class="screen" id="sEmpty" data-pane="empty"><div class="empty" style="margin:auto"></div></section>`;
@@ -249,6 +253,7 @@ export function render() {
   if (!S.offline && offlineBar) offlineBar.remove();
 
   let showNav = true;
+  if (R.view !== 'access') access.renderDetail(null);
   const fold = desk ? getFold() : {};
   root.classList.toggle('fold-tree', !!(desk && R.view === 'notes' && fold.tree));
   root.classList.toggle('fold-list', !!(desk && ((R.view === 'notes' && fold.list) || (R.view === 'tasks' && fold.tlist))));
@@ -275,6 +280,17 @@ export function render() {
     } else {
       setPane(panes.tlist, 'has-nav'); tasks.renderList(panes.tlist); tasks.renderDetail(null);
     }
+  } else if (R.view === 'access') {
+    notes.renderPage(null); tasks.renderDetail(null);
+    if (desk) {
+      setPane(panes.alist, 'pane-list'); access.renderList(panes.alist);
+      if (R.acc && store.get(R.acc)) { setPane(panes.adetail, 'pane-main'); access.renderDetail(panes.adetail, R.acc); }
+      else { setPane(panes.empty, 'pane-main'); emptyMsg('Nessun accesso aperto', 'Scegli un accesso dall\'elenco o aggiungine uno nuovo.'); access.renderDetail(null); }
+    } else if (R.acc && store.get(R.acc)) {
+      setPane(panes.adetail, 'full'); access.renderDetail(panes.adetail, R.acc); showNav = false;
+    } else {
+      setPane(panes.alist, 'has-nav'); access.renderList(panes.alist); access.renderDetail(null);
+    }
   } else if (R.view === 'search') {
     notes.renderPage(null); tasks.renderDetail(null);
     setPane(panes.search, 'has-nav pane-full'); search.render(panes.search);
@@ -289,11 +305,11 @@ function emptyMsg(t, s) { $('.empty', panes.empty).innerHTML = `<b>${esc(t)}</b>
 
 /** Cambia schermata. Su telefono le schermate di dettaglio entrano nella cronologia (tasto indietro). */
 function go(patch, { replace = false } = {}) {
-  notes.flush(); tasks.flush();
+  notes.flush(); tasks.flush(); access.flush();
   const prev = { ...app.R };
   Object.assign(app.R, patch);
   const R = app.R;
-  const deeper = (R.page && R.page !== prev.page) || (R.task && R.task !== prev.task);
+  const deeper = (R.page && R.page !== prev.page) || (R.task && R.task !== prev.task) || (R.acc && R.acc !== prev.acc);
   if (!mq.matches && deeper && !replace) history.pushState({ znk: { ...R } }, '');
   else history.replaceState({ znk: { ...R } }, '');
   const st = store.settings();
@@ -325,9 +341,9 @@ app.render = render;
 window.addEventListener('popstate', e => {
   if (isOverlayOpen()) { closeOverlay(); history.pushState({ znk: { ...app.R } }, ''); return; }
   const st = e.state && e.state.znk;
-  notes.flush(); tasks.flush();
+  notes.flush(); tasks.flush(); access.flush();
   if (st) Object.assign(app.R, st);
-  else Object.assign(app.R, { page: null, task: null });
+  else Object.assign(app.R, { page: null, task: null, acc: null });
   render();
 });
 mq.addEventListener('change', () => render());
@@ -353,10 +369,10 @@ document.addEventListener('keydown', e => {
   if (e.altKey && !mod) {
     if (k === 'n') { e.preventDefault(); notes.newPage(); return; }
     if (k === 't') { e.preventDefault(); tasks.quickAdd(); return; }
-    if (['1', '2', '3', '4'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'search', 'settings'][+k - 1] }); return; }
+    if (['1', '2', '3', '4', '5'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'access', 'search', 'settings'][+k - 1] }); return; }
   }
   if (k === 'escape' && !isOverlayOpen() && !typing) {
-    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null });
+    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null }); else if (app.R.acc) go({ acc: null });
   }
 });
 

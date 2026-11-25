@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       ZNoteKeeper
  * Description:       Taccuino e attività riservati per gli utenti abilitati: dati cifrati nel browser, app installabile (PWA) su telefono e PC, email → nota.
- * Version:           1.1.3
+ * Version:           1.2.1
  * Requires at least: 6.0
  * Requires PHP:      7.4
  * Author:            Zaramella
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ZNK_VERSION', '1.1.3');
+define('ZNK_VERSION', '1.2.1');
 define('ZNK_DB_VERSION', '2');
 define('ZNK_FILE', __FILE__);
 define('ZNK_DIR', plugin_dir_path(__FILE__));
@@ -33,11 +33,14 @@ require_once ZNK_DIR . 'includes/class-znk-imap.php';
 require_once ZNK_DIR . 'includes/class-znk-mail.php';
 require_once ZNK_DIR . 'includes/class-znk-push.php';
 require_once ZNK_DIR . 'includes/class-znk-cron.php';
+require_once ZNK_DIR . 'includes/class-znk-access.php';
 
 register_activation_hook(__FILE__, function () {
     ZNK_DB::install();
     ZNK_Push::ensure_keys();
     ZNK_App::add_rewrites();
+    ZNK_Access::install();
+    ZNK_Access::add_rewrites();
     flush_rewrite_rules();
     ZNK_Cron::schedule();
 });
@@ -56,4 +59,5 @@ add_action('plugins_loaded', function () {
     ZNK_App::init();
     ZNK_Admin::init();
     ZNK_Cron::init();
+    ZNK_Access::init();
 });

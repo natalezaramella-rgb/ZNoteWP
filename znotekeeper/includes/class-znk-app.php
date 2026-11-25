@@ -93,7 +93,7 @@ class ZNK_App
             'vendor/turndown-plugin-gfm.js',
             'js/main.js', 'js/db.js', 'js/crypto.js', 'js/api.js', 'js/store.js', 'js/ui.js', 'js/md.js',
             'js/editor.js', 'js/draw.js', 'js/notes.js', 'js/tasks.js', 'js/search.js', 'js/settings.js',
-            'js/lock.js', 'js/zip.js', 'js/datepicker.js', 'js/icons.js', 'js/mailin.js', 'js/transfer.js', 'js/ctx.js',
+            'js/lock.js', 'js/zip.js', 'js/datepicker.js', 'js/icons.js', 'js/mailin.js', 'js/transfer.js', 'js/ctx.js', 'js/access.js',
             'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png',
         ];
     }

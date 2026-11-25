@@ -437,3 +437,17 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
 @keyframes fade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{body{overflow:visible}.app{position:static}}
+
+/* accessi clienti */
+.acc-pw{display:flex;gap:6px;align-items:center}
+.acc-pw .field-in{flex:1;min-width:0;font-family:var(--f-mono)}
+.acc-send{margin-top:22px;border-top:1px solid var(--line);padding-top:14px}
+.acc-send h3{margin:0 0 8px}
+.acc-send .btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.acc-hist{margin-top:8px;font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+.acc-preview{border:1px solid var(--line);border-radius:12px;background:var(--surface-2);padding:10px 12px;max-height:40vh;overflow:auto}
+.acc-preview pre{margin:6px 0 0;white-space:pre-wrap;font:13.5px/1.45 var(--f-body)}
+.acc-subj{font-weight:700}
+.acc-ph{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.acc-ph > b{font-size:13px;margin-right:4px}
+.acc-ph .hint{flex-basis:100%}
