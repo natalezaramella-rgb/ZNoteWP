@@ -242,7 +242,11 @@ export function applyTheme() {
   else document.documentElement.setAttribute('data-theme', t);
   const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   const m = document.querySelector('meta[name=theme-color]');
-  if (m) m.content = dark ? '#131A18' : '#136F5E';
+  if (m) {
+    // colori dell'aspetto scelto per il sito (variabili CSS), con i valori originali come riserva
+    const cs = getComputedStyle(document.documentElement);
+    m.content = (cs.getPropertyValue(dark ? '--surface' : '--accent') || '').trim() || (dark ? '#131A18' : '#136F5E');
+  }
 }
 try { applyTheme(); } catch (e) { /* */ }
 export { closeOverlay, promptDialog };

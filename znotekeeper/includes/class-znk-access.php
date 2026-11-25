@@ -103,7 +103,10 @@ class ZNK_Access
         header('Referrer-Policy: no-referrer');
         header('X-Frame-Options: DENY');
         header('X-Robots-Tag: noindex, nofollow');
-        header("Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
+        // aspetto del sito: un solo blocco <style> ammesso dalla CSP tramite la sua impronta
+        $style = ZNK_Style::access_css();
+        $sh = $style !== '' ? " 'sha256-" . base64_encode(hash('sha256', $style, true)) . "'" : '';
+        header("Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'" . $sh . "; font-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'");
         $site = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
         $cfg = ['rest' => esc_url_raw(rest_url('znk/v1/')), 'site' => $site];
         $v = '?v=' . ZNK_VERSION;
@@ -112,6 +115,9 @@ class ZNK_Access
         echo '<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">';
         echo '<title>Dati di accesso · ' . esc_html($site) . '</title>';
         echo '<link rel="stylesheet" href="' . esc_url(ZNK_URL . 'app/access.css' . $v) . '">';
+        if ($style !== '') {
+            echo '<style>' . $style . '</style>';
+        }
         echo '<script type="application/json" id="znk-access">' . wp_json_encode($cfg, JSON_HEX_TAG | JSON_HEX_AMP) . '</script>';
         echo '</head><body><main class="card" id="box">';
         echo '<div class="site">' . esc_html($site) . '</div>';

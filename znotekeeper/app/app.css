@@ -73,7 +73,7 @@ body.offline .needs-net{display:none!important}
 .nav .pill{padding:3px 16px;border-radius:999px;display:grid;place-items:center}
 .nav .navlock{display:none}
 
-.fab{position:absolute;right:16px;bottom:16px;height:56px;padding:0 20px 0 16px;border-radius:18px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;gap:8px;font-weight:700;box-shadow:0 10px 24px -8px rgba(10,60,50,.55);z-index:3}
+.fab{position:absolute;right:16px;bottom:16px;height:56px;padding:0 20px 0 16px;border-radius:18px;background:var(--accent);color:var(--accent-ink);display:flex;align-items:center;gap:8px;font-weight:700;box-shadow:0 10px 24px -8px var(--accent-shadow,rgba(10,60,50,.55));z-index:3}
 
 h2.big{font-family:var(--f-display);font-size:28px;line-height:1.1;letter-spacing:-.02em;margin:0;overflow-wrap:anywhere}
 .head{padding:4px 16px 10px;display:flex;align-items:flex-end;gap:6px}

@@ -11,8 +11,8 @@ p{margin:0 0 12px}
 .bad{color:var(--bad)}
 .warn{background:var(--warn-soft);color:var(--ink);border-radius:12px;padding:10px 12px;font-size:14px;margin-top:16px}
 button{font:inherit;cursor:pointer;border-radius:12px;border:1px solid var(--line);background:var(--soft);color:var(--ink);padding:8px 14px;min-height:40px}
-button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;width:100%;min-height:50px;margin-top:8px}
-@media (prefers-color-scheme:dark){button.primary{color:#0F1513}}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink,#fff);font-weight:700;width:100%;min-height:50px;margin-top:8px}
+@media (prefers-color-scheme:dark){button.primary{color:var(--accent-ink,#0F1513)}}
 button:disabled{opacity:.6;cursor:default}
 .field{margin-top:16px}
 .lab{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:4px}

@@ -18,6 +18,7 @@ class ZNK_Admin
         add_action('admin_post_znk_user', [__CLASS__, 'handle_user']);
         add_action('admin_post_znk_mail', [__CLASS__, 'handle_mail']);
         add_action('admin_post_znk_mail_check', [__CLASS__, 'handle_mail_check']);
+        add_action('admin_post_znk_style', [__CLASS__, 'handle_style']);
         add_filter('plugin_action_links_' . plugin_basename(ZNK_FILE), function ($links) {
             array_unshift($links, '<a href="' . esc_url(admin_url('users.php?page=znotekeeper')) . '">Utenti</a>');
             $links[] = '<a href="' . esc_url(ZNK_App::url('')) . '">Apri app</a>';
@@ -87,6 +88,21 @@ class ZNK_Admin
         self::back(['znk_msg' => 'mailsaved', 'tab' => 'mail']);
     }
 
+    public static function handle_style()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die('Non autorizzato.');
+        }
+        check_admin_referer('znk_style');
+        $in = wp_unslash($_POST);
+        if (!empty($in['reset'])) {
+            delete_option(ZNK_Style::OPT);
+        } else {
+            ZNK_Style::save($in);
+        }
+        self::back(['znk_msg' => 'stylesaved', 'tab' => 'style']);
+    }
+
     public static function handle_mail_check()
     {
         if (!current_user_can('manage_options')) {
@@ -115,13 +131,14 @@ class ZNK_Admin
             return;
         }
         global $wpdb;
-        $tab = isset($_GET['tab']) && $_GET['tab'] === 'mail' ? 'mail' : 'users';
+        $tab = isset($_GET['tab']) && in_array($_GET['tab'], ['mail', 'style'], true) ? $_GET['tab'] : 'users';
         $msgs = [
             'enabled' => 'Utente abilitato. Riceverà un\'email di invito.',
             'disabled' => 'Utente disabilitato: i suoi dispositivi sono stati scollegati. I dati restano cifrati.',
             'deleted' => 'Spazio cancellato definitivamente.',
             'confirm' => 'Per cancellare lo spazio scrivi esattamente il nome utente.',
             'mailsaved' => 'Impostazioni email salvate.',
+            'stylesaved' => 'Aspetto salvato. Gli utenti lo vedono alla prossima apertura dell\'app (a volte serve ricaricare due volte).',
             'checked' => 'Controllo della casella eseguito.',
             'nouser' => 'Utente non trovato.',
         ];
@@ -131,7 +148,14 @@ class ZNK_Admin
             echo '<div class="notice ' . ($m === 'confirm' ? 'notice-error' : 'notice-success') . ' is-dismissible"><p>' . esc_html($msgs[$m]) . '</p></div>';
         }
         echo '<nav class="nav-tab-wrapper"><a class="nav-tab ' . ($tab === 'users' ? 'nav-tab-active' : '') . '" href="' . esc_url(admin_url('users.php?page=znotekeeper')) . '">Utenti</a>';
-        echo '<a class="nav-tab ' . ($tab === 'mail' ? 'nav-tab-active' : '') . '" href="' . esc_url(admin_url('users.php?page=znotekeeper&tab=mail')) . '">Email → nota</a></nav>';
+        echo '<a class="nav-tab ' . ($tab === 'mail' ? 'nav-tab-active' : '') . '" href="' . esc_url(admin_url('users.php?page=znotekeeper&tab=mail')) . '">Email → nota</a>';
+        echo '<a class="nav-tab ' . ($tab === 'style' ? 'nav-tab-active' : '') . '" href="' . esc_url(admin_url('users.php?page=znotekeeper&tab=style')) . '">Aspetto</a></nav>';
+
+        if ($tab === 'style') {
+            self::style_tab();
+            echo '</div>';
+            return;
+        }
 
         if ($tab === 'mail') {
             self::mail_tab();
@@ -180,6 +204,130 @@ class ZNK_Admin
             echo '</td></tr>';
         }
         echo '</tbody></table></div>';
+    }
+
+    private static function style_tab()
+    {
+        $s = ZNK_Style::settings();
+        $pv = ZNK_Style::preview();
+        $d = $pv['r']['detected'];
+        $src = $d['src'];
+        echo '<div style="max-width:900px">';
+        echo '<p>L\'app prende da sola colori e caratteri dal tema del sito (stili globali di theme.json, tavolozza del tema, Astra, GeneratePress, Kadence, OceanWP e Personalizza). Qui puoi controllare cosa ha trovato e correggere i singoli valori: un campo vuoto usa quello del sito. Da questi tre colori l\'app ricava da sola la versione chiara e quella scura, con un contrasto sempre leggibile.</p>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" id="znk-style-form">';
+        wp_nonce_field('znk_style');
+        echo '<input type="hidden" name="action" value="znk_style"><input type="hidden" name="faces" id="znk-faces" value="' . esc_attr(wp_json_encode($s['faces'])) . '">';
+        echo '<table class="form-table" role="presentation">';
+        echo '<tr><th>Stile</th><td><label><input type="radio" name="mode" value="site"' . checked($s['mode'], 'site', false) . '> Segui lo stile del sito</label><br>';
+        echo '<label><input type="radio" name="mode" value="plugin"' . checked($s['mode'], 'plugin', false) . '> Usa i colori originali di ZNoteKeeper (i campi qui sotto, se compilati, valgono comunque)</label></td></tr>';
+        $row = function ($k, $label, $type) use ($s, $d, $src) {
+            $det = $d[$k] ?? '';
+            echo '<tr><th><label for="znk-' . $k . '">' . esc_html($label) . '</label></th><td>';
+            if ($type === 'color') {
+                echo '<input type="color" id="znk-' . $k . '-pick" value="' . esc_attr($s[$k] ?: ($det ?: '#ffffff')) . '" style="vertical-align:middle;width:44px;height:30px;padding:0" data-for="znk-' . $k . '"> ';
+            }
+            echo '<input type="text" class="regular-text" id="znk-' . $k . '" name="' . $k . '" value="' . esc_attr($s[$k]) . '" placeholder="' . esc_attr($det ?: ($type === 'color' ? 'non trovato' : 'carattere di sistema')) . '"' . ($type === 'color' ? ' style="width:120px"' : '') . '>';
+            echo ' <button type="button" class="button-link" data-clear="znk-' . $k . '">usa quello del sito</button>';
+            echo '<p class="description">Dal sito: ' . ($det !== '' ? '<code>' . esc_html($det) . '</code> (' . esc_html($src[$k] ?? '') . ')' : 'nessun valore trovato, si usa quello di ZNoteKeeper') . '</p></td></tr>';
+        };
+        $row('accent', 'Colore principale', 'color');
+        $row('bg', 'Sfondo', 'color');
+        $row('ink', 'Testo', 'color');
+        $row('font_body', 'Carattere del testo', 'font');
+        $row('font_head', 'Carattere dei titoli', 'font');
+        $icon = function_exists('get_site_icon_url') ? get_site_icon_url(64) : '';
+        echo '<tr><th>Logo</th><td><label><input type="radio" name="logo" value="icon"' . checked($s['logo'], 'icon', false) . '> Icona del sito' . ($icon ? ' <img src="' . esc_url($icon) . '" alt="" style="width:20px;height:20px;vertical-align:middle;border-radius:4px">' : ' (non impostata: Aspetto › Personalizza › Identità del sito)') . '</label><br>';
+        echo '<label><input type="radio" name="logo" value="text"' . checked($s['logo'], 'text', false) . '> Scritta «ZN»</label></td></tr>';
+        echo '<tr><th>Rileva dalla home page</th><td><button type="button" class="button" id="znk-detect">Rileva dalla home page</button> <span id="znk-detect-msg" class="description"></span>';
+        echo '<p class="description">Utile con temi costruiti con page builder (Elementor, Divi…): apre la home page in modo invisibile, legge colori e caratteri effettivamente mostrati e compila i campi. Poi controlla e salva. I caratteri vengono usati nell\'app solo se i loro file stanno su questo sito (per privacy e sicurezza l\'app non carica risorse da altri siti, per esempio Google Fonts).' . ($s['faces'] ? ' Caratteri del sito salvati: ' . esc_html(implode(', ', array_unique(array_column($s['faces'], 'family')))) . '.' : '') . '</p></td></tr>';
+        echo '</table>';
+        // anteprima
+        echo '<h2>Anteprima</h2><div style="display:flex;gap:16px;flex-wrap:wrap">';
+        foreach (['light' => 'Chiaro', 'dark' => 'Scuro'] as $k => $lab) {
+            $p = $pv[$k];
+            $fb = $pv['r']['font_body'] ? $pv['r']['font_body'] . ',' : '';
+            $fh = $pv['r']['font_head'] ? $pv['r']['font_head'] . ',' : $fb;
+            echo '<div style="width:280px;border-radius:14px;overflow:hidden;border:1px solid ' . esc_attr($p['line']) . ';background:' . esc_attr($p['surface']) . ';color:' . esc_attr($p['ink']) . ';font-family:' . esc_attr($fb) . 'system-ui,sans-serif">';
+            echo '<div style="background:' . esc_attr($p['bg']) . ';padding:8px 12px;font-size:12px;color:' . esc_attr($p['muted']) . '">' . esc_html($lab) . '</div><div style="padding:14px">';
+            echo '<div style="font-family:' . esc_attr($fh) . 'system-ui,sans-serif;font-weight:700;font-size:20px;margin-bottom:6px">Le mie note</div>';
+            echo '<div style="background:' . esc_attr($p['surface-2']) . ';border-radius:10px;padding:8px 10px;margin-bottom:8px">Riunione di lunedì <span style="color:' . esc_attr($p['muted']) . ';font-size:12px">· ieri</span></div>';
+            echo '<div style="background:' . esc_attr($p['accent-soft']) . ';color:' . esc_attr($p['ink']) . ';border-radius:10px;padding:8px 10px;margin-bottom:12px">Pagina selezionata</div>';
+            echo '<span style="display:inline-block;background:' . esc_attr($p['accent']) . ';color:' . esc_attr($p['accent-ink']) . ';border-radius:12px;padding:8px 14px;font-weight:700">+ Nuova pagina</span> <a style="color:' . esc_attr($p['accent']) . '">un link</a></div></div>';
+        }
+        echo '</div><p class="description">L\'anteprima mostra i valori salvati. Ognuno può comunque scegliere chiaro, scuro o automatico nelle impostazioni dell\'app.</p>';
+        submit_button('Salva aspetto');
+        echo '</form>';
+        echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '">';
+        wp_nonce_field('znk_style');
+        echo '<input type="hidden" name="action" value="znk_style"><input type="hidden" name="reset" value="1"><button class="button-link" onclick="return confirm(\'Tornare ai valori trovati nel sito?\')">Ripristina i valori del sito</button></form>';
+        echo '</div>';
+        $home = wp_json_encode(home_url('/'));
+        echo <<<JS
+<script>
+(function(){
+  var f = document.getElementById('znk-style-form');
+  f.querySelectorAll('[data-for]').forEach(function(p){ p.addEventListener('input', function(){ document.getElementById(p.dataset.for).value = p.value; }); });
+  f.querySelectorAll('[data-clear]').forEach(function(b){ b.addEventListener('click', function(){ document.getElementById(b.dataset.clear).value = ''; }); });
+  var msg = document.getElementById('znk-detect-msg');
+  function rgb(s){ var m = /rgba?\\(([^)]+)\\)/.exec(s || ''); if(!m) return null; var p = m[1].split(/[\\s,\\/]+/).filter(Boolean).map(parseFloat); if(p.length>3 && p[3] < .5) return null; return p.slice(0,3); }
+  function hex(c){ return '#' + c.map(function(x){ return ('0' + Math.round(x).toString(16)).slice(-2); }).join('').toUpperCase(); }
+  function sat(c){ var mx = Math.max.apply(0,c)/255, mn = Math.min.apply(0,c)/255, l = (mx+mn)/2; return { s: mx===mn ? 0 : (mx-mn)/(1-Math.abs(2*l-1)), l: l }; }
+  function colorful(c){ var x = sat(c); return x.s > .18 && x.l > .12 && x.l < .9; }
+  function visible(el, w){ var r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && w.getComputedStyle(el).visibility !== 'hidden'; }
+  document.getElementById('znk-detect').addEventListener('click', function(){
+    msg.textContent = 'Apro la home page…';
+    var fr = document.createElement('iframe');
+    fr.style.cssText = 'position:fixed;left:-10000px;top:0;width:1280px;height:900px;border:0';
+    fr.src = {$home};
+    var done = false;
+    var to = setTimeout(function(){ if(!done){ done = true; msg.textContent = 'La home page non risponde: compila i campi a mano.'; fr.remove(); } }, 20000);
+    fr.onload = function(){
+      setTimeout(function(){
+        if (done) return; done = true; clearTimeout(to);
+        try {
+          var w = fr.contentWindow, d = fr.contentDocument, cs = function(e){ return w.getComputedStyle(e); };
+          // sfondo: risalgo dall'elemento al centro della pagina finché trovo un colore pieno
+          var el = d.elementFromPoint(640, 500) || d.body, bg = null;
+          for (var e = el; e && !bg; e = e.parentElement) bg = rgb(cs(e).backgroundColor);
+          bg = bg || rgb(cs(d.body).backgroundColor) || rgb(cs(d.documentElement).backgroundColor) || [255,255,255];
+          var p = d.querySelector('main p, article p, .entry-content p, .elementor-widget-text-editor p, p') || d.body;
+          var ink = rgb(cs(p).color);
+          var acc = null;
+          var cands = d.querySelectorAll('.wp-element-button, .wp-block-button__link, .elementor-button, .et_pb_button, .button, .btn, button[type=submit], input[type=submit], a.button');
+          for (var i = 0; i < cands.length && !acc; i++) { if (!visible(cands[i], w)) continue; var c = rgb(cs(cands[i]).backgroundColor); if (c && colorful(c)) acc = c; }
+          var links = d.querySelectorAll('main a, article a, .entry-content a, nav a, a');
+          for (var j = 0; j < links.length && !acc && j < 200; j++) { if (!visible(links[j], w) || links[j].closest('#wpadminbar')) continue; var c2 = rgb(cs(links[j]).color); if (c2 && colorful(c2)) acc = c2; }
+          var hd = d.querySelector('h1, h2, .entry-title, .elementor-heading-title');
+          var fb = cs(p).fontFamily, fh = hd ? cs(hd).fontFamily : '';
+          // @font-face dei caratteri usati, solo se i file sono su questo sito
+          var used = (fb + ',' + fh).toLowerCase(), faces = [], origin = w.location.origin;
+          for (var k = 0; k < d.styleSheets.length; k++) {
+            var rules; try { rules = d.styleSheets[k].cssRules; } catch (err) { continue; }
+            if (!rules) continue;
+            for (var n = 0; n < rules.length; n++) {
+              var r = rules[n]; if (r.type !== 5) continue;
+              var fam = r.style.getPropertyValue('font-family').replace(/["']/g, '').trim();
+              if (!fam || used.indexOf(fam.toLowerCase()) < 0) continue;
+              var base = d.styleSheets[k].href || d.baseURI, src = [];
+              (r.style.getPropertyValue('src').match(/url\\(([^)]+)\\)/g) || []).forEach(function(u){ try { var x = new URL(u.slice(4, -1).replace(/["']/g, ''), base); if (x.origin === origin) src.push(x.href); } catch (e2) {} });
+              if (src.length) faces.push({ family: fam, weight: r.style.getPropertyValue('font-weight') || '400', style: r.style.getPropertyValue('font-style') || 'normal', src: src });
+            }
+          }
+          var set = function(id, v){ if (v) { document.getElementById(id).value = v; var pk = document.getElementById(id + '-pick'); if (pk && /^#/.test(v)) pk.value = v.toLowerCase(); } };
+          set('znk-bg', hex(bg)); if (ink) set('znk-ink', hex(ink)); if (acc) set('znk-accent', hex(acc));
+          set('znk-font_body', fb); set('znk-font_head', fh && fh !== fb ? fh : '');
+          document.getElementById('znk-faces').value = JSON.stringify(faces.slice(0, 24));
+          f.querySelector('input[name=mode][value=site]').checked = true;
+          msg.textContent = 'Fatto: controlla i valori e premi «Salva aspetto».' + (acc ? '' : ' Colore principale non trovato.') + (faces.length ? ' Caratteri del sito: ' + faces.length + ' file.' : '');
+        } catch (err) { msg.textContent = 'Non riesco a leggere la home page (' + err.message + '): compila i campi a mano.'; }
+        fr.remove();
+      }, 1200);
+    };
+    document.body.appendChild(fr);
+  });
+})();
+</script>
+JS;
     }
 
     private static function mail_tab()

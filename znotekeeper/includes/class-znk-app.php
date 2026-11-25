@@ -114,7 +114,8 @@ class ZNK_App
 
     private static function head($title, $extra = '')
     {
-        $theme = '#136F5E';
+        $theme = ZNK_Style::accent();
+        $style = ZNK_Style::app_css();
         echo '<!doctype html><html lang="it"><head><meta charset="utf-8">';
         echo '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">';
         echo '<title>' . esc_html($title) . '</title>';
@@ -126,6 +127,10 @@ class ZNK_App
         echo '<link rel="icon" href="' . esc_url(self::asset('icons/icon-192.png')) . '">';
         echo '<link rel="apple-touch-icon" href="' . esc_url(self::asset('icons/icon-192.png')) . '">';
         echo '<link rel="stylesheet" href="' . esc_url(self::asset('app.css')) . '">';
+        if ($style !== '') {
+            // aspetto del sito (colori e caratteri del tema): valori già validati da ZNK_Style
+            echo '<style id="znk-style">' . str_replace('</', '<\\/', $style) . '</style>';
+        }
         echo $extra;
         echo '<script type="application/json" id="znk-config">' . wp_json_encode(self::config(), JSON_HEX_TAG | JSON_HEX_AMP) . '</script>';
         echo '</head>';
@@ -193,8 +198,8 @@ class ZNK_App
             'display' => 'standalone',
             'display_override' => ['window-controls-overlay', 'standalone'],
             'orientation' => 'any',
-            'background_color' => '#FBFCFB',
-            'theme_color' => '#136F5E',
+            'background_color' => ZNK_Style::background(),
+            'theme_color' => ZNK_Style::accent(),
             'lang' => 'it',
             'icons' => [
                 ['src' => self::asset('icons/icon-192.png'), 'sizes' => '192x192', 'type' => 'image/png', 'purpose' => 'any'],

@@ -1,7 +1,7 @@
 === ZNoteKeeper ===
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.3.0
+Stable tag: 1.4.0
 License: GPLv2 or later
 
 Taccuino (gruppi › sezioni › pagine) e attività in stile Google Tasks, cifrati nel browser, usabili come app (PWA) su telefono e PC.
@@ -65,6 +65,12 @@ Nella sezione «Accessi» dell'app si registrano gli accessi da dare ai clienti 
 Il link apre /znotekeeper/access/: la password si vede una sola volta, premendo «Mostra». Con «Invia nuovo link» si manda un nuovo link e il precedente smette di funzionare.
 Sicurezza: il browser cifra i dati da mostrare con una chiave casuale (AES-256-GCM) che sta solo nella parte del link dopo «#», che i browser non mandano al sito. Il sito non salva la chiave: conserva l'impronta del token, il testo cifrato e la scadenza, e cancella il cifrato appena il cliente lo legge o il link scade. Aprire il link senza premere «Mostra» (come fanno i filtri antispam) non lo consuma.
 L'email parte da WordPress (wp_mail) con il nome e l'indirizzo mittente scelti nel modello (l'indirizzo deve essere del dominio del sito); le risposte vanno all'email del tuo utente del sito. Massimo 30 invii all'ora per utente.
+
+== Aspetto ==
+
+L'app prende da sola colori e caratteri dal tema del sito: stili globali dei temi a blocchi (theme.json e modifiche fatte nell'Editor del sito), tavolozza del tema, Astra, GeneratePress, Kadence, OceanWP e lo sfondo del Personalizza. Da sfondo, testo e colore principale ricava la versione chiara e quella scura con contrasto leggibile. Anche la pagina dei dati di accesso per i clienti usa questi colori.
+
+In Utenti › ZNoteKeeper › Aspetto l'amministratore vede cosa è stato trovato, può correggere ogni valore, scegliere l'icona del sito come logo, tornare ai colori originali di ZNoteKeeper e usare «Rileva dalla home page» per i temi costruiti con page builder. I caratteri si usano solo se i loro file stanno sul sito stesso: l'app non carica risorse esterne (per esempio Google Fonts).
 
 == Notifiche ==
 
