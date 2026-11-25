@@ -273,6 +273,7 @@ class ZNK_Admin
   function hex(c){ return '#' + c.map(function(x){ return ('0' + Math.round(x).toString(16)).slice(-2); }).join('').toUpperCase(); }
   function sat(c){ var mx = Math.max.apply(0,c)/255, mn = Math.min.apply(0,c)/255, l = (mx+mn)/2; return { s: mx===mn ? 0 : (mx-mn)/(1-Math.abs(2*l-1)), l: l }; }
   function colorful(c){ var x = sat(c); return x.s > .18 && x.l > .12 && x.l < .9; }
+  function hdTmp(d){ var h = d.querySelector('h1, h2'); return h ? rgb(d.defaultView.getComputedStyle(h).color) : null; }
   function visible(el, w){ var r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && w.getComputedStyle(el).visibility !== 'hidden'; }
   document.getElementById('znk-detect').addEventListener('click', function(){
     msg.textContent = 'Apro la home page…';
@@ -291,7 +292,11 @@ class ZNK_Admin
           for (var e = el; e && !bg; e = e.parentElement) bg = rgb(cs(e).backgroundColor);
           bg = bg || rgb(cs(d.body).backgroundColor) || rgb(cs(d.documentElement).backgroundColor) || [255,255,255];
           var p = d.querySelector('main p, article p, .entry-content p, .elementor-widget-text-editor p, p') || d.body;
-          var ink = rgb(cs(p).color);
+          // testo: tra il colore del corpo e quello dei paragrafi, il più leggibile sullo sfondo
+          // (molti temi usano per i paragrafi un grigio «secondario»)
+          var lum = function(c){ var f = function(v){ v /= 255; return v <= .03928 ? v/12.92 : Math.pow((v+.055)/1.055, 2.4); }; return .2126*f(c[0]) + .7152*f(c[1]) + .0722*f(c[2]); };
+          var con = function(a, b){ var x = lum(a), y = lum(b); return (Math.max(x,y)+.05)/(Math.min(x,y)+.05); };
+          var ink = [rgb(cs(d.body).color), rgb(cs(p).color), hdTmp(d) ].filter(Boolean).sort(function(a, b){ return con(b, bg) - con(a, bg); })[0] || null;
           var acc = null;
           var cands = d.querySelectorAll('.wp-element-button, .wp-block-button__link, .elementor-button, .et_pb_button, .button, .btn, button[type=submit], input[type=submit], a.button');
           for (var i = 0; i < cands.length && !acc; i++) { if (!visible(cands[i], w)) continue; var c = rgb(cs(cands[i]).backgroundColor); if (c && colorful(c)) acc = c; }

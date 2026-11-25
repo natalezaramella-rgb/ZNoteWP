@@ -352,6 +352,12 @@ class ZNK_Style
         return self::derive($bg, $ink, $acc);
     }
 
+    private static function generated_light($r)
+    {
+        $acc = self::parse_color($r['accent']) ?: self::parse_color(self::DEFAULT_ACCENT);
+        return self::derive(self::mix([251, 252, 252], $acc, .015), self::mix([20, 24, 28], $acc, .06), $acc);
+    }
+
     /** Tutta la tavolozza da sfondo, testo e colore principale. */
     private static function derive($bg, $ink, $acc)
     {
@@ -417,7 +423,8 @@ class ZNK_Style
         $css .= ':root{' . $font . self::vars($l) . '}';
         $css .= '@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){' . self::vars($d) . '}}';
         $css .= ':root[data-theme="dark"]{' . self::vars($d) . '}';
-        $css .= ':root[data-theme="light"]{' . self::vars($l) . '}';
+        // sito scuro: chi sceglie «Chiaro» nell'app riceve una versione chiara con il colore principale del sito
+        $css .= ':root[data-theme="light"]{' . self::vars(self::lum($l['surface']) < .18 ? self::generated_light($r) : $l) . '}';
         if ($r['logo']) {
             $css .= '.boot .logo,.lock>.logo,.lock .logo:first-child{background:var(--surface) url("' . self::css_url($r['logo']) . '") center/cover no-repeat;color:transparent;font-size:0;box-shadow:0 0 0 1px var(--line)}';
         }
