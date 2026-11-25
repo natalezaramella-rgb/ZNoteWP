@@ -7,6 +7,7 @@ import * as store from './store.js';
 import { S } from './store.js';
 import { app } from './ctx.js';
 import * as L from './lock.js';
+import { manage as manageMfa } from './mfa.js';
 import { exportBackup, restoreBackup, exportMarkdown } from './transfer.js';
 import { unb64 } from './crypto.js';
 import { scheduleLocalReminders } from './tasks.js';
@@ -76,6 +77,7 @@ function paint(el) {
         ${row('finger', 'Sblocco con impronta o volto', local.bioOk ? 'Su questo dispositivo. Richiede un browser che supporti le passkey con estensione PRF (Chrome/Edge recenti, Android, iPhone con iOS 18 o successivo).' : 'Non disponibile su questo dispositivo o browser: usa il PIN.', local.bioOk ? sw('bio', local.bio, 'Sblocco biometrico', 'class="needs-net"') : '')}
         ${row('phone', 'Ricorda questo dispositivo', 'Si apre senza password finché non premi «Blocca» o lo scolleghi. Il blocco automatico resta spento. Solo su un dispositivo che usi solo tu.', sw('remember', local.rem, 'Ricorda questo dispositivo', 'class="needs-net"'))}
         ${row('key', 'PIN di sblocco', 'Solo su questo dispositivo e solo online. Dopo 5 errori si disattiva.', sw('pin', local.pin, 'PIN', 'class="needs-net"'))}
+        ${row('shield', 'Verifica in due passaggi', me.mfa ? 'Attiva: oltre alla password serve il codice della tua app di autenticazione.' : 'Spenta. Aggiunge alla password un codice a 6 cifre generato dal tuo telefono.', `<button class="btn ${me.mfa ? 'ghost' : 'primary'} small needs-net" data-a="mfa">${me.mfa ? 'Gestisci' : 'Attiva'}</button>`)}
         ${row('shield', 'Codice di recupero', me.recovery.code_created ? `Creato ${esc(fmtWhen(me.recovery.code_created))}. Quello vecchio smette di valere.` : '', btn('new-code', 'Nuovo'))}
         ${row('mail', 'Recupero via email', er === 'off' ? 'Spento. Con il recupero attivo il sito conserva una copia protetta della chiave, legata alla tua email e alla password WordPress attuali.' : er === 'pending' ? 'Recupero in corso: completabile dopo 24 ore.' : er === 'ready' ? 'Recupero pronto per essere completato.' : `Attivo per ${esc(me.user.email || '')}. Link monouso di 30 minuti, poi 24 ore di attesa.`, sw('mailrec', er !== 'off', 'Recupero via email', 'class="needs-net"'))}
         ${er === 'pending' || er === 'ready' ? row('', 'Non hai chiesto tu il recupero?', '', btn('er-cancel', 'Annulla recupero', 'danger')) : ''}
@@ -196,6 +198,7 @@ async function onClick(e) {
         break;
       case 'new-code': await L.newRecoveryCodeFlow(); S.me = await api('GET', 'me'); paint(el); break;
       case 'er-cancel': await api('POST', 'recover/email/cancel', {}); S.recovery = 'on'; toast('Recupero annullato.'); paint(el); break;
+      case 'mfa': await manageMfa(L.askPassword); S.me = await api('GET', 'me'); paint(el); break;
       case 'devices': devices(); break;
       case 'change-pw': L.changePassword(); break;
       case 'backup': exportBackup(); break;

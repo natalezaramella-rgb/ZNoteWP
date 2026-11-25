@@ -154,6 +154,7 @@ class ZNK_REST
                 'admin_url' => admin_url('users.php?page=znotekeeper'),
             ],
             'device' => ['id' => (int) $ctx['device']->id, 'name' => $ctx['device']->name, 'pin' => !empty($ctx['device']->pin_hash), 'remember' => !empty($ctx['device']->rem_hash)],
+            'mfa' => ZNK_Mfa::is_on($u->user_id),
             'has_vault' => (bool) $vault,
             'kdf' => $vault ? $vault['kdf'] : null,
             'recovery' => [
@@ -223,6 +224,9 @@ class ZNK_REST
         if ($e = ZNK_Auth::verify_user_secret($u, self::str($p, 'auth', 200), $u->pw_auth)) {
             return $e;
         }
+        if ($e = ZNK_Mfa::gate($req, $ctx)) {
+            return $e;
+        }
         return ['vault' => json_decode($u->vault, true), 'session' => ZNK_Auth::issue_session($ctx['device'])];
     }
 
@@ -233,6 +237,9 @@ class ZNK_REST
         $p = self::json($req);
         if (empty($u->mk_auth) || !ZNK_Auth::check_secret(self::str($p, 'mk_auth', 200), $u->mk_auth)) {
             return self::err('znk_bad_secret', 'Sblocco biometrico non più valido: usa la password.', 403);
+        }
+        if ($e = ZNK_Mfa::gate($req, $ctx)) {
+            return $e;
         }
         return ['vault' => json_decode($u->vault, true), 'session' => ZNK_Auth::issue_session($ctx['device'])];
     }
@@ -261,6 +268,9 @@ class ZNK_REST
             return self::err('znk_bad_secret', 'PIN non corretto. Tentativi rimasti: ' . (5 - $f) . '.', 403);
         }
         $wpdb->update(ZNK_DB::t('devices'), ['pin_fails' => 0], ['id' => $dev->id]);
+        if ($e = ZNK_Mfa::gate($req, $ctx)) {
+            return $e;
+        }
         return [
             'pepper' => $dev->pin_pepper,
             'vault' => json_decode($ctx['user']->vault, true),
@@ -294,6 +304,9 @@ class ZNK_REST
             // Il segreto è casuale (256 bit): un errore vuol dire dati alterati, quindi si spegne subito.
             $wpdb->update(ZNK_DB::t('devices'), ['rem_hash' => null, 'rem_pepper' => null], ['id' => $dev->id]);
             return self::err('znk_no_remember', 'Questo dispositivo non è più ricordato: inserisci la password.', 403);
+        }
+        if ($e = ZNK_Mfa::gate($req, $ctx)) {
+            return $e;
         }
         return [
             'pepper' => $dev->rem_pepper,
@@ -354,6 +367,8 @@ class ZNK_REST
             return $e;
         }
         $v = json_decode($u->vault, true);
+        // Il codice di recupero vale anche senza telefono: al termine spegne la verifica in due passaggi.
+        set_transient('znk_rc_reset_' . (int) $u->user_id, 1, 15 * MINUTE_IN_SECONDS);
         return ['wrapped' => $v['rc'], 'priv' => $v['priv'], 'ticket' => self::issue_ticket($u)];
     }
 
@@ -431,6 +446,9 @@ class ZNK_REST
         if ($state !== 'ready') {
             return self::err('znk_not_ready', $state === 'pending' ? 'L\'attesa di 24 ore non è ancora finita.' : 'Nessun recupero via email in corso.', 409);
         }
+        if ($e = ZNK_Mfa::gate($req, $ctx)) {
+            return $e;
+        }
         $er = ZNK_Secret::decrypt($u->er_sealed, ZNK_Users::er_key($u->user_id));
         $v = json_decode($u->vault, true);
         return [
@@ -475,6 +493,10 @@ class ZNK_REST
         ]);
         $wpdb->query($wpdb->prepare('DELETE FROM ' . ZNK_DB::t('devices') . ' WHERE user_id = %d AND id <> %d', $u->user_id, $ctx['device']->id));
         $wpdb->update(ZNK_DB::t('devices'), ['pin_hash' => null, 'pin_pepper' => null, 'rem_hash' => null, 'rem_pepper' => null], ['id' => $ctx['device']->id]);
+        if (get_transient('znk_rc_reset_' . (int) $u->user_id)) {
+            delete_transient('znk_rc_reset_' . (int) $u->user_id);
+            ZNK_Mfa::disable($u->user_id, "Hai recuperato l'accesso con il codice di recupero: la verifica in due passaggi è stata spenta. Riattivala da Impostazioni › Sicurezza.");
+        }
         ZNK_Users::notify($u->user_id, 'accesso recuperato', "La password delle note è stata reimpostata e gli altri dispositivi sono stati scollegati.\nSe non sei stato tu, contatta subito l'amministratore del sito.");
         return ['session' => ZNK_Auth::issue_session($ctx['device'])];
     }

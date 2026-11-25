@@ -1,7 +1,7 @@
 === ZNoteKeeper ===
 Requires at least: 6.2
 Requires PHP: 7.4
-Stable tag: 1.5.0
+Stable tag: 1.6.0
 License: GPLv2 or later
 
 Taccuino (gruppi › sezioni › pagine) e attività in stile Google Tasks, cifrati nel browser, usabili come app (PWA) su telefono e PC.
@@ -26,6 +26,16 @@ Serve HTTPS (la cifratura del browser, il service worker e le notifiche funziona
   Dopo la conferma del link c'è un'attesa di sicurezza di 24 ore, con avviso via email e possibilità di annullare.
 * Sblocco con impronta/volto: WebAuthn con estensione PRF. Funziona su Android (Chrome) e su iPhone/iPad con iOS 18 o successivi
   (Safari o app installata), su PC con Windows Hello o Touch ID dove il browser lo supporta.
+
+== Verifica in due passaggi ==
+
+Facoltativa, la attiva ogni utente da Impostazioni › Sicurezza. Usa un'app di autenticazione (TOTP a 6 cifre: Google Authenticator, Microsoft Authenticator, Aegis, 1Password…).
+
+* Il sito consegna la cassaforte e apre la sessione solo dopo password delle note (o PIN, impronta, «Ricordami») più il codice.
+* Ogni dispositivo può restare fidato per 1, 7 o 30 giorni, oppure si può chiedere il codice a ogni sblocco.
+* 10 codici di riserva monouso. Chi perde telefono e codici rientra con il codice di recupero di 24 caratteri, che spegne la verifica.
+* Il segreto TOTP è cifrato con la chiave del sito; i codici di riserva sono conservati come impronte. I tentativi sono limitati come per la password.
+* Limiti: senza rete le note già scaricate si aprono in sola lettura con la sola password; non protegge da chi amministra il sito.
 
 == Email → nota ==
 

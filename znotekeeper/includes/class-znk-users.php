@@ -96,6 +96,7 @@ class ZNK_Users
         }
         ZNK_Access::delete_user($uid);
         ZNK_Vault::delete_user($uid);
+        ZNK_Mfa::delete_user($uid);
     }
 
     public static function usage($user_id)

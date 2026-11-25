@@ -5,6 +5,7 @@ import * as C from './crypto.js';
 import { ic } from './icons.js';
 import { $, esc, sheet, closeOverlay, toast, download, strengthMeter, confirmDialog, fmtWhen } from './ui.js';
 import { S } from './store.js';
+import { apiMfa } from './mfa.js';
 
 const ITER = C.PW_ITER;
 
@@ -258,7 +259,7 @@ export function renderLock(root, { me, onUnlocked, offline }) {
       const d = await C.deriveSecret(pw, kdf.salt, kdf.iter);
       let vault, ro = false;
       try {
-        const r = await api('POST', 'unlock', { auth: d.auth }, { quiet: true });
+        const r = await apiMfa('POST', 'unlock', { auth: d.auth }, { quiet: true });
         setSession(r.session);
         vault = r.vault;
       } catch (err) {
@@ -296,7 +297,7 @@ export function renderLock(root, { me, onUnlocked, offline }) {
     try { space = await C.Space.unwrap(kek, b.box); } catch (e) { throw new Error('Sblocco biometrico non riuscito: usa la password.'); }
     let vault = await kv.get('vault'), ro = false;
     try {
-      const r = await api('POST', 'unlock/key', { mk_auth: space.mkAuth }, { quiet: true });
+      const r = await apiMfa('POST', 'unlock/key', { mk_auth: space.mkAuth }, { quiet: true });
       setSession(r.session); vault = r.vault;
     } catch (err) {
       if (!isOffline(err)) throw err;
@@ -320,7 +321,7 @@ function pinSheet(onOk) {
       if (!local) throw new Error('PIN non configurato su questo dispositivo.');
       const bits = await C.pbkdf2($('input', el).value, local.salt, C.PIN_ITER);
       const auth = C.b64(new Uint8Array(await crypto.subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: new Uint8Array(32), info: new TextEncoder().encode('znk-auth') }, await crypto.subtle.importKey('raw', bits, 'HKDF', false, ['deriveBits']), 256)));
-      const r = await api('POST', 'pin/unlock', { pin_auth: auth }, { quiet: true });
+      const r = await apiMfa('POST', 'pin/unlock', { pin_auth: auth }, { quiet: true });
       const mix = new Uint8Array([...bits, ...C.unb64(r.pepper)]);
       const kek = await C.kekFrom(mix, 'znk-pin');
       const space = await C.Space.unwrap(kek, local.box);
@@ -357,14 +358,15 @@ export async function rememberUnlock() {
   if (!local) return null;
   try {
     const R = new Uint8Array(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: local.iv }, local.w, local.ct));
-    const r = await api('POST', 'remember/unlock', { rem_auth: C.b64(await hkdfBits(R, 'znk-rem-auth')) }, { quiet: true });
+    const r = await apiMfa('POST', 'remember/unlock', { rem_auth: C.b64(await hkdfBits(R, 'znk-rem-auth')) }, { quiet: true });
     const kek = await C.kekFrom(new Uint8Array([...R, ...C.unb64(r.pepper)]), 'znk-rem');
     const space = await C.Space.unwrap(kek, local.box);
     setSession(r.session);
     S.remembered = true;
     return { space, vault: r.vault };
   } catch (e) {
-    if (!isOffline(e)) { await kv.del('rem'); S.remembered = false; }
+    // Un codice di verifica annullato o sbagliato non deve far dimenticare il dispositivo.
+    if (!isOffline(e) && !['znk_mfa_cancel', 'znk_mfa_bad', 'znk_wait'].includes(e.code)) { await kv.del('rem'); S.remembered = false; }
     throw e;
   }
 }
@@ -493,7 +495,7 @@ function recoverCode(onUnlocked) {
 
 async function emailComplete(onUnlocked) {
   try {
-    const r = await api('POST', 'recover/email/complete', {});
+    const r = await apiMfa('POST', 'recover/email/complete', {});
     const kek = await C.kekFrom(C.unb64(r.er), 'znk-er');
     const space = await C.Space.unwrap(kek, r.wrapped);
     newPasswordFlow(space, r.ticket, r.priv, onUnlocked);
