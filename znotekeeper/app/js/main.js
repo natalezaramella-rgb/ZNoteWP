@@ -2,7 +2,7 @@
 import { CFG, api, setToken, setSession, onAuthError, isOffline } from './api.js';
 import { kv } from './db.js';
 import { installSprite, ic } from './icons.js';
-import { $, $$, esc, closeOverlay, isOverlayOpen, toast, confirmDialog } from './ui.js';
+import { $, $$, esc, closeOverlay, isOverlayOpen, toast, confirmDialog, choose } from './ui.js';
 import { app } from './ctx.js';
 import * as store from './store.js';
 import { S } from './store.js';
@@ -53,10 +53,11 @@ function shell() {
       <button data-nav="notes"><span class="pill">${ic('book')}</span>Taccuino</button>
       <button data-nav="tasks"><span class="pill">${ic('tasks')}</span>Attività</button>
       <button data-nav="vault"><span class="pill">${ic('key')}</span><span class="nl">I miei secrets</span><span class="ns">Secrets</span></button>
-      <button data-nav="access"><span class="pill">${ic('mail')}</span><span class="nl">Secrets clienti</span><span class="ns">Clienti</span></button>
-      <button data-nav="secrets"><span class="pill">${ic('shield')}</span><span class="nl">Foglio segreti</span><span class="ns">Foglio</span></button>
+      <button data-nav="access" class="navx"><span class="pill">${ic('mail')}</span><span class="nl">Secrets clienti</span><span class="ns">Clienti</span></button>
+      <button data-nav="secrets" class="navx"><span class="pill">${ic('shield')}</span><span class="nl">Foglio segreti</span><span class="ns">Foglio</span></button>
       <button data-nav="search"><span class="pill">${ic('search')}</span>Cerca</button>
-      <button data-nav="settings"><span class="pill">${ic('sliders')}</span>Impostazioni</button>
+      <button data-nav="settings" class="navx"><span class="pill">${ic('sliders')}</span>Impostazioni</button>
+      <button data-nav="more" class="navmore" aria-label="Altre sezioni"><span class="pill">${ic('more')}</span>Altro</button>
       <button class="navlock" data-nav="lock" title="Blocca (Ctrl+Maiusc+L)"><span class="pill">${ic('lock')}</span>Blocca</button>
     </nav>
     <div id="overlay"></div><div id="toastRoot"></div>`;
@@ -64,8 +65,24 @@ function shell() {
     const b = e.target.closest('[data-nav]');
     if (!b) return;
     if (b.dataset.nav === 'lock') return app.lock();
+    if (b.dataset.nav === 'more') return moreMenu();
     go({ view: b.dataset.nav, page: app.R.view === b.dataset.nav ? null : app.R.page, task: app.R.view === b.dataset.nav ? null : app.R.task, acc: app.R.view === b.dataset.nav ? null : app.R.acc, vent: app.R.view === b.dataset.nav ? null : app.R.vent, sver: null }, { replace: true });
   });
+}
+
+// Telefono: le sezioni meno usate stanno in «Altro», così la barra in basso resta corta.
+async function moreMenu() {
+  const v = app.R && app.R.view;
+  const a = await choose('Altro', [
+    { label: 'Secrets clienti', icon: 'mail', value: 'access' },
+    { label: 'Foglio segreti', icon: 'shield', value: 'secrets', hint: secrets.dirty() ? 'Modifiche non salvate' : '' },
+    { label: 'Impostazioni', icon: 'sliders', value: 'settings' },
+    { sep: true },
+    { label: 'Blocca', icon: 'lock', value: 'lock' },
+  ], { current: ['access', 'secrets', 'settings'].includes(v) ? v : null });
+  if (!a) return;
+  if (a === 'lock') { app.lock(); return; }
+  go({ view: a, page: null, task: null, acc: null, vent: null, sver: null }, { replace: true });
 }
 
 function message(title, html) {
@@ -218,7 +235,6 @@ function buildScreens() {
     <section class="screen" id="vTree" data-pane="vtree"></section>
     <section class="screen" id="vList" data-pane="vlist"></section>
     <section class="screen" id="vMain" data-pane="vmain"></section>
-    <section class="screen" id="sVers" data-pane="slist"></section>
     <section class="screen" id="sMain" data-pane="smain"></section>
     <section class="screen" id="sVer" data-pane="sver"></section>
     <section class="screen" id="sSearch" data-pane="search"></section>
@@ -231,22 +247,59 @@ function buildScreens() {
 function setPane(el, cls) {
   el.hidden = !cls;
   el.className = 'screen' + (cls ? ' ' + cls : '');
+  el.style.left = el.style.width = el.style.right = '';
 }
 
 // ---------- pannelli richiudibili (PC) ----------
+// Due interruttori validi per tutte le sezioni: «tree» (colonna di navigazione: sezioni, cartelle)
+// e «list» (elenco: pagine, attività, secrets, clienti). Aprendo un'altra sezione la scelta resta.
 const FOLD_KEY = 'znk-fold';
-function getFold() { try { return JSON.parse(localStorage.getItem(FOLD_KEY) || '{}') || {}; } catch (e) { return {}; } }
-function setFold(k, v) { const f = getFold(); f[k] = v; try { localStorage.setItem(FOLD_KEY, JSON.stringify(f)); } catch (e) { /* */ } render(); }
-function foldRail(view, fold) {
+const NAVW = 84, RAILW = 44;
+function getFold() {
+  let f = {};
+  try { f = JSON.parse(localStorage.getItem(FOLD_KEY) || '{}') || {}; } catch (e) { /* */ }
+  if ('tlist' in f) { f.list = !!(f.list || f.tlist); delete f.tlist; try { localStorage.setItem(FOLD_KEY, JSON.stringify(f)); } catch (e) { /* */ } }
+  return f;
+}
+function saveFold(f) { try { localStorage.setItem(FOLD_KEY, JSON.stringify(f)); } catch (e) { /* */ } render(); }
+function setFold(k, v) { const f = getFold(); f[k] = v; saveFold(f); }
+const RAIL = {
+  notes: { tree: ['folder', 'Mostra sezioni'], list: ['page', 'Mostra pagine'] },
+  tasks: { list: ['list', 'Mostra elenco delle attività'] },
+  vault: { tree: ['folder', 'Mostra cartelle'], list: ['key', 'Mostra elenco dei secrets'] },
+  access: { list: ['mail', 'Mostra elenco dei clienti'] },
+};
+function foldRail(view, keys) {
   let rail = $('#foldRail');
-  const btns = [];
-  if (view === 'notes' && fold.tree) btns.push(['tree', 'folder', 'Mostra sezioni']);
-  if (view === 'notes' && fold.list) btns.push(['list', 'page', 'Mostra pagine']);
-  if (view === 'tasks' && fold.tlist) btns.push(['tlist', 'list', 'Mostra elenco']);
-  if (!btns.length) { if (rail) rail.remove(); return; }
+  if (!keys.length) { if (rail) rail.remove(); return; }
   if (!rail) { rail = document.createElement('div'); rail.id = 'foldRail'; rail.className = 'foldrail'; root.appendChild(rail); }
-  rail.style.left = view === 'notes' && fold.list && !fold.tree ? '344px' : '84px';
-  rail.innerHTML = btns.map(([k, i, l]) => `<button class="ib" data-unfold="${k}" aria-label="${l}" title="${l}">${ic(i)}</button>`).join('');
+  rail.style.left = NAVW + 'px';
+  rail.innerHTML = keys.map(k => { const [i, l] = RAIL[view][k]; return `<button class="ib" data-unfold="${k}" aria-label="${l}" title="${l} (Ctrl+\\)">${ic(i)}</button>`; }).join('');
+}
+function place(el, left, width) {
+  el.style.left = left + 'px';
+  el.style.width = width ? width + 'px' : '';
+  el.style.right = width ? 'auto' : '0';
+}
+/** PC: dispone le colonne richiudibili di una sezione e restituisce dove comincia l'area di lavoro. */
+function columns(view, fold, cols) {
+  const folded = cols.filter(c => fold[c.k]).map(c => c.k);
+  foldRail(view, folded);
+  let x = NAVW + (folded.length ? RAILW : 0);
+  for (const c of cols) {
+    if (fold[c.k]) continue;
+    setPane(c.el, c.cls); place(c.el, x, c.w); c.render(c.el); x += c.w;
+  }
+  return x;
+}
+function mainPane(el, x) { setPane(el, 'pane-main'); place(el, x, 0); }
+function toggleAllFolds() {
+  const keys = Object.keys(RAIL[app.R.view] || {});
+  if (!keys.length) return;
+  const f = getFold();
+  const all = keys.every(k => f[k]);
+  keys.forEach(k => { f[k] = !all; });
+  saveFold(f);
 }
 document.addEventListener('click', e => {
   const f = e.target.closest('[data-fold],[data-unfold]');
@@ -263,7 +316,8 @@ export function render() {
   root.classList.toggle('desk', desk);
   for (const p of Object.values(panes)) p.hidden = true;
   const nav = R.view;
-  $$('#nav [data-nav]').forEach(b => b.setAttribute('aria-current', String(b.dataset.nav === nav)));
+  const inMore = ['access', 'secrets', 'settings'].includes(nav);
+  $$('#nav [data-nav]').forEach(b => b.setAttribute('aria-current', String(b.dataset.nav === nav || (b.dataset.nav === 'more' && inMore))));
   const offlineBar = $('#offlineBar');
   if (S.offline && !offlineBar) root.insertAdjacentHTML('afterbegin', '<div class="offline-bar" id="offlineBar">Offline · sola lettura delle note già scaricate</div>');
   if (!S.offline && offlineBar) offlineBar.remove();
@@ -273,15 +327,16 @@ export function render() {
   if (R.view !== 'vault') vault.renderDetail(null);
   if (R.view !== 'secrets') { secrets.renderMain(null); secrets.renderVersion(null); }
   const fold = desk ? getFold() : {};
-  root.classList.toggle('fold-tree', !!(desk && R.view === 'notes' && fold.tree));
-  root.classList.toggle('fold-list', !!(desk && ((R.view === 'notes' && fold.list) || (R.view === 'tasks' && fold.tlist))));
-  foldRail(desk ? R.view : null, fold);
+  if (!desk || !RAIL[R.view]) foldRail(null, []);
+  const unfoldBtn = fold.list ? '<br><br><button class="btn ghost small" data-unfold="list">Mostra l\'elenco</button>' : '';
   if (R.view === 'notes') {
     if (desk) {
-      if (!fold.tree) { setPane(panes.tree, 'pane-tree'); notes.renderTree(panes.tree); }
-      if (!fold.list) { setPane(panes.nlist, 'pane-list after-tree'); notes.renderList(panes.nlist); }
-      if (R.page && store.get(R.page)) { setPane(panes.npage, 'pane-main after-tree'); notes.renderPage(panes.npage, R.page); }
-      else { setPane(panes.empty, 'pane-main after-tree'); emptyMsg('Nessuna pagina aperta', 'Scegli una pagina dall\'elenco o creane una nuova (Alt+N).'); notes.renderPage(null); }
+      const x = columns('notes', fold, [
+        { k: 'tree', el: panes.tree, cls: 'pane-tree', w: 260, render: notes.renderTree },
+        { k: 'list', el: panes.nlist, cls: 'pane-list', w: 340, render: notes.renderList },
+      ]);
+      if (R.page && store.get(R.page)) { mainPane(panes.npage, x); notes.renderPage(panes.npage, R.page); }
+      else { mainPane(panes.empty, x); emptyMsg('Nessuna pagina aperta', 'Scegli una pagina dall\'elenco o creane una nuova (Alt+N).', unfoldBtn); notes.renderPage(null); }
     } else if (R.page && store.get(R.page)) {
       setPane(panes.npage, 'full'); notes.renderPage(panes.npage, R.page); showNav = false;
     } else {
@@ -290,9 +345,9 @@ export function render() {
   } else if (R.view === 'tasks') {
     notes.renderPage(null);
     if (desk) {
-      if (!fold.tlist) { setPane(panes.tlist, 'pane-list'); tasks.renderList(panes.tlist); }
-      if (R.task && store.get(R.task)) { setPane(panes.tdetail, 'pane-main'); tasks.renderDetail(panes.tdetail, R.task); }
-      else { setPane(panes.empty, 'pane-main'); emptyMsg('Nessuna attività aperta', 'Scegli un\'attività per vederne i dettagli qui accanto, o aggiungine una (Alt+T).'); tasks.renderDetail(null); }
+      const x = columns('tasks', fold, [{ k: 'list', el: panes.tlist, cls: 'pane-list', w: 380, render: tasks.renderList }]);
+      if (R.task && store.get(R.task)) { mainPane(panes.tdetail, x); tasks.renderDetail(panes.tdetail, R.task); }
+      else { mainPane(panes.empty, x); emptyMsg('Nessuna attività aperta', 'Scegli un\'attività per vederne i dettagli qui accanto, o aggiungine una (Alt+T).', unfoldBtn); tasks.renderDetail(null); }
     } else if (R.task && store.get(R.task)) {
       setPane(panes.tdetail, 'full'); tasks.renderDetail(panes.tdetail, R.task); showNav = false;
     } else {
@@ -302,10 +357,12 @@ export function render() {
     notes.renderPage(null); tasks.renderDetail(null);
     const ve = R.vent;
     if (desk) {
-      setPane(panes.vtree, 'pane-tree'); vault.renderTree(panes.vtree);
-      setPane(panes.vlist, 'pane-list after-tree'); vault.renderList(panes.vlist);
-      if (ve) { setPane(panes.vmain, 'pane-main after-tree'); vault.renderDetail(panes.vmain, ve); }
-      else { setPane(panes.empty, 'pane-main after-tree'); emptyMsg('Nessun secret aperto', 'Scegli una voce dall\'elenco o aggiungine una nuova.'); vault.renderDetail(null); }
+      const x = columns('vault', fold, [
+        { k: 'tree', el: panes.vtree, cls: 'pane-tree', w: 260, render: vault.renderTree },
+        { k: 'list', el: panes.vlist, cls: 'pane-list', w: 340, render: vault.renderList },
+      ]);
+      if (ve) { mainPane(panes.vmain, x); vault.renderDetail(panes.vmain, ve); }
+      else { mainPane(panes.empty, x); emptyMsg('Nessun secret aperto', 'Scegli una voce dall\'elenco o aggiungine una nuova.', unfoldBtn); vault.renderDetail(null); }
     } else if (ve) {
       setPane(panes.vmain, 'full'); vault.renderDetail(panes.vmain, ve); showNav = false;
     } else {
@@ -314,9 +371,9 @@ export function render() {
   } else if (R.view === 'access') {
     notes.renderPage(null); tasks.renderDetail(null);
     if (desk) {
-      setPane(panes.alist, 'pane-list'); access.renderList(panes.alist);
-      if (R.acc && store.get(R.acc)) { setPane(panes.adetail, 'pane-main'); access.renderDetail(panes.adetail, R.acc); }
-      else { setPane(panes.empty, 'pane-main'); emptyMsg('Nessun secret cliente aperto', 'Scegli un cliente dall\'elenco o aggiungine uno nuovo.'); access.renderDetail(null); }
+      const x = columns('access', fold, [{ k: 'list', el: panes.alist, cls: 'pane-list', w: 380, render: access.renderList }]);
+      if (R.acc && store.get(R.acc)) { mainPane(panes.adetail, x); access.renderDetail(panes.adetail, R.acc); }
+      else { mainPane(panes.empty, x); emptyMsg('Nessun secret cliente aperto', 'Scegli un cliente dall\'elenco o aggiungine uno nuovo.', unfoldBtn); access.renderDetail(null); }
     } else if (R.acc && store.get(R.acc)) {
       setPane(panes.adetail, 'full'); access.renderDetail(panes.adetail, R.acc); showNav = false;
     } else {
@@ -324,15 +381,13 @@ export function render() {
     }
   } else if (R.view === 'secrets') {
     notes.renderPage(null); tasks.renderDetail(null);
+    // Le versioni si scelgono dall'elenco a discesa in alto: niente colonna dedicata.
     const v = R.sver && R.sver !== 'list' ? R.sver : null;
     if (desk) {
-      setPane(panes.slist, 'pane-list'); secrets.renderList(panes.slist);
-      if (v) { secrets.renderMain(null); setPane(panes.sver, 'pane-main'); secrets.renderVersion(panes.sver, v); }
-      else { secrets.renderVersion(null); setPane(panes.smain, 'pane-main'); secrets.renderMain(panes.smain); }
+      if (v) { secrets.renderMain(null); mainPane(panes.sver, NAVW); secrets.renderVersion(panes.sver, v); }
+      else { secrets.renderVersion(null); mainPane(panes.smain, NAVW); secrets.renderMain(panes.smain); }
     } else if (v) {
       secrets.renderMain(null); setPane(panes.sver, 'full'); secrets.renderVersion(panes.sver, v); showNav = false;
-    } else if (R.sver === 'list') {
-      secrets.renderMain(null); secrets.renderVersion(null); setPane(panes.slist, 'full'); secrets.renderList(panes.slist); showNav = false;
     } else {
       secrets.renderVersion(null); setPane(panes.smain, 'has-nav'); secrets.renderMain(panes.smain);
     }
@@ -346,7 +401,7 @@ export function render() {
   $('#nav').hidden = !showNav && !desk;
   lastRendered = { ...R };
 }
-function emptyMsg(t, s) { $('.empty', panes.empty).innerHTML = `<b>${esc(t)}</b>${esc(s)}`; }
+function emptyMsg(t, s, extra = '') { $('.empty', panes.empty).innerHTML = `<b>${esc(t)}</b>${esc(s)}${extra}`; }
 
 /** Cambia schermata. Su telefono le schermate di dettaglio entrano nella cronologia (tasto indietro). */
 function go(patch, { replace = false } = {}) {
@@ -362,6 +417,7 @@ function go(patch, { replace = false } = {}) {
     saveNav();
   }
   closeOverlay();
+  if (prev.view !== R.view || deeper) root.classList.remove('chrome-hidden');
   render();
 }
 let navT = null;
@@ -404,9 +460,7 @@ document.addEventListener('keydown', e => {
   if (mod && e.shiftKey && k === 'l') { e.preventDefault(); app.lock(); return; }
   if (mod && e.key === '\\' && app.desk) {
     e.preventDefault();
-    const f = getFold();
-    if (app.R.view === 'tasks') setFold('tlist', !f.tlist);
-    else if (app.R.view === 'notes') { const all = f.tree && f.list; f.tree = !all; f.list = !all; try { localStorage.setItem(FOLD_KEY, JSON.stringify(f)); } catch (x) { /* */ } render(); }
+    toggleAllFolds();
     return;
   }
   if (mod && k === 'k' && !typing) { e.preventDefault(); go({ view: 'search' }); setTimeout(() => { const q = $('#q'); if (q) q.focus(); }, 30); return; }
@@ -417,8 +471,30 @@ document.addEventListener('keydown', e => {
     if (['1', '2', '3', '4', '5', '6', '7'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'vault', 'access', 'secrets', 'search', 'settings'][+k - 1] }); return; }
   }
   if (k === 'escape' && !isOverlayOpen() && !typing) {
-    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null }); else if (app.R.acc) go({ acc: null }); else if (app.R.vent && app.R.vent !== 'new') go({ vent: null }); else if (app.R.sver) go({ sver: app.desk || app.R.sver === 'list' ? null : 'list' });
+    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null }); else if (app.R.acc) go({ acc: null }); else if (app.R.vent && app.R.vent !== 'new') go({ vent: null }); else if (app.R.sver) go({ sver: null });
   }
+});
+
+// ---------- telefono: barre che si fanno da parte ----------
+// Scorrendo verso il basso la barra delle sezioni scompare (torna scorrendo in su);
+// mentre si scrive sparisce del tutto e compare la barra di formattazione.
+const lastY = new WeakMap();
+document.addEventListener('scroll', e => {
+  if (app.desk || !started) return;
+  const t = e.target;
+  if (!(t instanceof Element) || !t.closest('.screen.has-nav')) return;
+  const y = t.scrollTop, p = lastY.has(t) ? lastY.get(t) : 0;
+  lastY.set(t, y);
+  if (y < 24) root.classList.remove('chrome-hidden');
+  else if (y > p + 8) root.classList.add('chrome-hidden');
+  else if (y < p - 8) root.classList.remove('chrome-hidden');
+}, true);
+const isTyping = el => !!(el && el.closest && el.closest('input:not([type=checkbox]):not([type=radio]):not([type=button]),textarea,[contenteditable=true],.etools'));
+let typingT = null;
+document.addEventListener('focusin', e => { clearTimeout(typingT); if (isTyping(e.target) && !e.target.closest('.sheet')) root.classList.add('typing'); });
+document.addEventListener('focusout', () => {
+  clearTimeout(typingT);
+  typingT = setTimeout(() => { if (!isTyping(document.activeElement)) root.classList.remove('typing'); }, 150);
 });
 
 boot().catch(e => { console.error(e); message('Errore di avvio', esc(e.message)); });

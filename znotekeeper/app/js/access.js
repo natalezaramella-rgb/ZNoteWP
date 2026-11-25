@@ -81,6 +81,7 @@ export function renderList(el) {
         <div class="grow" style="padding-left:10px"><div class="apptitle">Secrets clienti</div></div>
         <button class="ib needs-net" data-a="tpl" aria-label="Modello dell'email" title="Modello dell'email">${ic('mail')}</button>
         <button class="ib" data-a="lock" data-only="phone" aria-label="Blocca">${ic('lock')}</button>
+        <button class="ib" data-only="desk" data-fold="list" aria-label="Nascondi elenco" title="Nascondi elenco dei clienti (Ctrl+\\)">${ic('panel')}</button>
       </div>
       <label class="searchbox">${ic('search')}<input id="accQ" type="search" placeholder="Cerca cliente, software, email" aria-label="Cerca nei secrets clienti" autocomplete="off"></label>
       <div class="scroll" id="accRows"></div>

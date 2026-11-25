@@ -261,7 +261,7 @@ function treeHTML() {
   const walk = (pid, depth) => kids(pid).map(f => `<div class="row"><button class="sec ${depth ? '' : 'top'}" style="padding-left:${10 + depth * 18}px" data-v="scope" data-id="f:${f.id}" aria-current="${cur === 'f:' + f.id}">${ic('folder', 'sm')}<span class="nm">${esc(f.d.name)}</span><span class="cnt">${n('f:' + f.id) || ''}</span></button>
       <button class="ib more needs-net" data-v="fmenu" data-id="${f.id}" aria-label="Azioni cartella ${esc(f.d.name)}">${ic('more')}</button></div>${depth < 5 ? walk(f.id, depth + 1) : ''}`).join('');
   const tags = allTags();
-  return `<div class="dh"><div style="display:flex;align-items:center"><h2 class="big" style="font-size:24px;flex:1">I miei secrets</h2></div></div>
+  return `<div class="dh"><div style="display:flex;align-items:center"><h2 class="big" style="font-size:24px;flex:1">I miei secrets</h2><button class="ib" data-only="desk" data-fold="tree" aria-label="Nascondi cartelle" title="Nascondi cartelle (Ctrl+\\)">${ic('panel')}</button></div></div>
     <div class="tree">
       ${q('all', 'key', 'Tutti')}
       ${q('fav', 'star', 'Preferiti')}
@@ -339,6 +339,7 @@ export function renderList(el) {
         <button class="ib" data-v="drawer" data-only="phone" aria-label="Cartelle e viste">${ic('menu')}</button>
         <div class="grow" style="padding-left:6px"><div class="apptitle" id="vScope"></div></div>
         <button class="ib" data-v="lock" data-only="phone" aria-label="Blocca">${ic('lock')}</button>
+        <button class="ib" data-only="desk" data-fold="list" aria-label="Nascondi elenco" title="Nascondi elenco dei secrets (Ctrl+\\)">${ic('panel')}</button>
       </div>
       <label class="searchbox">${ic('search')}<input id="vQ" type="search" placeholder="Cerca titolo, utente, indirizzo, tag" aria-label="Cerca nei secrets" autocomplete="off"></label>
       <div class="scroll" id="vRows"></div>

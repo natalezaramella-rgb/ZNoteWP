@@ -78,45 +78,41 @@ async function save() {
   paintHead();
 }
 
-// ---------- elenco versioni ----------
-export function renderList(el) {
-  loadVersions();
+// ---------- scelta della versione (elenco a discesa, dalla più recente) ----------
+function pickerHTML() {
   const it = item();
-  const cur = app.R.sver;
-  const rows = [];
-  if (it) rows.push(`<div class="page-row ${!cur || cur === 'list' ? 'sel' : ''}" data-a="ver" data-id="">
-      <div class="pg"><div class="pt">${ic('page')}Versione in corso${vers ? ` (${vers.length + 1})` : ''}</div><div class="ps">Salvata ${esc(when(it.updated_at))}${dirty() ? ' · <b style="color:var(--due)">modifiche non salvate</b>' : ''}</div></div></div>`);
-  (vers || []).forEach((v, i) => {
-    rows.push(`<div class="page-row ${String(v.id) === String(cur) ? 'sel' : ''}" data-a="ver" data-id="${v.id}">
-      <div class="pg"><div class="pt">${ic('history')}Versione ${vers.length - i}</div><div class="ps">${esc(when(v.at))} · sola lettura · ${esc(fmtSize(v.size))}</div></div></div>`);
-  });
-  el.innerHTML = `
-    <div class="topbar">
-      <button class="ib" data-a="back" data-only="phone" aria-label="Indietro">${ic('back')}</button>
-      <div class="grow" style="padding-left:10px"><div class="apptitle">Versioni</div></div>
-    </div>
-    <div class="scroll">
-      ${S.offline ? '<div class="ro-note" style="margin:0 16px 8px">Offline: le versioni precedenti si vedono solo con la connessione.</div>' : ''}
-      ${rows.join('') || '<div class="empty"><b>Nessuna versione</b>Scrivi qualcosa e premi Salva: ogni salvataggio crea una versione.</div>'}
-      ${it && vers && !vers.length ? '<p class="muted" style="padding:8px 16px;font-size:13px">Ancora nessuna versione precedente: appariranno qui dopo il prossimo salvataggio.</p>' : ''}
-      ${!vers && it && !S.offline ? '<p class="muted" style="padding:8px 16px;font-size:13px">Carico le versioni…</p>' : ''}
-      <div style="height:40px"></div>
-    </div>`;
-  if (!el._secBound) {
-    el._secBound = true;
-    el.addEventListener('click', e => {
-      const b = e.target.closest('[data-a]');
-      if (!b) return;
-      if (b.dataset.a === 'back') app.go({ sver: null });
-      if (b.dataset.a === 'ver') app.go({ sver: b.dataset.id || null });
-    });
-  }
+  const cur = app.R.sver && app.R.sver !== 'list' ? String(app.R.sver) : '';
+  const opts = [];
+  if (it) opts.push(`<option value="" ${cur ? '' : 'selected'}>Versione in corso${vers ? ` (${vers.length + 1})` : ''} · ${esc(when(it.updated_at))}${dirty() ? ' · non salvata' : ''}</option>`);
+  else opts.push('<option value="" selected>Versione in corso · mai salvata</option>');
+  (vers || []).forEach((v, i) => opts.push(`<option value="${esc(String(v.id))}" ${String(v.id) === cur ? 'selected' : ''}>Versione ${vers.length - i} · ${esc(when(v.at))} · ${esc(fmtSize(v.size))}</option>`));
+  if (!vers && it && !S.offline) opts.push('<option disabled>Carico le versioni…</option>');
+  if (S.offline) opts.push('<option disabled>Offline: versioni precedenti non disponibili</option>');
+  if (it && vers && !vers.length) opts.push('<option disabled>Nessuna versione precedente</option>');
+  return opts.join('');
+}
+function pickerTag() {
+  return `<label class="sec-vpick" title="Versioni (dalla più recente)">${ic('history')}<select class="sel" data-a="pick" aria-label="Versione da mostrare">${pickerHTML()}</select></label>`;
+}
+function paintPicker(el) {
+  const sel = el && $('select[data-a=pick]', el);
+  if (!sel || document.activeElement === sel) return;
+  const html = pickerHTML();
+  if (sel._html !== html) { sel.innerHTML = html; sel._html = html; }
+}
+function bindPicker(el) {
+  const sel = $('select[data-a=pick]', el);
+  if (!sel) return;
+  sel._html = sel.innerHTML;
+  sel.addEventListener('change', () => app.go({ sver: sel.value || null }));
+  sel.addEventListener('focus', () => loadVersions());
 }
 
 // ---------- foglio ----------
 export function renderMain(el) {
   if (!el) { if (E && E.editor) E.editor.flush(); E = null; return; }
   const it = item();
+  loadVersions();
   if (E && E.el === el && el.isConnected) {
     // Aggiornato da un altro dispositivo: se non ci sono modifiche in corso, mostra il testo nuovo.
     if (!dirty() && E.editor && E.editor.md !== savedMd() && !el.contains(document.activeElement)) { E.editor.setMd(savedMd()); draft = null; baseRev = null; }
@@ -129,8 +125,8 @@ export function renderMain(el) {
   const md = draft !== null ? draft : savedMd();
   el.innerHTML = `
     <div class="topbar">
-      <div class="grow" style="padding-left:${desk ? '16px' : '10px'};min-width:0"><div class="apptitle">I miei segreti</div><div class="sec-state" id="sState"></div></div>
-      <button class="ib" data-a="versions" data-only="phone" aria-label="Versioni" title="Versioni">${ic('history')}</button>
+      <div class="grow" style="padding-left:${desk ? '16px' : '10px'};min-width:0"><div class="apptitle">Foglio segreti</div><div class="sec-state" id="sState"></div></div>
+      ${pickerTag()}
       <button class="btn primary sec-save needs-net" data-a="save" id="sSave" title="Salva (Ctrl+S)">Salva</button>
       <button class="ib" data-a="lock" data-only="phone" aria-label="Blocca">${ic('lock')}</button>
     </div>
@@ -157,7 +153,6 @@ export function renderMain(el) {
     if (!b || b.closest('#sEditor')) return;
     switch (b.dataset.a) {
       case 'save': save(); break;
-      case 'versions': app.go({ sver: 'list' }); break;
       case 'lock': app.lock(); break;
       case 'mode': {
         const m = b.dataset.mode;
@@ -174,6 +169,7 @@ export function renderMain(el) {
     }
   };
   el.onkeydown = e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); save(); } };
+  bindPicker(el);
   paintHead();
 }
 
@@ -183,16 +179,17 @@ function paintHead() {
   const st = $('#sState', E.el);
   const d = dirty();
   if (st) st.innerHTML = saving ? 'Salvataggio…' : d ? '<b style="color:var(--due)">Modifiche non salvate</b>' : it ? 'Salvato ' + esc(fmtWhen(it.updated_at)) : 'Mai salvato';
+  paintPicker(E.el);
   const b = $('#sSave', E.el);
   if (b) { b.disabled = saving || !d || S.offline; b.classList.toggle('pulse', d); }
-  const nb = document.querySelector('#nav [data-nav=secrets]');
-  if (nb) nb.classList.toggle('dirty', d);
+  ['secrets', 'more'].forEach(k => { const nb = document.querySelector(`#nav [data-nav=${k}]`); if (nb) nb.classList.toggle('dirty', d); });
 }
 
 // ---------- versione precedente (sola lettura + differenze) ----------
 let V = null; // { el, vid }
 export function renderVersion(el, vid) {
   if (!el) { V = null; return; }
+  loadVersions();
   const nv = vers ? vers.length : -1;
   if (V && V.el === el && V.vid === vid && el.isConnected && V.cur === currentMd() && V.nv === nv) return;
   V = { el, vid, cur: currentMd(), nv };
@@ -200,9 +197,10 @@ export function renderVersion(el, vid) {
   const v = vi >= 0 ? vers[vi] : null;
   el.innerHTML = `
     <div class="topbar">
-      <button class="ib" data-a="back" aria-label="Torna alle versioni" data-only="phone">${ic('back')}</button>
+      <button class="ib" data-a="close" aria-label="Torna alla versione in corso" data-only="phone">${ic('back')}</button>
       <div class="grow" style="padding-left:${app.desk ? '16px' : '4px'};min-width:0"><div class="apptitle">${v ? `Versione ${vers.length - vi}` : 'Versione precedente'}</div><div class="sec-state">${v ? esc(when(v.at)) + ' · ' : ''}sola lettura</div></div>
-      <button class="btn ghost small needs-net" data-a="restore" title="Copia questo testo nel foglio: poi premi Salva">${ic('restore', 'sm')}Ripristina</button>
+      ${pickerTag()}
+      <button class="btn ghost small needs-net" data-a="restore" title="Copia questo testo nel foglio: poi premi Salva">${ic('restore', 'sm')}<span class="sec-rlab">Ripristina</span></button>
       <button class="ib" data-a="close" data-only="desk" aria-label="Torna alla versione in corso" title="Torna alla versione in corso">${ic('close')}</button>
     </div>
     <div class="seg sec-tabs" role="group" aria-label="Vista" data-only="phone"><button data-a="tab" data-t="diff" aria-pressed="true">Differenze</button><button data-a="tab" data-t="text" aria-pressed="false">Testo</button></div>
@@ -210,7 +208,6 @@ export function renderVersion(el, vid) {
   el.onclick = async e => {
     const b = e.target.closest('[data-a]');
     if (!b) return;
-    if (b.dataset.a === 'back') app.go({ sver: 'list' });
     if (b.dataset.a === 'close') app.go({ sver: null });
     if (b.dataset.a === 'tab') { $$('[data-a=tab]', el).forEach(x => x.setAttribute('aria-pressed', String(x === b))); $('.sec-ver', el).dataset.t = b.dataset.t; }
     if (b.dataset.a === 'restore') {
@@ -224,6 +221,7 @@ export function renderVersion(el, vid) {
       toast('Testo ripristinato nel foglio: premi Salva per renderlo la versione in corso.');
     }
   };
+  bindPicker(el);
   versionMd(vid).then(md => {
     if (!V || V.el !== el || V.vid !== vid) return;
     $('.sec-text', el).innerHTML = `<div class="sec-colhead">Testo di questa versione</div><div class="editor sec-read">${mdToHtml(md) || '<p class="muted">(vuoto)</p>'}</div>`;
