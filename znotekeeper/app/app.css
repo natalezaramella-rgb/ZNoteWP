@@ -451,3 +451,39 @@ mark{background:var(--due-soft);color:inherit;border-radius:3px}
 .acc-ph{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .acc-ph > b{font-size:13px;margin-right:4px}
 .acc-ph .hint{flex-basis:100%}
+
+/* ---------- I miei segreti ---------- */
+.sec-state{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sec-save{margin:0 6px;min-width:84px}
+.sec-save:disabled{opacity:.45;cursor:default}
+.sec-save.pulse:not(:disabled){box-shadow:0 0 0 3px var(--accent-soft)}
+.nav button.dirty .pill::after{content:"";position:absolute;top:6px;margin-left:22px;width:8px;height:8px;border-radius:50%;background:var(--due)}
+.sec-tabs{margin:0 16px 8px;align-self:flex-start}
+.sec-ver{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-top:1px solid var(--line)}
+.sec-ver>div{overflow:auto;min-height:0}
+.sec-diff{border-right:1px solid var(--line);background:var(--bg)}
+.sec-text{padding:0 0 40px}
+.sec-text .sec-read{padding:4px 18px}
+.sec-colhead{position:sticky;top:0;z-index:1;background:inherit;padding:10px 14px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);border-bottom:1px solid var(--line)}
+.sec-text .sec-colhead{background:var(--surface)}
+.sec-legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:10px 14px;font-size:13px;font-weight:600}
+.sec-legend .del{color:var(--danger)}
+.sec-legend .add{color:var(--accent)}
+.sec-lines{font-family:var(--f-mono);font-size:12.5px;line-height:1.55;padding-bottom:40px}
+.dl{display:grid;grid-template-columns:34px 34px 16px minmax(0,1fr);align-items:start}
+.dl .dn{color:var(--muted);opacity:.6;text-align:right;padding-right:6px;font-size:11px;user-select:none}
+.dl .dm{font-weight:700;user-select:none}
+.dl .dt{white-space:pre-wrap;word-break:break-word;padding-right:10px}
+.dl.del{background:var(--danger-soft)}
+.dl.del .dm,.dl.del .dt{color:var(--danger)}
+.dl.del .dt{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--danger) 45%,transparent)}
+.dl.add{background:var(--accent-soft)}
+.dl.add .dm{color:var(--accent)}
+.dl.skip{display:block;text-align:center;color:var(--muted);font-family:var(--f-body);font-size:12px;padding:4px 0;background:transparent}
+.app:not(.desk) .sec-ver{display:block;overflow:auto}
+.app:not(.desk) .sec-ver>div{overflow:visible}
+.app:not(.desk) .sec-ver[data-t="diff"] .sec-text,.app:not(.desk) .sec-ver[data-t="text"] .sec-diff{display:none}
+.app:not(.desk) .sec-diff{border-right:0;min-height:100%}
+.app.desk .etools.sec-tools{order:0;border-top:1px solid var(--line)}
+.app:not(.desk) .nav button{min-width:0;font-size:10.5px}
+.app:not(.desk) .nav .pill{padding:3px 12px}

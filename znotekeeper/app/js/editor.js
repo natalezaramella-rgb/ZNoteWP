@@ -16,8 +16,9 @@ const LABEL = {
   undo: [ic('undo'), 'Annulla'], redo: [ic('redo'), 'Ripristina'],
 };
 
-export function toolbarHTML(small = false, cls = '') {
-  return `<div class="etools ${cls}" role="toolbar" aria-label="Formattazione">${(small ? SMALL : FULL).map(c => c === '|' ? '<span class="sep"></span>' :
+export function toolbarHTML(small = false, cls = '', omit = []) {
+  const btns = (small ? SMALL : FULL).filter(c => !omit.includes(c)).filter((c, i, a) => c !== '|' || (i > 0 && a[i - 1] !== '|' && i < a.length - 1));
+  return `<div class="etools ${cls}" role="toolbar" aria-label="Formattazione">${btns.map(c => c === '|' ? '<span class="sep"></span>' :
     `<button type="button" data-cmd="${c}" title="${esc(LABEL[c][1])}" aria-label="${esc(LABEL[c][1])}">${LABEL[c][0]}</button>`).join('')}</div>`;
 }
 

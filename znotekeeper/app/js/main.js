@@ -2,7 +2,7 @@
 import { CFG, api, setToken, setSession, onAuthError, isOffline } from './api.js';
 import { kv } from './db.js';
 import { installSprite, ic } from './icons.js';
-import { $, $$, esc, closeOverlay, isOverlayOpen, toast } from './ui.js';
+import { $, $$, esc, closeOverlay, isOverlayOpen, toast, confirmDialog } from './ui.js';
 import { app } from './ctx.js';
 import * as store from './store.js';
 import { S } from './store.js';
@@ -12,6 +12,7 @@ import * as tasks from './tasks.js';
 import * as search from './search.js';
 import * as settings from './settings.js';
 import * as access from './access.js';
+import * as secrets from './secrets.js';
 import { importInbox } from './mailin.js';
 
 const root = document.getElementById('app');
@@ -51,6 +52,7 @@ function shell() {
       <button data-nav="notes"><span class="pill">${ic('book')}</span>Taccuino</button>
       <button data-nav="tasks"><span class="pill">${ic('tasks')}</span>Attività</button>
       <button data-nav="access"><span class="pill">${ic('key')}</span>Accessi</button>
+      <button data-nav="secrets"><span class="pill">${ic('shield')}</span>Segreti</button>
       <button data-nav="search"><span class="pill">${ic('search')}</span>Cerca</button>
       <button data-nav="settings"><span class="pill">${ic('sliders')}</span>Impostazioni</button>
       <button class="navlock" data-nav="lock" title="Blocca (Ctrl+Maiusc+L)"><span class="pill">${ic('lock')}</span>Blocca</button>
@@ -60,7 +62,7 @@ function shell() {
     const b = e.target.closest('[data-nav]');
     if (!b) return;
     if (b.dataset.nav === 'lock') return app.lock();
-    go({ view: b.dataset.nav, page: app.R.view === b.dataset.nav ? null : app.R.page, task: app.R.view === b.dataset.nav ? null : app.R.task, acc: app.R.view === b.dataset.nav ? null : app.R.acc }, { replace: true });
+    go({ view: b.dataset.nav, page: app.R.view === b.dataset.nav ? null : app.R.page, task: app.R.view === b.dataset.nav ? null : app.R.task, acc: app.R.view === b.dataset.nav ? null : app.R.acc, sver: null }, { replace: true });
   });
 }
 
@@ -164,7 +166,7 @@ function startAutolock() {
   lockT = setInterval(() => {
     if (!S.space || S.remembered) return;
     const m = store.settings().autolock ?? 5;
-    if (m > 0 && Date.now() - lastAct > m * 60000) app.lock();
+    if (m > 0 && Date.now() - lastAct > m * 60000) app.lock(false, { auto: true });
   }, 15000);
 }
 document.addEventListener('visibilitychange', () => {
@@ -174,15 +176,17 @@ document.addEventListener('visibilitychange', () => {
     hiddenAt = Date.now();
     notes.flush();
     tasks.flush();
-    if (m === 0 && !S.remembered) setTimeout(() => { if (document.hidden) app.lock(); }, 1500);
-  } else if (hiddenAt && m > 0 && !S.remembered && Date.now() - hiddenAt > m * 60000) app.lock();
+    if (m === 0 && !S.remembered) setTimeout(() => { if (document.hidden) app.lock(false, { auto: true }); }, 1500);
+  } else if (hiddenAt && m > 0 && !S.remembered && Date.now() - hiddenAt > m * 60000) app.lock(false, { auto: true });
 });
 
-app.lock = async (expired = false) => {
+app.lock = async (expired = false, { auto = false } = {}) => {
   if (!S.space) return;
+  if (!expired && !auto && secrets.dirty() && !await confirmDialog('Segreti non salvati', 'Nel foglio «I miei segreti» ci sono modifiche non salvate: bloccando le perdi.', { ok: 'Blocca comunque', danger: true })) return;
   // «Blocca» scelto a mano su un dispositivo ricordato: lo dimentica, altrimenti si riaprirebbe da solo.
   if (!expired && S.remembered) { await forgetRemember(); toast('Questo dispositivo non è più ricordato: al prossimo accesso servirà la password.'); }
   notes.flush(); tasks.flush();
+  secrets.forget();
   closeOverlay();
   if (!expired) api('POST', 'lock', {}, { quiet: true }).catch(() => {});
   setSession(null);
@@ -205,6 +209,9 @@ function buildScreens() {
     <section class="screen" id="tDetail" data-pane="tdetail"></section>
     <section class="screen" id="aList" data-pane="alist"></section>
     <section class="screen" id="aDetail" data-pane="adetail"></section>
+    <section class="screen" id="sVers" data-pane="slist"></section>
+    <section class="screen" id="sMain" data-pane="smain"></section>
+    <section class="screen" id="sVer" data-pane="sver"></section>
     <section class="screen" id="sSearch" data-pane="search"></section>
     <section class="screen" id="sSettings" data-pane="settings"></section>
     <section class="screen" id="sEmpty" data-pane="empty"><div class="empty" style="margin:auto"></div></section>`;
@@ -254,6 +261,7 @@ export function render() {
 
   let showNav = true;
   if (R.view !== 'access') access.renderDetail(null);
+  if (R.view !== 'secrets') { secrets.renderMain(null); secrets.renderVersion(null); }
   const fold = desk ? getFold() : {};
   root.classList.toggle('fold-tree', !!(desk && R.view === 'notes' && fold.tree));
   root.classList.toggle('fold-list', !!(desk && ((R.view === 'notes' && fold.list) || (R.view === 'tasks' && fold.tlist))));
@@ -291,6 +299,20 @@ export function render() {
     } else {
       setPane(panes.alist, 'has-nav'); access.renderList(panes.alist); access.renderDetail(null);
     }
+  } else if (R.view === 'secrets') {
+    notes.renderPage(null); tasks.renderDetail(null);
+    const v = R.sver && R.sver !== 'list' ? R.sver : null;
+    if (desk) {
+      setPane(panes.slist, 'pane-list'); secrets.renderList(panes.slist);
+      if (v) { secrets.renderMain(null); setPane(panes.sver, 'pane-main'); secrets.renderVersion(panes.sver, v); }
+      else { secrets.renderVersion(null); setPane(panes.smain, 'pane-main'); secrets.renderMain(panes.smain); }
+    } else if (v) {
+      secrets.renderMain(null); setPane(panes.sver, 'full'); secrets.renderVersion(panes.sver, v); showNav = false;
+    } else if (R.sver === 'list') {
+      secrets.renderMain(null); secrets.renderVersion(null); setPane(panes.slist, 'full'); secrets.renderList(panes.slist); showNav = false;
+    } else {
+      secrets.renderVersion(null); setPane(panes.smain, 'has-nav'); secrets.renderMain(panes.smain);
+    }
   } else if (R.view === 'search') {
     notes.renderPage(null); tasks.renderDetail(null);
     setPane(panes.search, 'has-nav pane-full'); search.render(panes.search);
@@ -309,7 +331,7 @@ function go(patch, { replace = false } = {}) {
   const prev = { ...app.R };
   Object.assign(app.R, patch);
   const R = app.R;
-  const deeper = (R.page && R.page !== prev.page) || (R.task && R.task !== prev.task) || (R.acc && R.acc !== prev.acc);
+  const deeper = (R.page && R.page !== prev.page) || (R.task && R.task !== prev.task) || (R.acc && R.acc !== prev.acc) || (R.sver && R.sver !== prev.sver);
   if (!mq.matches && deeper && !replace) history.pushState({ znk: { ...R } }, '');
   else history.replaceState({ znk: { ...R } }, '');
   const st = store.settings();
@@ -343,7 +365,7 @@ window.addEventListener('popstate', e => {
   const st = e.state && e.state.znk;
   notes.flush(); tasks.flush(); access.flush();
   if (st) Object.assign(app.R, st);
-  else Object.assign(app.R, { page: null, task: null, acc: null });
+  else Object.assign(app.R, { page: null, task: null, acc: null, sver: null });
   render();
 });
 mq.addEventListener('change', () => render());
@@ -369,10 +391,10 @@ document.addEventListener('keydown', e => {
   if (e.altKey && !mod) {
     if (k === 'n') { e.preventDefault(); notes.newPage(); return; }
     if (k === 't') { e.preventDefault(); tasks.quickAdd(); return; }
-    if (['1', '2', '3', '4', '5'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'access', 'search', 'settings'][+k - 1] }); return; }
+    if (['1', '2', '3', '4', '5', '6'].includes(k)) { e.preventDefault(); go({ view: ['notes', 'tasks', 'access', 'secrets', 'search', 'settings'][+k - 1] }); return; }
   }
   if (k === 'escape' && !isOverlayOpen() && !typing) {
-    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null }); else if (app.R.acc) go({ acc: null });
+    if (app.R.page) go({ page: null }); else if (app.R.task) go({ task: null }); else if (app.R.acc) go({ acc: null }); else if (app.R.sver) go({ sver: app.desk || app.R.sver === 'list' ? null : 'list' });
   }
 });
 

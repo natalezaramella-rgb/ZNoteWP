@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
 class ZNK_REST
 {
     const NS = 'znk/v1';
-    const KINDS = ['notebook', 'group', 'section', 'page', 'list', 'task', 'drawing', 'blob', 'settings', 'access'];
+    const KINDS = ['notebook', 'group', 'section', 'page', 'list', 'task', 'drawing', 'blob', 'settings', 'access', 'secret'];
     const MAX_DATA = 16 * 1024 * 1024;
 
     public static function init()
@@ -88,6 +88,7 @@ class ZNK_REST
         self::r('/items/(?P<id>[A-Za-z0-9_-]{1,40})', 'PUT', [$c, 'item_put']);
         self::r('/items/(?P<id>[A-Za-z0-9_-]{1,40})', 'DELETE', [$c, 'item_purge']);
         self::r('/items/(?P<id>[A-Za-z0-9_-]{1,40})/versions', 'GET', [$c, 'versions']);
+        self::r('/items/(?P<id>[A-Za-z0-9_-]{1,40})/versions/(?P<vid>\d{1,12})', 'GET', [$c, 'version_one']);
 
         self::r('/inbox', 'GET', [$c, 'inbox']);
         self::r('/inbox/(?P<id>\d+)', 'DELETE', [$c, 'inbox_delete']);
@@ -738,6 +739,15 @@ class ZNK_REST
                 return self::err('znk_gone', 'Elemento eliminato definitivamente.', 410);
             }
             // Cronologia delle versioni delle pagine (punto 31): una copia ogni 10 minuti, ultime 50.
+            // «I miei segreti»: ogni salvataggio (pulsante Salva) conserva la versione precedente, fino a 1000.
+            if ($cur->kind === 'secret' && isset($f['data']) && $f['data'] !== $cur->data && $cur->data) {
+                $vt = ZNK_DB::t('versions');
+                $wpdb->insert($vt, ['user_id' => $uid, 'item_id' => $id, 'created_at' => $cur->updated_at, 'data' => $cur->data]);
+                $ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM $vt WHERE user_id = %d AND item_id = %s ORDER BY created_at DESC, id DESC LIMIT 1000, 1000", $uid, $id));
+                if ($ids) {
+                    $wpdb->query("DELETE FROM $vt WHERE id IN (" . implode(',', array_map('intval', $ids)) . ')');
+                }
+            }
             if ($cur->kind === 'page' && isset($f['data']) && $f['data'] !== $cur->data && $cur->data) {
                 $vt = ZNK_DB::t('versions');
                 $last = $wpdb->get_var($wpdb->prepare("SELECT MAX(created_at) FROM $vt WHERE user_id = %d AND item_id = %s", $uid, $id));
@@ -814,12 +824,31 @@ class ZNK_REST
     public static function versions($req, $ctx)
     {
         global $wpdb;
+        if ($req->get_param('meta')) {
+            // Solo l'elenco (data e dimensione): il contenuto si scarica una versione alla volta.
+            $rows = $wpdb->get_results($wpdb->prepare('SELECT id, created_at, LENGTH(data) AS size FROM ' . ZNK_DB::t('versions') . ' WHERE user_id = %d AND item_id = %s ORDER BY created_at DESC, id DESC LIMIT 1000', $ctx['user']->user_id, $req['id']));
+            $out = [];
+            foreach ($rows as $r) {
+                $out[] = ['id' => (int) $r->id, 'at' => $r->created_at . 'Z', 'size' => (int) $r->size];
+            }
+            return $out;
+        }
         $rows = $wpdb->get_results($wpdb->prepare('SELECT id, created_at, data FROM ' . ZNK_DB::t('versions') . ' WHERE user_id = %d AND item_id = %s ORDER BY created_at DESC LIMIT 50', $ctx['user']->user_id, $req['id']));
         $out = [];
         foreach ($rows as $r) {
             $out[] = ['id' => (int) $r->id, 'at' => $r->created_at . 'Z', 'data' => $r->data];
         }
         return $out;
+    }
+
+    public static function version_one($req, $ctx)
+    {
+        global $wpdb;
+        $r = $wpdb->get_row($wpdb->prepare('SELECT id, created_at, data FROM ' . ZNK_DB::t('versions') . ' WHERE user_id = %d AND item_id = %s AND id = %d', $ctx['user']->user_id, $req['id'], (int) $req['vid']));
+        if (!$r) {
+            return self::err('znk_not_found', 'Versione non trovata.', 404);
+        }
+        return ['id' => (int) $r->id, 'at' => $r->created_at . 'Z', 'data' => $r->data];
     }
 
     // ===================== Email → nota =====================
