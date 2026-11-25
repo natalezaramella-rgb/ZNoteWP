@@ -1,6 +1,6 @@
 # ZNoteKeeper – Presentazione commerciale
 
-25 novembre 2026 · Versione condivisibile: [Claude Doc](https://claude.ai/artifact/AytSjxAeM5mLcCoR7Zg2rm)
+25 novembre 2026 (aggiornata alla versione 1.2) · Versione condivisibile: [Claude Doc](https://claude.ai/artifact/AytSjxAeM5mLcCoR7Zg2rm)
 
 ## In sintesi
 
@@ -8,7 +8,7 @@ ZNoteKeeper è il taccuino riservato che vive sul tuo sito WordPress: note, atti
 
 È pensato per chi vuole la comodità di Google Tasks e OneNote senza consegnare i propri appunti a un cloud di terzi. Si installa come un normale plugin, l'amministratore abilita gli utenti e ognuno ha il proprio spazio con la propria password.
 
-**ZNoteKeeper 1.0.1 è già disponibile** e in uso su un sito reale.
+**ZNoteKeeper 1.2 è già disponibile** e in uso su un sito reale.
 
 ## Il problema
 
@@ -37,7 +37,7 @@ ZNoteKeeper è per chi ha già un sito WordPress e tratta informazioni che non d
 | --- | --- | --- |
 | Professionisti (avvocati, commercialisti, medici, consulenti) | Appunti su clienti e pratiche soggetti a segreto professionale | Note cifrate che nemmeno il fornitore del sito può leggere |
 | Piccole imprese e studi associati | Uno strumento comune ma con spazi separati per ogni collaboratore | Utenti abilitati dall'admin, dati isolati per persona |
-| Agenzie web e sistemisti WordPress | Un servizio a valore aggiunto da offrire ai clienti che già gestiscono | Un plugin che si installa in minuti sul sito del cliente |
+| Agenzie web e sistemisti WordPress | Un servizio a valore aggiunto da offrire ai clienti che già gestiscono | Un plugin che si installa in minuti sul sito del cliente, con l'invio sicuro delle credenziali ai propri clienti |
 | Famiglie e privati attenti alla privacy | Documenti, password di casa, ricette, scadenze in un posto sicuro | Un taccuino personale sul proprio dominio, senza abbonamenti |
 | Associazioni e redazioni | Bozze, verbali e contatti riservati | Email inoltrate che diventano note, ricerca unica |
 
@@ -47,15 +47,34 @@ Ogni funzione di ZNoteKeeper lavora su dati cifrati: comodità da app moderna, r
 
 | Area | Cosa offre |
 | --- | --- |
+| **Taccuini multipli** | Più raccoglitori separati per lo stesso utente, per esempio Lavoro, Clienti e Famiglia, ognuno con i propri gruppi e sezioni. Sezioni e gruppi si spostano da un taccuino all'altro. |
 | **Taccuino** | Note organizzate come un raccoglitore ad anelli: gruppi di sezioni, sezioni colorate, pagine e sottopagine. Preferiti, recenti, etichette, cestino di 30 giorni e cronologia delle versioni. |
 | **Editor visuale** | Si scrive come in un programma di videoscrittura: titoli, elenchi, caselle, tabelle, link, immagini. Il testo è salvato in Markdown, aperto e leggibile ovunque. Salvataggio automatico. |
-| **Attività** | Liste di cose da fare con scadenza e ora, ripetizioni, sotto-attività, stella, riordino a trascinamento e promemoria. Una casella in una nota può diventare un'attività collegata. |
+| **Attività** | Liste di cose da fare con scadenza e ora, ripetizioni, sotto-attività, stella, riordino a trascinamento e promemoria. Una casella in una nota può diventare un'attività collegata. Le liste restano sempre raggiungibili, anche quando sono molte. |
+| **Accessi clienti** | Archivio cifrato delle credenziali da consegnare ai clienti e invio con link monouso a scadenza (vedi sotto). |
 | **Disegno** | Schizzi a mano libera con dito, pennino, mouse o tavoletta: penna, evidenziatore, forme, gomma, sei colori. Un disegno iniziato sul telefono si continua sul PC. |
 | **Email → nota** | Si inoltra un'email a un indirizzo personale e diventa una nota o un'attività. Smistamento con #parola nell'oggetto, solo mittenti autorizzati e verificati (SPF/DKIM). Ricezione via IMAP o webhook. |
-| **App per telefono e PC** | PWA installabile su Android, iPhone, Windows e Mac. Su schermo grande, vista a colonne e scorciatoie da tastiera. Senza rete si legge e si cerca tutto ciò che è sul dispositivo. |
+| **App per telefono e PC** | PWA installabile su Android, iPhone, Windows e Mac. Su schermo grande, vista a colonne con pannelli richiudibili per scrivere a tutto schermo, e scorciatoie da tastiera. Senza rete si legge e si cerca tutto ciò che è sul dispositivo. |
 | **Ricerca unica** | Una sola casella cerca in titoli, testi ed etichette di note e attività, con filtri rapidi. |
 | **Portabilità** | Backup completo in un file cifrato ed esportazione delle note in Markdown. |
 | **Gestione utenti** | L'amministratore WordPress abilita o disabilita le persone e vede solo lo spazio occupato, mai i contenuti. |
+
+## Novità: Accessi clienti
+
+Con la versione 1.2 ZNoteKeeper diventa anche il modo sicuro per consegnare ai clienti le credenziali dei software che si installano per loro: niente più password in chiaro nelle email.
+
+1. Nella sezione **Accessi** si registrano cliente, email, software, indirizzo, nome utente, password iniziale e note, cifrati come tutto il resto.
+2. **Invia accessi** manda al cliente un'email con un modello modificabile, il proprio nome e indirizzo mittente e le risposte dirette alla propria casella.
+3. L'email contiene indirizzo e nome utente, e un **link monouso** valido per le ore scelte (da 1 a 720).
+4. Il cliente apre il link e preme **Mostra**: vede la password iniziale una sola volta, poi il link smette di funzionare.
+
+**Perché è sicuro**
+
+- La password viene cifrata nel browser con una chiave casuale (AES-256-GCM) che sta solo nella parte del link dopo «#», che i browser non inviano mai al sito.
+- Il sito conserva solo l'impronta del link, il testo cifrato e la scadenza, e cancella il cifrato appena il cliente lo legge o il link scade.
+- I filtri antispam che aprono i link non lo consumano: serve premere «Mostra».
+- Si vede sempre lo stato del link (inviato, letto, scaduto) e con **Invia nuovo link** il precedente viene annullato.
+- Massimo 30 invii all'ora per utente, contro gli abusi.
 
 ## Sicurezza e riservatezza
 
@@ -73,10 +92,13 @@ La sicurezza è il cuore del prodotto: i dati vengono cifrati nel browser dell'u
 - **Spazi isolati**: ogni utente ha la propria chiave. L'amministratore può abilitare, disabilitare o cancellare uno spazio, ma non aprirlo.
 - **Recupero senza backdoor**: un codice di recupero di 24 caratteri, mostrato una volta sola e rigenerato a ogni uso. Il recupero via email è facoltativo e spento di default; se attivato è legato all'indirizzo, monouso, valido 30 minuti e seguito da 24 ore di attesa annullabile.
 - **Sblocco biometrico** con impronta o volto su Android e iOS, e blocco automatico dopo un tempo di inattività scelto dall'utente.
-- **Contro i tentativi a forza bruta**: attese crescenti dopo 5 password sbagliate, blocco e avviso via email dopo 10.
+- **«Ricordami su questo dispositivo»**: sui dispositivi fidati la chiave resta chiusa da un segreto del browser non esportabile e da una metà consegnata dal sito solo a quel dispositivo. «Blocca», lo scollegamento o un recupero d'accesso la cancellano.
+- **Contro i tentativi a forza bruta**: attese crescenti dopo 5 password sbagliate, blocco e avviso via email dopo 10. Ogni tentativo di password, codice o PIN viene contato prima della verifica, così nemmeno richieste in parallelo superano il limite.
 - **Conferma per le azioni delicate**: cambio password, nuovo codice, dispositivi e backup richiedono di nuovo la password.
 - **Notifiche discrete**: i promemoria inviati dal server non contengono i titoli, perché il server non li conosce.
-- **Email chiuse all'arrivo**: un'email inoltrata viene cifrata appena arriva e cancellata dalla casella.
+- **Email chiuse all'arrivo**: un'email inoltrata viene cifrata appena arriva e cancellata dalla casella. Si accettano solo allegati immagine e PDF, e la verifica del mittente usa solo l'esito scritto dal proprio server di posta.
+- **App verificata**: l'app installata usa i file salvati sul dispositivo solo se la loro impronta digitale corrisponde a quella attesa.
+- **Revisione di sicurezza**: il codice è stato sottoposto a una revisione dedicata, e le correzioni sono incluse nella versione 1.2.2.
 
 **Detto con onestà.** ZNoteKeeper protegge da furti del database, backup sottratti, accessi al server e amministratori curiosi. Come ogni applicazione web, presuppone che il codice del sito non venga manomesso di proposito: per questo va installato su un sito di cui ci si fida. Se si perdono sia la password sia il codice di recupero, i dati non si possono più aprire: è la garanzia che nessun altro abbia una copia della chiave.
 
@@ -100,17 +122,21 @@ Rispetto alle app di note cloud più diffuse, ZNoteKeeper offre le stesse comodi
 - **Un'abitudine, non un progetto**: interfaccia familiare a chi usa già liste di attività e taccuini digitali, nessuna formazione.
 - **Libertà di uscita**: le note si esportano in file leggibili da qualsiasi programma.
 
-## In arrivo
+## Novità recenti
 
-Le prossime novità, già in sviluppo, rendono ZNoteKeeper ancora più adatto a chi organizza molti ambiti di lavoro.
+In un giorno ZNoteKeeper è passato dalla 1.0 alla 1.2, con funzioni già pubblicate e in uso.
 
-- **Taccuini multipli**: più raccoglitori separati per lo stesso utente, per esempio Lavoro, Clienti e Famiglia, ognuno con i propri gruppi e sezioni.
-- **Pannelli richiudibili**: sul PC l'albero delle sezioni e l'elenco delle pagine si chiudono per lasciare tutto lo schermo alla scrittura.
-- **«Ricordami su questo dispositivo»**: sui dispositivi personali e fidati lo sblocco diventa ancora più rapido, senza rinunciare alla cifratura.
+| Versione | Novità |
+| --- | --- |
+| 1.2.2 | Correzioni dalla revisione di sicurezza (in pubblicazione) |
+| 1.2.1 | Indirizzo mittente configurabile per l'invio degli accessi |
+| 1.2.0 | Accessi clienti con link monouso a scadenza |
+| 1.1.2 | Liste delle Attività sempre raggiungibili su PC e telefono |
+| 1.1.0 | Taccuini multipli, pannelli richiudibili, «Ricordami su questo dispositivo» |
 
 ## Come iniziare
 
-Si parte in pochi minuti su qualsiasi sito WordPress 6.0 o successivo con PHP 7.4 o superiore.
+Si parte in pochi minuti su qualsiasi sito WordPress 6.2 o successivo con PHP 7.4 o superiore.
 
 1. Installa il plugin ZNoteKeeper dal pannello di WordPress e attivalo.
 2. Da **Utenti › ZNoteKeeper** abilita le persone che lo useranno.
