@@ -215,14 +215,10 @@ class ZNK_REST
         if (empty($u->vault)) {
             return self::err('znk_no_vault', 'Spazio non ancora creato.', 409);
         }
-        if ($e = ZNK_Auth::throttle($u)) {
+        $p = self::json($req);
+        if ($e = ZNK_Auth::verify_user_secret($u, self::str($p, 'auth', 200), $u->pw_auth)) {
             return $e;
         }
-        $p = self::json($req);
-        if (!ZNK_Auth::check_secret(self::str($p, 'auth', 200), $u->pw_auth)) {
-            return ZNK_Auth::register_fail($u);
-        }
-        ZNK_Auth::reset_fails($u);
         return ['vault' => json_decode($u->vault, true), 'session' => ZNK_Auth::issue_session($ctx['device'])];
     }
 
@@ -245,13 +241,19 @@ class ZNK_REST
             return self::err('znk_no_pin', 'PIN non attivo su questo dispositivo.', 409);
         }
         $p = self::json($req);
+        // Prenotazione atomica del tentativo: richieste in parallelo non superano i 5 PIN.
+        $dt = ZNK_DB::t('devices');
+        $ok = $wpdb->query($wpdb->prepare("UPDATE $dt SET pin_fails = LAST_INSERT_ID(pin_fails + 1) WHERE id = %d AND pin_hash IS NOT NULL AND pin_fails < 5", $dev->id));
+        if (!$ok) {
+            $wpdb->update($dt, ['pin_hash' => null, 'pin_pepper' => null, 'pin_fails' => 0], ['id' => $dev->id]);
+            return self::err('znk_pin_off', 'PIN errato 5 volte: è stato disattivato. Usa la password.', 403);
+        }
+        $f = (int) $wpdb->get_var('SELECT LAST_INSERT_ID()');
         if (!ZNK_Auth::check_secret(self::str($p, 'pin_auth', 200), $dev->pin_hash)) {
-            $f = (int) $dev->pin_fails + 1;
             if ($f >= 5) {
-                $wpdb->update(ZNK_DB::t('devices'), ['pin_hash' => null, 'pin_pepper' => null, 'pin_fails' => 0], ['id' => $dev->id]);
+                $wpdb->update($dt, ['pin_hash' => null, 'pin_pepper' => null, 'pin_fails' => 0], ['id' => $dev->id]);
                 return self::err('znk_pin_off', 'PIN errato 5 volte: è stato disattivato. Usa la password.', 403);
             }
-            $wpdb->update(ZNK_DB::t('devices'), ['pin_fails' => $f], ['id' => $dev->id]);
             return self::err('znk_bad_secret', 'PIN non corretto. Tentativi rimasti: ' . (5 - $f) . '.', 403);
         }
         $wpdb->update(ZNK_DB::t('devices'), ['pin_fails' => 0], ['id' => $dev->id]);
@@ -302,14 +304,10 @@ class ZNK_REST
         if (empty($u->vault)) {
             return self::err('znk_no_vault', 'Spazio non ancora creato.', 409);
         }
-        if ($e = ZNK_Auth::throttle($u)) {
+        $p = self::json($req);
+        if ($e = ZNK_Auth::verify_user_secret($u, self::str($p, 'rc_auth', 200), $u->rc_auth, 'Codice di recupero non corretto.')) {
             return $e;
         }
-        $p = self::json($req);
-        if (!ZNK_Auth::check_secret(self::str($p, 'rc_auth', 200), $u->rc_auth)) {
-            return ZNK_Auth::register_fail($u, 'Codice di recupero non corretto.');
-        }
-        ZNK_Auth::reset_fails($u);
         $v = json_decode($u->vault, true);
         return ['wrapped' => $v['rc'], 'priv' => $v['priv'], 'ticket' => self::issue_ticket($u)];
     }
@@ -440,14 +438,7 @@ class ZNK_REST
 
     private static function require_password($u, $p)
     {
-        if ($e = ZNK_Auth::throttle($u)) {
-            return $e;
-        }
-        if (!ZNK_Auth::check_secret(self::str($p, 'auth', 200), $u->pw_auth)) {
-            return ZNK_Auth::register_fail($u);
-        }
-        ZNK_Auth::reset_fails($u);
-        return null;
+        return ZNK_Auth::verify_user_secret($u, self::str($p, 'auth', 200), $u->pw_auth);
     }
 
     public static function reauth($req, $ctx)

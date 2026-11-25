@@ -176,7 +176,8 @@ class ZNK_Mail
         $atts = [];
         $total = 0;
         foreach ($msg['attachments'] as $a) {
-            $keep = (strpos($a['type'], 'image/') === 0 || $a['type'] === 'application/pdf') && $a['size'] <= self::MAX_ATTACH && $total + $a['size'] <= self::MAX_TOTAL;
+            // Solo immagini raster e PDF: un SVG può contenere script.
+            $keep = (preg_match('#^image/(png|jpe?g|gif|webp|avif|bmp|heic|heif)$#i', $a['type']) || $a['type'] === 'application/pdf') && $a['size'] <= self::MAX_ATTACH && $total + $a['size'] <= self::MAX_TOTAL;
             $atts[] = [
                 'name' => mb_substr($a['name'], 0, 200),
                 'type' => $a['type'],

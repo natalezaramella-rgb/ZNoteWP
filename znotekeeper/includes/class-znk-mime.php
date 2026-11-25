@@ -211,7 +211,9 @@ class ZNK_Mime
             $d = strtolower(trim($d, " .;\t"));
             return $d !== '' && ($d === $dom || substr($dom, -strlen('.' . $d)) === '.' . $d || substr($d, -strlen('.' . $dom)) === '.' . $dom);
         };
-        $all = array_merge($headers['authentication-results'] ?? [], $headers['arc-authentication-results'] ?? []);
+        // Solo l'intestazione più in alto: è quella aggiunta dal server che ha ricevuto il messaggio.
+        // Quelle più in basso (e le ARC, non verificate qui) le può scrivere chiunque spedisca l'email.
+        $all = array_slice($headers['authentication-results'] ?? [], 0, 1);
         foreach ($all as $ar) {
             $ar = strtolower($ar);
             if (preg_match('/dmarc=pass/', $ar)) {

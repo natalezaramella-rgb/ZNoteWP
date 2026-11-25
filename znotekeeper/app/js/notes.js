@@ -11,7 +11,7 @@ import { api } from './api.js';
 import { uuid } from './crypto.js';
 
 const COLORS = [1, 2, 3, 4, 5, 6];
-export const secColor = s => `var(--s${(s && s.d && s.d.color) || 3})`;
+export const secColor = s => `var(--s${Math.min(6, Math.max(1, parseInt(s && s.d && s.d.color, 10) || 3))})`;
 const title = it => (it && it.d && it.d.title) || 'Senza titolo';
 
 // ---------- struttura ----------
@@ -573,7 +573,9 @@ export async function openRef(ref) {
         sheet(`<h3>${esc(b.meta.name || 'Immagine')}</h3><img src="${b.url}" alt="" style="max-width:100%;border-radius:12px;display:block;margin:0 auto">
           <div class="row-end"><button class="btn ghost" data-dl>${ic('download', 'sm')}Scarica</button><button class="btn primary" data-close>Chiudi</button></div>`, { wide: true })
           .querySelector('[data-dl]').addEventListener('click', () => { const a = document.createElement('a'); a.href = b.url; a.download = b.meta.name || 'immagine'; a.click(); });
-      } else if (b.meta.type === 'application/pdf' || b.meta.type.startsWith('image/')) {
+      } else if (b.meta.type === 'application/pdf' || /^image\/(png|jpe?g|gif|webp|avif|bmp)$/i.test(b.meta.type || '')) {
+        // Mai aprire come documento un SVG o un HTML: conterrebbe script eseguiti con l'origine dell'app.
+        // Gli altri tipi vengono solo scaricati.
         window.open(b.url, '_blank', 'noopener');
       } else {
         const a = document.createElement('a'); a.href = b.url; a.download = b.meta.name || 'allegato'; a.click();
